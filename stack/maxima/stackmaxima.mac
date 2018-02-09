@@ -80,6 +80,7 @@ degree(ex,v) := ev(hipow(expand(ex), v), simp); /* See notes on hipow.          
 /* ********************************** */
 
 load ("functs");
+load ("pw/pw.mac");
 
 /* We don't want to allow people to put boxes round things. */
 box(ex) := ex;
@@ -2533,7 +2534,6 @@ ATIntOptionsHelper(in, out) := block(
 
 Intfun(SA, SB, SBdisp, constint, var) := block([val,rawmk,ansnote,fb,ret,ex,SAd,SBd,SBraw,saa,dd,dc,lSAv,lSBv,mSAv,mSBv,SAConsistentLogs,SAUsedLogAbs,SBUsedLogAbs],
     val:true, rawmk:false, fb:"", ansnote:"",
-    debug:false,
     ret:[val, rawmk, ansnote, fb],
     /* Check if the teacher and student used only log abs.
        Teacher must be consistent, otherwise the student doesn't have to be!*/
@@ -2560,8 +2560,8 @@ Intfun(SA, SB, SBdisp, constint, var) := block([val,rawmk,ansnote,fb,ret,ex,SAd,
       SAa:subst(STACKLA=log, ATInt_logabs_to_STACKLA(SAa))
       ),
     /* Calculate derivatives */
-    SAd:ev(diff(SA, var), simp),
-    SBd:ev(diff(SB, var), simp),
+    SAd:ev(pwsimp(diff(SA, var), var), simp),
+    SBd:ev(pwsimp(diff(SB, var), var), simp),
     if debug then print([SAa, SBd]),
     if debug then print(["Derivatives : ", SAd, SBd]),
     if ev(algebraic_equivalence(SAd, SBd), simp) then block(
