@@ -6,11 +6,11 @@ Maxima comes in a variety of versions, each of which can be compiled on a number
 
 If the optimised image is not created for you on request, please contact the developers.  The notes below are intended for developers, or those who chose to compile Maxima from source or those need to create optimised images manually because they have installed Maxima in a non-standard location which we can't auto-detect.
 
-The instructions for both CLISP and SBCL have been tested and work in STACK 4.x.  As of February 2018, these are working with Maxima 5.41.0, but some versions (particularly older versios) of Maxima do have problems.
+The instructions for both CLISP and SBCL have been tested and work in STACK 4.x.  As of February 2018, these are working with Maxima 5.41.0, but some versions (particularly older versions) of Maxima do have problems.
 
 ## Terminating runaway LISPS ##
 
-It is relatively easy for students to inadvertently generate an answer which takes Maxima a very long time to evaluate.  Typically this arises from where Maxima needs to expand out the brackets by comparing `(x-a)^59999` with a similar expression.  It is very hard to ensure this kind of calculation is impossible so in general this situation will arise from time to time.  The PHP scripts have a timeout, but on Linux systems you can also ensure the underlying LISP process is killed off using `timeout` command in Linux.  This is particularly valuable for production systems where stability is essential.
+It is relatively easy for students to inadvertently generate an answer which takes Maxima a very long time to evaluate.  Typically this arises when Maxima needs to expand out the brackets, e.g. by comparing `(x-a)^59999` with a similar expression.  It is very hard to ensure this kind of calculation is impossible so in general this situation will arise from time to time.  The PHP scripts have a timeout, but on Linux systems you can also ensure the underlying LISP process is killed off using the `timeout` command in Linux.  This is particularly valuable for production systems where stability is essential.
 
 1. Check that your Linux has the `timeout` command.  Because this is not standard we have not included this mechanism by default.
 2. Make sure STACK is working.
@@ -19,7 +19,7 @@ It is relatively easy for students to inadvertently generate an answer which tak
 
     timeout --kill-after=6s 6s maxima
 
-It is important that the timeout time is *longer* than the CAS connection timeout.  That way, PHP gives up first and degrates gracefully.  The OS then kills the process later.  If you choose the timeout to be the same or less, PHP may not have gathered enough data to degrade gracefully.  
+It is important that the timeout time is *longer* than the CAS connection timeout.  That way, PHP gives up first.  The OS then kills the process later.  If you choose the timeout to be the same or less, PHP may not have gathered enough data to degrade gracefully.  
 
 The above can be used with either a direct maxima connection, or with the image created as described below.
 
@@ -33,6 +33,18 @@ Although CLISP is the most portable - due to being interpreted - other lisps can
 Lisp is able to save a snapshot of its current state to a file. This file can then be used to re-start Lisp, and hence Maxima, in exactly that state. This optimisation involves creating a snap-shot of Lisp with Maxima and all the STACK code loaded, which can speed up launch times by an order of magnitude on Linux. This tip was originally provided Niels Walet.
 
 The principle is to save an image of Maxima running with STACK libraries already loaded then run this directly.  The healtcheck page contains a link at the bottom "Create Maxima Image".  We strongly recommend you use the automated option to create a Maxima image.
+
+Note, if you have compiled Maxima from source code then the "version" is likely to look something like `branch_5_41_base_85_g80a062e`, which will not be listed as a supported version.  Hence, you are likely to get an error of the following type.
+
+    Expected Maxima version : "5.41.0". Actual Maxima version: "branch_5_41_base_85_g80a062e" (41.0). CAS returned some data as expected, but there were errors.
+
+In this case you will need to set `qtype_stack | maximaversion` to `default` and manually override `qtype_stack | maximapreoptcommand` with the correct command (e.g. `maxima --use-version=branch_5_37_base_49_g6d35b66`).  You should explicity set the correct lisp as well in `qtype_stack | lisp`.
+
+If you are in any doubt about which versions of Maxima and lisp you have on your (linux) system use the command 
+
+    maxima --list-avail
+
+from the command line.  The healthcheck does its best to run this command for you and display the available Maxima versions.
 
 ## Create Maxima Image by hand ##
 

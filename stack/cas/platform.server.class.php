@@ -159,8 +159,8 @@ class stack_platform_server extends stack_platform_base {
      * returns string|null Returns the version as a string or null if that is not currently possible.
      */
     public function get_actual_maxima_version() {
-        $results =  $this->get_connection()->get_raw()->compute('build_info()@version;');
-        /** @TODO */
+        $results = $this->get_connection()->get_raw()->compute('build_info()@version;');
+        // TODO.
         return 'build_info()@version;';
     }
 
@@ -171,8 +171,8 @@ class stack_platform_server extends stack_platform_base {
      * returns string|null Returns the lisp name as a string or null if that is not currently possible.
      */
     public function get_actual_lisp() {
-        $results =  $this->get_connection()->get_raw()->compute('build_info()@lisp_name;');
-        /** @TODO */
+        $results = $this->get_connection()->get_raw()->compute('build_info()@lisp_name;');
+        // TODO.
         return 'build_info()@lisp_name;';
     }
 
@@ -203,7 +203,8 @@ class stack_platform_server extends stack_platform_base {
      * Linux or Unix.
      */
     public function get_default_plot_command() {
-        if ($this->get_host() && 1 === preg_match("/-(win|windows|w64|w32|win32|win64|mingw|mingw32|mingw64)-/i",$this->serverhost)) {
+        if ($this->get_host() && 1 === preg_match("/-(win|windows|w64|w32|win32|win64|mingw|mingw32|mingw64)-/i",
+                $this->serverhost)) {
             return "wgnuplot";
         } else {
             return "gnuplot";
@@ -216,7 +217,8 @@ class stack_platform_server extends stack_platform_base {
      * @return string On the server platform, for Linux this returns 'rm'; for a Windows server it returns 'del';
      */
     public function get_remove_command() {
-        if ($this->get_host() && 1 === preg_match("/-(win|windows|w64|w32|win32|win64|mingw|mingw32|mingw64)-/i",$this->serverhost)) {
+        if ($this->get_host() && 1 === preg_match("/-(win|windows|w64|w32|win32|win64|mingw|mingw32|mingw64)-/i",
+                $this->serverhost)) {
             return "del";
         } else {
             return "rm";

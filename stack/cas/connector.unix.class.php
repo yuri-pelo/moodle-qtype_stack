@@ -51,7 +51,7 @@ class stack_cas_connection_unix extends stack_cas_connection_base {
             throw new stack_exception('stack_cas_connection: could not open a CAS process');
         }
 
-        if(!$bypassinit) {
+        if (!$bypassinit) {
             if (!fwrite($pipes[0], $this->initcommand)) {
                 throw new stack_exception('stack_cas_connection: could not write to the CAS process.');
             }

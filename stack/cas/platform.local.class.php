@@ -59,7 +59,7 @@ abstract class stack_platform_local extends stack_platform_base {
         if (!$versionisdefault) {
             $version = $settings->maximaversion;
             $actualversion = $this->get_actual_maxima_version();
-            if(0 !== strncasecmp($version, $actualversion, strlen($version))) {
+            if (0 !== strncasecmp($version, $actualversion, strlen($version))) {
                 $errors[] = stack_string('healthcheckmaximaversionnotmatch',
                         array("config" => $version, "actual" => $actualversion));
                 $rv = false;
@@ -84,13 +84,13 @@ abstract class stack_platform_local extends stack_platform_base {
      */
     protected function get_list_of_lisps($all = false) {
         $lisps = null;
-        if ($this->can_list_maxima_versions())
-        {
+        if ($this->can_list_maxima_versions()) {
             if (!$all) {
                 $version = $this->get_actual_maxima_version();
                 if (!$version) {
                     $settings = stack_utils::get_config();
-                    $versionisdefault = !isset($settings->maximaversion) || !$settings->maximaversion || 'default' === $settings->maximaversion;
+                    $versionisdefault = !isset($settings->maximaversion) || !$settings->maximaversion
+                        || 'default' === $settings->maximaversion;
                     if (!$versionisdefault) {
                         $version = $settings->maximaversion;
                     }
@@ -99,9 +99,9 @@ abstract class stack_platform_local extends stack_platform_base {
                 $version = null;
             }
             $versions = $this->get_list_of_maxima_versions();
-            if($versions) {
+            if ($versions) {
                 if (!$all && $version && array_key_exists($version, $versions)) {
-                    if(isset($versions[$version]['lisps'])) {
+                    if (isset($versions[$version]['lisps'])) {
                         $lisps = $versions[$version]['lisps'];
                     } else {
                         $lisps = array();
@@ -134,14 +134,14 @@ abstract class stack_platform_local extends stack_platform_base {
             $lisp = $settings->lisp;
             $actuallisp = $this->get_actual_lisp();
             if ( $actuallisp ) {
-                if(0 !== strcasecmp($actuallisp, $lisp)) {
+                if (0 !== strcasecmp($actuallisp, $lisp)) {
                     $errors[] = stack_string('healthchecklispnotmatch',
                             array("config" => $lisp, "actual" => $actuallisp));
                     $rv = false;
                 }
             }
             $lisps = $this->get_list_of_lisps();
-            if (FALSE === array_key_exists($lisp, $lisps)) {
+            if (false === array_key_exists($lisp, $lisps)) {
                 $errors[] = stack_string('healthcheckmaximaversionlispnotpresent',
                         array("chosen" => $lisp,
                             "available" => implode(', ', $lisps)));

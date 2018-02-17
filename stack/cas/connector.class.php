@@ -125,13 +125,15 @@ abstract class stack_cas_connection_base implements stack_cas_connection {
      */
     public function get_maxima_build_info() {
         if (!$this->maximabuildinfo) {
-            $cmd = '(bi:build_info(),print(concat("build", "_", "info:version:", bi@version,"|host:",bi@host,"|lisp_name:",bi@lisp_name,"|lisp_version:",bi@lisp_version,"|")))$quit()$';
+            $cmd = '(bi:build_info(),print(concat("build", "_", "info:version:", bi@version,"|host:",bi@host,'
+                    .'"|lisp_name:",bi@lisp_name,"|lisp_version:",bi@lisp_version,"|")))$quit()$';
             $result = $this->call_maxima($cmd, true);
             // Maxima sometimes returns garbage escaped newlines in its output...
             $result = str_replace("\\\r\n", '', $result);
             $result = str_replace("\\\n", '', $result);
             $result = str_replace("\\\r", '', $result);
-            $pattern = '/build_info:version:(?P<version>.*)\\|host:(?P<host>.*)\\|lisp_name:(?P<lisp_name>.*)\\|lisp_version:(?P<lisp_version>.*)\\|/';
+            $pattern = '/build_info:version:(?P<version>.*)\\|host:(?P<host>.*)\\|lisp_name:(?P<lisp_name>.*)\\|'
+                    . 'lisp_version:(?P<lisp_version>.*)\\|/';
             $matches = array();
             $rv = preg_match($pattern, $result, $matches);
             if (false !== $rv && $rv > 0) {

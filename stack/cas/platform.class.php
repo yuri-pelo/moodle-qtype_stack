@@ -414,8 +414,7 @@ abstract class stack_platform_base {
      *
      * returns string Returns the version as a string or '*unknown*' if that is not currently possible.
      */
-    public function get_host()
-    {
+    public function get_host() {
         if (!$this->host) {
             $bi = $this->get_connection()->get_raw()->get_maxima_build_info();
             $this->host = ($bi && isset($bi->host)) ? $bi->host : '*unknown*';
@@ -429,8 +428,7 @@ abstract class stack_platform_base {
      *
      * returns string Returns the version as a string or '*unknown*' if that is not currently possible.
      */
-    public function get_actual_maxima_version()
-    {
+    public function get_actual_maxima_version() {
         if (!$this->actualmaximaversion) {
             $bi = $this->get_connection()->get_raw()->get_maxima_build_info();
             $this->actualmaximaversion = ($bi && isset($bi->version)) ? $bi->version : '*unknown*';
@@ -444,17 +442,16 @@ abstract class stack_platform_base {
      *
      * returns string Returns the lisp name as a string or '*unknown*' if that is not currently possible.
      */
-    public function get_actual_lisp()
-    {
+    public function get_actual_lisp() {
         if (!$this->actuallisp) {
             $bi = $this->get_connection()->get_raw()->get_maxima_build_info();
             if (isset($bi->lisp_name)) {
                 $knownlisps = array('gcl' => 'gcl', 'clisp' => 'clisp', 'ecl' => 'ecl',
                         'ccl' => 'ccl', 'openmcl' => 'openmcl', 'sbcl' => 'sbcl', 'abcl' => 'abcl');
                 if ($this->can_list_maxima_versions()) {
-                    // Get the list of lisps this Maxima install contains:
+                    // Get the list of lisps this Maxima install contains.
                     $installedlisps = $this->get_list_of_lisps(true);
-                    // Merge that with lisps we know of:
+                    // Merge that with lisps we know of.
                     if ($installedlisps) {
                         $lisps = array_merge( $knownlisps, $installedlisps );
                     } else {
@@ -463,15 +460,15 @@ abstract class stack_platform_base {
                 } else {
                     $lisps = $knownlisps;
                 }
-                $pattern = "/(" . implode("|",$lisps) . ")/i";
+                $pattern = "/(" . implode("|", $lisps) . ")/i";
                 $matches = array();
                 if (1 === preg_match($pattern, $bi->lisp_name, $matches)) {
                     $this->actuallisp = strtolower($matches[1]);
                 } else {
-                    $this->actuallisp =  '*unknown*';
+                    $this->actuallisp = '*unknown*';
                 }
             } else {
-                $this->actuallisp =  '*unknown*';
+                $this->actuallisp = '*unknown*';
             }
         }
         return $this->actuallisp;
@@ -489,11 +486,11 @@ abstract class stack_platform_base {
     public function get_maxima_install(&$locations = array()) {
         return true;
     }
-    
+
     /**
      * Ensures the stack data directory is present, if needed for this platform,
      * and creates it if not.
-     * @return boolean true if directory found / created ok or not needed
+     * @return boolean true if directory found / created ok or not needed.
      */
     public function ensure_data_directory() {
         return true;

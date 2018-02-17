@@ -48,12 +48,12 @@ class stack_cas_connection_windows extends stack_cas_connection_base {
         } else {
             $cmd = null;
         }
-        if(!$cmd) {
+        if (!$cmd) {
             $cmd = $this->command;
         }
-        
+
         $this->debug->log('Command line', $cmd);
-        
+
         $casprocess = proc_open($cmd, $descriptors, $pipes);
         if (!is_resource($casprocess)) {
             throw new stack_exception('stack_cas_connection: Could not open a CAS process.');

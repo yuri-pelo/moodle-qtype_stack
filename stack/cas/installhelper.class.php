@@ -220,7 +220,7 @@ END;
                 throw new stack_exception(stack_string('errormaximalocalunresolvederrors'));
             }
         }
-        
+
         $platform->ensure_data_directory();
 
         if (!file_put_contents(self::maximalocal_location(), self::generate_maximalocal_contents())) {

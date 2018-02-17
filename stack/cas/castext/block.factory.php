@@ -37,7 +37,7 @@ class castext_block_factory {
      * @return string corresponding class name. Or NULL.
      */
     protected static function class_for_type($type) {
-        $types = castext_block_factory::get_available_types();
+        $types = self::get_available_types();
 
         if (array_key_exists($type, $types)) {
             return $types[$type];

@@ -235,9 +235,9 @@ class qtype_stack_admin_timestamp extends admin_setting_configtext {
         } else {
             $rv = '';
         }
-        
+
         $rv2 = parent::write_setting($data);
-        
+
         if (!$rv2) {
             if (!$rv) {
                 return '';
