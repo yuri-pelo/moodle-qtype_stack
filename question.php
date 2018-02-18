@@ -201,7 +201,7 @@ class qtype_stack_question extends question_graded_automatically_with_countback
 
     /**
      * @return bool do any of the inputs in this question require the student
-     *      validat the input.
+     *      validate the input.
      */
     protected function any_inputs_require_validation() {
         foreach ($this->inputs as $name => $input) {

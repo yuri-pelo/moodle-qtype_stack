@@ -1297,7 +1297,8 @@ class qtype_stack extends question_type {
      * @param array $errors Existing partial error array.
      * @return array($errors, $warnings).
      */
-    public function validate_fromform($fromform, $errors) {
+    public function validate_fromform($fromform) {
+        $errors = array();
         $warnings = array();
 
         $fixingdollars = array_key_exists('fixdollars', $fromform);
@@ -1315,12 +1316,12 @@ class qtype_stack extends question_type {
         // We slightly break the usual conventions of validation, in that rather
         // than building up $errors as an array of strings, we initially build it
         // up as an array of arrays, then at the end remove any empty arrays,
-        // and implod (' ', ...) any arrays that are non-empty. This makes our
+        // and implode (' ', ...) any arrays that are non-empty. This makes our
         // rather complex validation easier to implement.
 
         // Question text.
         $errors['questiontext'] = array();
-        $errors = $this->validate_cas_text($errors, $fromform['questiontext']['text'], 'questiontext', $fixingdollars);
+        $this->validate_cas_text($errors, $warnings, $fromform['questiontext']['text'], 'questiontext', $fixingdollars);
 
         // Check multi-language versions all have the same feedback tags.
         $ml = new stack_multilang();
@@ -1410,8 +1411,8 @@ class qtype_stack extends question_type {
         }
 
         // Question variables.
-        $errors = $this->validate_cas_keyval($errors, $fromform['questionvariables'], 'questionvariables',
-                array_keys($inputs));
+        $this->validate_cas_keyval($errors, $warnings, $fromform['questionvariables'],
+                'questionvariables', array_keys($inputs));
 
         // Default mark.
         if (empty($inputs) && $fromform['defaultmark'] != 0) {
@@ -1426,7 +1427,7 @@ class qtype_stack extends question_type {
 
         // Specific feedback.
         $errors['specificfeedback'] = array();
-        $errors = $this->validate_cas_text($errors, $fromform['specificfeedback']['text'], 'specificfeedback', $fixingdollars);
+        $this->validate_cas_text($errors, $warnings, $fromform['specificfeedback']['text'], 'specificfeedback', $fixingdollars);
 
         $errors['specificfeedback'] += $this->validation_check_no_placeholders(
                 stack_string('specificfeedback'), $fromform['specificfeedback']['text'],
@@ -1434,7 +1435,7 @@ class qtype_stack extends question_type {
 
         // General feedback.
         $errors['generalfeedback'] = array();
-        $errors = $this->validate_cas_text($errors, $fromform['generalfeedback']['text'], 'generalfeedback', $fixingdollars);
+        $this->validate_cas_text($errors, $warnings, $fromform['generalfeedback']['text'], 'generalfeedback', $fixingdollars);
         $errors['generalfeedback'] += $this->validation_check_no_placeholders(
                 get_string('generalfeedback', 'question'), $fromform['generalfeedback']['text']);
 
@@ -1453,13 +1454,14 @@ class qtype_stack extends question_type {
             }
         } else {
             // Note, the 'questionnote' does not have an editor field and hence no 'text' sub-clause.
-            $errors = $this->validate_cas_text($errors, $fromform['questionnote'], 'questionnote', $fixingdollars);
+            $this->validate_cas_text($errors, $warnings, $fromform['questionnote'], 'questionnote', $fixingdollars);
         }
 
         $errors['questionnote'] += $this->validation_check_no_placeholders(
                 stack_string('questionnote'), $fromform['questionnote']);
 
         // 2) Validate all inputs.
+        $stackinputfactory = new stack_input_factory();
         foreach ($inputs as $inputname => $counts) {
             list($numinputs, $numvalidations) = $counts;
 
@@ -1476,9 +1478,29 @@ class qtype_stack extends question_type {
             }
 
             if (array_key_exists($inputname . 'modelans', $fromform)) {
-                $errors = $this->validate_cas_string($errors,
-                        $fromform[$inputname . 'modelans'], $inputname . 'modelans', $inputname . 'modelans');
+                $this->validate_cas_string($errors, $fromform[$inputname . 'modelans'],
+                        $inputname . 'modelans', $inputname . 'modelans');
             }
+
+            $inputtype = $fromform[$inputname . 'type'];
+            $stackinput = $stackinputfactory->make($inputtype, $inputname,
+                    $fromform[$inputname . 'modelans'], null, null, false);
+            $parameters = array();
+            foreach ($stackinputfactory->get_parameters_fromform_mapping($inputtype) as $key => $param) {
+                $paramvalue = $stackinputfactory->convert_parameter_fromform($key, $fromform[$inputname .$param]);
+                $parameters[$key] = $paramvalue;
+                if ('options' !== $key) {
+                    $validityresult = $stackinput->validate_parameter($key, $paramvalue);
+                    if (!($validityresult === true)) {
+                        $errors[$inputname . $param][] = stack_string('inputinvalidparamater');
+                    }
+                }
+            }
+            // Create an input with these parameters, in particular the 'options', and validate that.
+            $stackinput = $stackinputfactory->make($inputtype, $inputname,
+                    $fromform[$inputname . 'modelans'], null, $parameters, false);
+            $stackinput->validate_extra_options();
+            $errors[$inputname . 'options'] = $stackinput->get_errors();
         }
 
         // 3) Validate all prts.
@@ -1493,13 +1515,13 @@ class qtype_stack extends question_type {
                         'questiontextfeedbackonlycontain', '[[feedback:' . $prtname . ']]');
             }
 
-            $errors = $this->validate_prt($errors, $fromform, $prtname, $fixingdollars);
+            $this->validate_prt($errors, $warnings, $fromform, $prtname, $fixingdollars);
 
         }
 
         // 4) Validate all hints.
         foreach ($fromform['hint'] as $index => $hint) {
-            $errors = $this->validate_cas_text($errors, $hint['text'], 'hint[' . $index . ']', $fixingdollars);
+            $this->validate_cas_text($errors, $warnings, $hint['text'], 'hint[' . $index . ']', $fixingdollars);
         }
 
         // Clear out any empty $errors elements, ready for the next check.
@@ -1511,7 +1533,7 @@ class qtype_stack extends question_type {
 
         // If everything else is OK, try executing the CAS code to check for errors.
         if (empty($errors)) {
-            $errors = $this->validate_question_cas_code($errors, $fromform, $fixingdollars);
+            $this->validate_question_cas_code($errors, $warnings, $fromform, $fixingdollars);
         }
 
         // Convert the $errors array from our array of arrays format to the
@@ -1539,7 +1561,7 @@ class qtype_stack extends question_type {
      * @param int $maxlength the maximum allowable length. Defaults to 255.
      * @return array updated $errors array.
      */
-    protected function validate_cas_string($errors, $value, $fieldname, $savesession, $notblank = true, $maxlength = 255) {
+    protected function validate_cas_string(&$errors, $value, $fieldname, $savesession, $notblank = true, $maxlength = 255) {
 
         if ($notblank && '' === trim($value)) {
             $errors[$fieldname][] = stack_string('nonempty');
@@ -1554,18 +1576,19 @@ class qtype_stack extends question_type {
             }
         }
 
-        return $errors;
+        return null;
     }
 
     /**
      * Validate a CAS text field.
      * @param array $errors the errors array that validation is assembling.
+     * @param array $warnings the warnings array that validation is assembling.
      * @param string $value the submitted value validate.
      * @param string $fieldname the name of the field add any errors to.
      * @param string $savesession the array key to save the session to in $this->validationcasstrings.
      * @return array updated $errors array.
      */
-    protected function validate_cas_text($errors, $value, $fieldname, $fixingdollars, $session = null) {
+    protected function validate_cas_text(&$errors, &$warnings, $value, $fieldname, $fixingdollars, $session = null) {
         if (!$fixingdollars && strpos($value, '$$') !== false) {
             $errors[$fieldname][] = stack_string('forbiddendoubledollars');
         }
@@ -1573,7 +1596,7 @@ class qtype_stack extends question_type {
         $castext = new stack_cas_text($value, $session, $this->seed, 't');
         if (!$castext->get_valid()) {
             $errors[$fieldname][] = $castext->get_errors();
-            return $errors;
+            return null;
         }
 
         // Validate any [[facts:...]] tags.
@@ -1581,31 +1604,29 @@ class qtype_stack extends question_type {
         if ($unrecognisedtags) {
             $errors[$fieldname][] = stack_string('unrecognisedfactstags',
                     array('tags' => implode(', ', $unrecognisedtags)));
-            return $errors;
+            return null;
         }
 
         if ($session) {
             $display = $castext->get_display_castext();
             if ($castext->get_errors()) {
                 $errors[$fieldname][] = $castext->get_errors();
-                return $errors;
             }
         }
-
-        return $errors;
     }
 
     /**
      * Validate a CAS string field to make sure that: 1. it fits in the DB, and
      * 2. that it is syntactically valid.
      * @param array $errors the errors array that validation is assembling.
+     * @param array $warnings the warnings array that validation is assembling.
      * @param string $value the submitted value validate.
      * @param string $fieldname the name of the field add any errors to.
      * @return array updated $errors array.
      */
-    protected function validate_cas_keyval($errors, $value, $fieldname, $inputs = null) {
+    protected function validate_cas_keyval(&$errors, &$warnings, $value, $fieldname, $inputs = null) {
         if ('' == trim($value)) {
-            return $errors;
+            return null;
         }
 
         $keyval = new stack_cas_keyval($value, $this->options, $this->seed, 't');
@@ -1613,7 +1634,7 @@ class qtype_stack extends question_type {
             $errors[$fieldname][] = $keyval->get_errors();
         }
 
-        return $errors;
+        return null;
     }
 
     /**
@@ -1630,22 +1651,22 @@ class qtype_stack extends question_type {
      * @param array $fromform the submitted data to validate.
      * @return array updated $errors array.
      */
-    protected function validate_question_cas_code($errors, $fromform, $fixingdollars) {
+    protected function validate_question_cas_code(&$errors, &$warnings, $fromform, $fixingdollars) {
 
         $keyval = new stack_cas_keyval($fromform['questionvariables'], $this->options, $this->seed, 't');
         $keyval->instantiate();
         $session = $keyval->get_session();
         if ($session->get_errors()) {
             $errors['questionvariables'][] = $session->get_errors();
-            return $errors;
+            return null;
         }
 
         // Instantiate all text fields and look for errors.
         $castextfields = array('questiontext', 'specificfeedback', 'generalfeedback');
         foreach ($castextfields as $field) {
-            $errors = $this->validate_cas_text($errors, $fromform[$field]['text'], $field, $fixingdollars, clone $session);
+            $this->validate_cas_text($errors, $warnings, $fromform[$field]['text'], $field, $fixingdollars, clone $session);
         }
-        $errors = $this->validate_cas_text($errors, $fromform['questionnote'], 'questionnote', $fixingdollars, clone $session);
+        $this->validate_cas_text($errors, $warnings, $fromform['questionnote'], 'questionnote', $fixingdollars, clone $session);
 
         // Make a list of all inputs, instantiate it and then look for errors.
         $inputs = array_keys($this->get_input_names_from_question_text($fromform['questiontext']['text']));
@@ -1684,7 +1705,7 @@ class qtype_stack extends question_type {
 
         // At this point if we have errors, especially with inputs, there is no point in executing any of the PRTs.
         if (!empty($errors)) {
-            return $errors;
+            return null;
         }
 
         // TODO: loop over all the PRTs in a similar manner....
@@ -1692,7 +1713,7 @@ class qtype_stack extends question_type {
         // This will have all the teacher's answers instantiated.
         // Otherwise we are likley to do illigitimate things to the various inputs.
 
-        return $errors;
+        return null;
     }
 
     /**
@@ -1734,7 +1755,7 @@ class qtype_stack extends question_type {
      * @param string $prtname the name of the PRT to validate.
      * @return array the update $errors array.
      */
-    protected function validate_prt($errors, $fromform, $prtname, $fixingdollars) {
+    protected function validate_prt(&$errors, &$warnings, $fromform, $prtname, $fixingdollars) {
 
         if (strlen($prtname) > 18 && !isset($fromform[$prtname . 'prtdeleteconfirm'])) {
             $errors['specificfeedback'][] = stack_string('prtnamelength', $prtname);
@@ -1751,7 +1772,7 @@ class qtype_stack extends question_type {
 
         // Check the fields that belong to the PRT as a whole.
         $inputs = array_keys($this->get_input_names_from_question_text($fromform['questiontext']['text']));
-        $errors = $this->validate_cas_keyval($errors, $fromform[$prtname . 'feedbackvariables'],
+        $this->validate_cas_keyval($errors, $warnings, $fromform[$prtname . 'feedbackvariables'],
                 $prtname . 'feedbackvariables', $inputs);
 
         if ($fromform[$prtname . 'value'] < 0) {
@@ -1772,7 +1793,7 @@ class qtype_stack extends question_type {
             $nodekey = $node->name - 1;
 
             // Check the fields the belong to this node individually.
-            $errors = $this->validate_prt_node($errors, $fromform, $prtname, $nodekey, $fixingdollars);
+            $this->validate_prt_node($errors, $warnings, $fromform, $prtname, $nodekey, $fixingdollars);
 
             if (is_null($textformat)) {
                 $textformat = $fromform[$prtname . 'truefeedback'][$nodekey]['format'];
@@ -1813,13 +1834,13 @@ class qtype_stack extends question_type {
      * @param string $nodekey the name of the node to validate.
      * @return array the update $errors array.
      */
-    protected function validate_prt_node($errors, $fromform, $prtname, $nodekey, $fixingdollars) {
+    protected function validate_prt_node(&$errors, &$warnings, $fromform, $prtname, $nodekey, $fixingdollars) {
         $nodegroup = $prtname . 'node[' . $nodekey . ']';
 
-        $errors = $this->validate_cas_string($errors, $fromform[$prtname . 'sans'][$nodekey],
+        $this->validate_cas_string($errors, $fromform[$prtname . 'sans'][$nodekey],
                 $nodegroup, $prtname . 'sans' . $nodekey, 'sansrequired');
 
-        $errors = $this->validate_cas_string($errors, $fromform[$prtname . 'tans'][$nodekey],
+        $this->validate_cas_string($errors, $fromform[$prtname . 'tans'][$nodekey],
                 $nodegroup, $prtname . 'tans' . $nodekey, 'tansrequired');
 
         $answertest = new stack_ans_test_controller($fromform[$prtname . 'answertest'][$nodekey]);
@@ -1870,11 +1891,11 @@ class qtype_stack extends question_type {
                 }
             }
 
-            $errors = $this->validate_cas_text($errors, $fromform[$prtname . $branch . 'feedback'][$nodekey]['text'],
+            $this->validate_cas_text($errors, $warnings, $fromform[$prtname . $branch . 'feedback'][$nodekey]['text'],
                     $prtname . $branch . 'feedback[' . $nodekey . ']', $fixingdollars);
         }
 
-        return $errors;
+        return null;
     }
 
     /**

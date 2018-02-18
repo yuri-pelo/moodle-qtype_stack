@@ -107,6 +107,12 @@ abstract class stack_input {
     protected $units = false;
 
     /**
+     * Decide if the input is being used at run-time or just constructed elswhere.
+     * @var bool.
+     */
+    protected $runtime = true;
+
+    /**
      * Constructor
      *
      * @param string $name the name of the input. This is the name of the
@@ -116,11 +122,14 @@ abstract class stack_input {
      * @param int $maxLength limit on the maximum input length.
      * @param int $height height of the input.
      * @param array $parameters The options for this input. All the opitions have default
+     * @param bool $runtime This decides if we are at runtime (true) or in edit mode.  Can we rely on the value of
+     * the teacher's answer as an instantiated variable?
      *      values, so you only have to give options that are different from the default.
      */
-    public function __construct($name, $teacheranswer, $options = null, $parameters = null) {
+    public function __construct($name, $teacheranswer, $options = null, $parameters = null, $runtime = true) {
         $this->name = $name;
         $this->teacheranswer = $teacheranswer;
+        $this->runtime = $runtime;
         $class = get_class($this);
         $this->parameters = $class::get_parameters_defaults();
 
@@ -174,7 +183,7 @@ abstract class stack_input {
     /**
      * Validate the individual extra options.
      */
-    protected function validate_extra_options() {
+    public function validate_extra_options() {
 
         foreach ($this->extraoptions as $option => $arg) {
 
@@ -278,7 +287,7 @@ abstract class stack_input {
      * This method gives the input element a chance to adapt itself given the
      * value of the teacher's model answer for this variant of the question.
      * For example, the matrix question type uses this to work out how many
-     * rows and columns it should have.
+     * rows and columns it should have.  It probably relies on $this->runtime being true.
      * @param string $teacheranswer the teacher's model answer for this input.
      */
     public function adapt_to_model_answer($teacheranswer) {

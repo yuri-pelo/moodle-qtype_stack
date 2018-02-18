@@ -734,7 +734,7 @@ class qtype_stack_edit_form extends question_edit_form {
         $errors = parent::validation($fromform, $files);
 
         $qtype = new qtype_stack();
-        list($errors, $warnings) = $qtype->validate_fromform($fromform, $errors);
+        list($errors, $warnings) = $qtype->validate_fromform($fromform);
 
         return $errors;
     }
