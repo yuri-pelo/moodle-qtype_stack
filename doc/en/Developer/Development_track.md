@@ -7,6 +7,8 @@ How to report bugs and make suggestions is described on the [community](../About
 
 ## Version 4.2
 
+_STACK 4.2 requires at least Moodle 3.1.0_  Do not upgrade the plugin on an earlier version of Moodle!
+
 Version 4.2 contains re-factored and enhanced code for dealing with Maxima, lisp and platform dependencies.  When upgrading to version 4.2 please expect changes to the settings page, and healthcheck.  You will need to review all setting carefully.
 
 To do:
