@@ -11,6 +11,8 @@ _STACK 4.2 requires at least Moodle 3.1.0_  Do not upgrade the plugin on an earl
 
 Version 4.2 contains re-factored and enhanced code for dealing with Maxima, lisp and platform dependencies.  When upgrading to version 4.2 please expect changes to the settings page, and healthcheck.  You will need to review all setting carefully.
 
+Newer versions of Maxima require that a variable has been initialised as a list/array before you can assign values to its indices.  For this reason some older questions may stop working when you upgrade to a new version of Maxima.  Please use the bulk test script after each upgrade!  See issue #343.
+
 To do:
 
 * Add in a version number to STACK questions.
