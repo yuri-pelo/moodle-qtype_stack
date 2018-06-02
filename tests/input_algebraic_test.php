@@ -31,7 +31,6 @@ require_once(__DIR__ . '/../stack/input/factory.class.php');
  * @group qtype_stack
  */
 class stack_algebra_input_test extends qtype_stack_testcase {
-
     public function test_internal_validate_parameter() {
         $el = stack_input_factory::make('algebraic', 'input', 'x^2');
         $this->assertTrue($el->validate_parameter('boxWidth', 30));
@@ -47,7 +46,7 @@ class stack_algebra_input_test extends qtype_stack_testcase {
     public function test_render_blank() {
         $el = stack_input_factory::make('algebraic', 'ans1', 'x^2');
         $this->assertEquals('<input type="text" name="stack1__ans1" id="stack1__ans1" '
-                .'size="16.5" style="width: 13.6em" value="" />',
+                .'size="16.5" style="width: 13.6em" autocapitalize="none" spellcheck="false" value="" />',
                 $el->render(new stack_input_state(stack_input::VALID, array(), '', '', '', '', ''),
                         'stack1__ans1', false, null));
     }
@@ -55,7 +54,7 @@ class stack_algebra_input_test extends qtype_stack_testcase {
     public function test_render_zero() {
         $el = stack_input_factory::make('algebraic', 'ans1', '0');
         $this->assertEquals('<input type="text" name="stack1__ans1" id="stack1__ans1" '
-                .'size="16.5" style="width: 13.6em" value="0" />',
+                .'size="16.5" style="width: 13.6em" autocapitalize="none" spellcheck="false" value="0" />',
                 $el->render(new stack_input_state(stack_input::VALID, array('0'), '', '', '', '', ''),
                         'stack1__ans1', false, null));
     }
@@ -63,7 +62,7 @@ class stack_algebra_input_test extends qtype_stack_testcase {
     public function test_render_pre_filled() {
         $el = stack_input_factory::make('algebraic', 'test', 'x^2');
         $this->assertEquals('<input type="text" name="stack1__test" id="stack1__test" '
-                .'size="16.5" style="width: 13.6em" value="x+y" />',
+                .'size="16.5" style="width: 13.6em" autocapitalize="none" spellcheck="false" value="x+y" />',
                 $el->render(new stack_input_state(stack_input::VALID, array('x+y'), '', '', '', '', ''),
                         'stack1__test', false, null));
     }
@@ -71,7 +70,7 @@ class stack_algebra_input_test extends qtype_stack_testcase {
     public function test_render_pre_filled_nasty_input() {
         $el = stack_input_factory::make('algebraic', 'test', 'x^2');
         $this->assertEquals('<input type="text" name="stack1__test" id="stack1__test" '
-                .'size="16.5" style="width: 13.6em" value="x&lt;y" />',
+                .'size="16.5" style="width: 13.6em" autocapitalize="none" spellcheck="false" value="x&lt;y" />',
                 $el->render(new stack_input_state(stack_input::VALID, array('x<y'), '', '', '', '', ''),
                         'stack1__test', false, null));
     }
@@ -79,7 +78,7 @@ class stack_algebra_input_test extends qtype_stack_testcase {
     public function test_render_max_length() {
         $el = stack_input_factory::make('algebraic', 'test', 'x^2');
         $this->assertEquals('<input type="text" name="stack1__test" id="stack1__test" '
-                .'size="16.5" style="width: 13.6em" value="x+y" />',
+                .'size="16.5" style="width: 13.6em" autocapitalize="none" spellcheck="false" value="x+y" />',
                 $el->render(new stack_input_state(stack_input::VALID, array('x+y'), '', '', '', '', ''),
                         'stack1__test', false, null));
     }
@@ -88,7 +87,7 @@ class stack_algebra_input_test extends qtype_stack_testcase {
         $el = stack_input_factory::make('algebraic', 'input', 'x^2');
         $this->assertEquals(
                 '<input type="text" name="stack1__input" id="stack1__input" '
-                .'size="16.5" style="width: 13.6em" value="x+1" readonly="readonly" />',
+                .'size="16.5" style="width: 13.6em" autocapitalize="none" spellcheck="false" value="x+1" readonly="readonly" />',
                 $el->render(new stack_input_state(stack_input::VALID, array('x+1'), '', '', '', '', ''),
                         'stack1__input', true, null));
     }
@@ -97,7 +96,7 @@ class stack_algebra_input_test extends qtype_stack_testcase {
         $el = stack_input_factory::make('algebraic', 'input', 'x^2');
         $el->set_parameter('boxWidth', 30);
         $this->assertEquals('<input type="text" name="stack1__input" id="stack1__input" '
-                .'size="33" style="width: 27.1em" value="x+1" />',
+                .'size="33" style="width: 27.1em" autocapitalize="none" spellcheck="false" value="x+1" />',
                 $el->render(new stack_input_state(stack_input::VALID, array('x+1'), '', '', '', '', ''),
                         'stack1__input', false, null));
     }
@@ -106,7 +105,7 @@ class stack_algebra_input_test extends qtype_stack_testcase {
         $el = stack_input_factory::make('algebraic', 'sans1', '[a, b, c]');
         $el->set_parameter('syntaxHint', '[?, ?, ?]');
         $this->assertEquals('<input type="text" name="stack1__sans1" id="stack1__sans1" '
-                .'size="16.5" style="width: 13.6em" value="[?, ?, ?]" />',
+                .'size="16.5" style="width: 13.6em" autocapitalize="none" spellcheck="false" value="[?, ?, ?]" />',
                 $el->render(new stack_input_state(stack_input::BLANK, array(), '', '', '', '', ''),
                         'stack1__sans1', false, null));
     }
@@ -116,7 +115,7 @@ class stack_algebra_input_test extends qtype_stack_testcase {
         $el->set_parameter('syntaxHint', 'Remove me');
         $el->set_parameter('syntaxAttribute', 1);
         $this->assertEquals('<input type="text" name="stack1__sans1" id="stack1__sans1" '
-                .'size="16.5" style="width: 13.6em" placeholder="Remove me" />',
+                .'size="16.5" style="width: 13.6em" autocapitalize="none" spellcheck="false" placeholder="Remove me" />',
                 $el->render(new stack_input_state(stack_input::BLANK, array(), '', '', '', '', ''),
                         'stack1__sans1', false, null));
     }
@@ -266,6 +265,20 @@ class stack_algebra_input_test extends qtype_stack_testcase {
         $state = $el->validate_student_response(array('sans1' => '2x'), $options, '2*x', array('ta'));
         $this->assertEquals(stack_input::INVALID, $state->status);
         $this->assertEquals('missing_stars', $state->note);
+    }
+
+    public function test_validate_student_response_insertstars_sqrt_1() {
+        $options = new stack_options();
+        $el = stack_input_factory::make('algebraic', 'sans1', '2*sqrt(2)/3');
+        $el->set_parameter('insertStars', 1);
+        $el->set_parameter('strictSyntax', false);
+        $state = $el->validate_student_response(array('sans1' => '2*sqrt(+2)/3'), $options, '2*sqrt(2)/3', array('ta'));
+        $this->assertEquals(stack_input::VALID, $state->status);
+        $this->assertEquals('2*sqrt(+2)/3', $state->contentsmodified);
+        $this->assertEquals('\[ \frac{2\cdot \sqrt{2}}{3} \]', $state->contentsdisplayed);
+        $this->assertEquals('A correct answer is <span class="filter_mathjaxloader_equation">'
+            . '<span class="nolink">\( \frac{2\cdot \sqrt{2}}{3} \)</span></span>, which can be typed in as follows: '
+            . '<code>2*sqrt(2)/3</code>', $el->get_teacher_answer_display('2*sqrt(2)/3', '\frac{2\cdot \sqrt{2}}{3}'));
     }
 
     public function test_validate_student_response_sametype_true_1() {

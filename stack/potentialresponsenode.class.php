@@ -139,7 +139,6 @@ class stack_potentialresponse_node {
         if ($this->required_atoptions() && !$this->process_atoptions()) {
             $ncasopts = $this->atoptions;
         }
-
         $at = new stack_ans_test_controller($this->answertest, $nsans, $ntans, $options, $ncasopts);
         $at->do_test();
 
@@ -190,7 +189,6 @@ class stack_potentialresponse_node {
         }
 
         $results->add_trace($at->get_trace());
-
         return $resultbranch['nextnode'];
     }
 
@@ -356,5 +354,15 @@ class stack_potentialresponse_node {
         $summary->truescore      = $this->branches[true]['score'];
         $summary->truescoremode  = $this->branches[true]['scoremodification'];
         return $summary;
+    }
+
+    public function get_maxima_representation() {
+        $ncasoptions = null;
+        if ($this->required_atoptions()) {
+            $ncasoptions = $this->atoptions;
+        }
+        $at = new stack_ans_test_controller($this->answertest,
+            $this->sans->get_raw_casstring(), $this->tans->get_raw_casstring(), null, $ncasoptions);
+        return $at->get_trace(false);
     }
 }
