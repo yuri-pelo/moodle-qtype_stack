@@ -86,8 +86,10 @@ class qtype_stack_renderer extends qtype_renderer {
 
         // Initialise automatic validation, if enabled.
         if ($qaid && stack_utils::get_config()->ajaxvalidation) {
-            $this->page->requires->yui_module('moodle-qtype_stack-input',
-                    'M.qtype_stack.init_inputs', array($inputstovaldiate, $qaid, $qa->get_field_prefix()));
+        /*    $this->page->requires->yui_module('moodle-qtype_stack-input',
+                    'M.qtype_stack.init_inputs', array($inputstovaldiate, $qaid, $qa->get_field_prefix()));*/
+            $this->page->requires->js_call_amd('qtype-stack/input', 'init_inputs', array($inputstovaldiate, $qaid, $qa->get_field_prefix()));
+            
         }
 
         $result = '';
