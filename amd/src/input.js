@@ -1,4 +1,4 @@
-define(['jquery', 'core/yui'], function($, Y) {
+define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 
 		/**
 		 * Constructor.
@@ -96,22 +96,20 @@ define(['jquery', 'core/yui'], function($, Y) {
 		 */
 		stack_input.prototype.validate_input = function() {
 		    var self = this;
-		    Y.io(M.cfg.wwwroot + "/question/type/stack/stack/input/ajax.php",
-		            {
-		                data: {
-		                    qaid:  this.qaid,
-		                    name:  this.name,
-		                    input: this.get_intput_value()
-		                },
-		                on: {
-		                    success: function(id, rawresponse) {
-		                        self.validation_received(rawresponse);
-		                    },
-		                    failure: function(id, rawresponse) {
-		                        self.show_validation_failure(rawresponse);
-		                    }
-		                }
-		            });
+		    $.ajax({url: cfg.wwwroot + "/question/type/stack/stack/input/ajax.php",
+		           data: {
+	                    qaid:  this.qaid,
+	                    name:  this.name,
+	                    input: this.get_intput_value()
+	                },
+		       
+                    success: function(rawresponse) {
+                        self.validation_received(rawresponse);
+                    },
+                    error: function(rawresponse) {
+                        self.show_validation_failure(rawresponse);
+                    }
+            });
 		    this.show_loading();
 		};
 	
@@ -127,12 +125,12 @@ define(['jquery', 'core/yui'], function($, Y) {
 		 * @param e the data that came back from the ajax validation call.
 		 */
 		stack_input.prototype.validation_received = function(rawresponse) {
-		    var response = Y.JSON.parse(rawresponse.responseText);
-		    if (response.error) {
+		    var response = rawresponse;
+		    if (response.status == 'invalid') {
 		        this.show_validation_failure(rawresponse);
 		        return;
 		    }
-		    this.validationresults[response.input] = response;
+		    this.validationresults[response.input] = response.message;
 		    this.show_validation_results();
 		};
 	
@@ -170,7 +168,7 @@ define(['jquery', 'core/yui'], function($, Y) {
 		    this.lastvalidatedvalue = val;
 	
 		    var scriptcommands = [];
-		    var html = this.extract_scripts(results.message, scriptcommands);
+		    var html = this.extract_scripts(results, scriptcommands);
 		    this.validationdiv.setContent(html);
 	
 		    // Run script commands.
@@ -179,7 +177,7 @@ define(['jquery', 'core/yui'], function($, Y) {
 		    }
 	
 		    this.remove_all_classes();
-		    if (!results.message) {
+		    if (!results) {
 		        this.validationdiv.addClass('empty');
 		    }
 	
@@ -193,9 +191,9 @@ define(['jquery', 'core/yui'], function($, Y) {
 		 * @param e the data that came back from the ajax validation call.
 		 */
 		stack_input.prototype.show_validation_failure = function(rawresponse) {
-		    var response = Y.JSON.parse(rawresponse.responseText);
+		    var response = rawresponse.message;
 		    this.lastvalidatedvalue = '';
-		    this.validationdiv.setContent(response.error);
+		    this.validationdiv.setContent(response);
 		    this.remove_all_classes();
 		    this.validationdiv.addClass('error');
 		};
