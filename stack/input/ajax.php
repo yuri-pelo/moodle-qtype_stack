@@ -44,6 +44,7 @@ $state = $question->get_input_state($inputname, $inputvalue, true);
 $result = array(
     'input'   => $inputvalue,
     'status'  => $state->status,
+    'contentsdisplayed' => $state->contentsdisplayed,
     'message' => $input->render_validation($state, $qa->get_qt_field_name($inputname)),
 );
 
