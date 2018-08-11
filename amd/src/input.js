@@ -6,9 +6,10 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		 * @param qaid the question-attempt id.
 		 * @param input a YUI Node object for the input element for this input.
 		 */
-		var stack_input = function(name, qaid, input, validationdiv) {
+		var stack_input = function(name, qaid, input, validationdiv, castextdiv) {
 		    this.input         = input;
 		    this.validationdiv = validationdiv;
+		    this.castextdiv    = castextdiv;
 		    this.name          = name;
 		    this.qaid          = qaid;
 	
@@ -32,9 +33,12 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		/** Int question_attempt id. */
 		stack_input.prototype.qaid = null,
 	
-		/** YUI Node for the div where the validation is displayed. */
+		/** YUI Node for the div where a validation error is displayed. */
 		stack_input.prototype.validationdiv = null,
-	
+		
+		/** YUI Node for the div where the correctly interpreted CAS text is displayed */
+		stack_input.prototype.castextdiv = null,
+		
 		/** Object known inputs => corresponding validation. */
 		stack_input.prototype.validationresults = {},
 	
@@ -76,6 +80,7 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		    if (this.get_intput_value() === this.lastvalidatedvalue) {
 		        this.cancel_typing_delay();
 		        this.validationdiv.removeClass('waiting');
+		        this.castextdiv.removeClass('waiting');
 		    }
 		};
 	
@@ -130,7 +135,7 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		        this.show_validation_failure(rawresponse);
 		        return;
 		    }
-		    this.validationresults[response.input] = response.message;
+		    this.validationresults[response.input] = rawresponse.contentsdisplayed;
 		    this.show_validation_results();
 		};
 	
@@ -169,7 +174,7 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 	
 		    var scriptcommands = [];
 		    var html = this.extract_scripts(results, scriptcommands);
-		    this.validationdiv.setContent(html);
+		    this.castextdiv.setContent(html);
 	
 		    // Run script commands.
 		    for (var i = 0; i < scriptcommands.length; i++) {
@@ -178,11 +183,12 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 	
 		    this.remove_all_classes();
 		    if (!results) {
+		        this.castextdiv.addClass('empty');
 		        this.validationdiv.addClass('empty');
 		    }
 	
-		    Y.fire(M.core.event.FILTER_CONTENT_UPDATED, {nodes: (new Y.NodeList(this.validationdiv))});
-	
+		    Y.fire(M.core.event.FILTER_CONTENT_UPDATED, {nodes: (new Y.NodeList(this.castextdiv))});
+		    
 		    return true;
 		};
 	
@@ -204,6 +210,7 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		stack_input.prototype.show_loading = function() {
 		    this.remove_all_classes();
 		    this.validationdiv.addClass('loading');
+		    this.castextdiv.addClass('loading');
 		};
 	
 		/**
@@ -213,6 +220,7 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		stack_input.prototype.show_waiting = function() {
 		    this.remove_all_classes();
 		    this.validationdiv.addClass('waiting');
+		    this.castextdiv.addClass('loading');
 		};
 	
 		/**
@@ -223,6 +231,10 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		    this.validationdiv.removeClass('error');
 		    this.validationdiv.removeClass('loading');
 		    this.validationdiv.removeClass('waiting');
+		    this.castextdiv.removeClass('empty');
+		    this.castextdiv.removeClass('error');
+		    this.castextdiv.removeClass('loading');
+		    this.castextdiv.removeClass('waiting');
 		};
 	
 		/**
@@ -337,14 +349,20 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		    if (!valinput) {
 		        return false;
 		    }
+		    
+		    var casinput = Y.one(document.getElementById(prefix + name + '_cas'));
+		    if (!casinput) {
+		    	// If there isn't a separate CAS text element then output the raw validated input to the validation div
+		    	casinput = Y.one(document.getElementById(prefix + name + '_val'));
+		    }
 	
 		    // See if it is an ordinary input.
 		    var input = Y.one(document.getElementById(prefix + name));
 		    if (input) {
 		        if (input.get('tagName') === 'TEXTAREA') {
-		            new stack_input(name, qaid, new stack_textarea_input(input), valinput);
+		            new stack_input(name, qaid, new stack_textarea_input(input), valinput, casinput);
 		        } else {
-		            new stack_input(name, qaid, new stack_simple_input(input), valinput);
+		            new stack_input(name, qaid, new stack_simple_input(input), valinput, casinput);
 		        }
 		        return true;
 		    }
@@ -352,7 +370,7 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		    // See if it is a matrix input.
 		    var matrix = Y.one(document.getElementById(prefix + name + '_container'));
 		    if (matrix) {
-		        new stack_input(name, qaid, new stack_matrix_input(prefix + name, matrix), valinput);
+		        new stack_input(name, qaid, new stack_matrix_input(prefix + name, matrix), valinput, casinput);
 		        return true;
 		    }
 	
