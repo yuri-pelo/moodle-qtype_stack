@@ -868,6 +868,8 @@ $string['equiv_ASSUMEPOSVARS']           = 'Assume +ve vars';
 $string['equiv_ASSUMEPOSREALVARS']       = 'Assume +ve real vars';
 $string['equiv_LET']                     = 'Let';
 
+$string['studentValidation_contentsdisplayed']  = ' {$a}';
+
 $string['studentValidation_yourLastAnswer']     = 'Your last answer was interpreted as follows: {$a}';
 $string['studentValidation_listofvariables']    = 'The variables found in your answer were: {$a}';
 $string['studentValidation_listofunits']        = 'The units found in your answer were: {$a}';
