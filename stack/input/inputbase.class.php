@@ -976,7 +976,7 @@ abstract class stack_input {
      * @param string $fieldname the field name to use in the HTML for this input.
      * @return string HTML for the validation results for this input.
      */
-    public function render_contentsdisplayed(stack_input_state $state, $fieldname) {
+    public function render_contentsdisplayed(stack_input_state $state, $fieldname, $displayinline = true, $displayerr = false, $displayvars = false) {
         if (self::BLANK == $state->status) {
             return '';
         }
@@ -985,23 +985,28 @@ abstract class stack_input {
             return '';
         }
         $feedback  = '';
-        $feedback .= html_writer::tag('p', stack_string('studentValidation_contentsdisplayed',
-            stack_utils::logic_nouns_sort($state->contentsdisplayed, 'remove')));
+        
+        $displaystr = stack_utils::logic_nouns_sort($state->contentsdisplayed, 'remove');
+        
+        if ($displayinline) {
+            // TODO: speed test this? (It seems quite a nasty way of doing it)
+            $displaystr = substr($displaystr, 2, strlen($displaystr) - 4);
+            $displaystr = '\\(' . $displaystr . '\\)';
+            $displaystr = preg_replace('/\\\\]$/', '\\)', $displaystr);
+        }
+            
+        $feedback .= html_writer::tag('p', stack_string('studentValidation_contentsdisplayed', $displaystr));
         
         if ($this->requires_validation() && '' !== $state->contents) {
             $feedback .= html_writer::empty_tag('input', array('type' => 'hidden',
                 'name' => $fieldname . '_val', 'value' => $this->contents_to_maxima($state->contents)));
         }
         
-      /*  if (self::INVALID == $state->status) {
-            $feedback .= html_writer::tag('p', stack_string('studentValidation_invalidAnswer'));
-        }
-        
-        if ($state->errors) {
+        if ($displayerr && $state->errors) {
             $feedback .= html_writer::tag('p', $state->errors, array('class' => 'stack_errors'));
         }
-        */
-        if ($this->get_parameter('showValidation', 1) == 1 && !($state->lvars === '' or $state->lvars === '[]')) {
+       
+        if ($displayvars && $this->get_parameter('showValidation', 1) == 1 && !($state->lvars === '' or $state->lvars === '[]')) {
             $feedback .= $this->tag_listofvariables($state->lvars);
         }
         return $feedback;
