@@ -58,8 +58,12 @@ class stack_algebraic_input extends stack_input {
         if ($readonly) {
             $attributes['readonly'] = 'readonly';
         }
+        
+        $casdisplay = html_writer::tag('div', '', array('class' => "casdisplay empty", 'id' => $fieldname.'_cas'));
 
-        return html_writer::empty_tag('input', $attributes);
+        $display = html_writer::empty_tag('input', $attributes) . $casdisplay;
+        
+        return $display;
     }
 
     public function add_to_moodleform_testinput(MoodleQuickForm $mform) {
