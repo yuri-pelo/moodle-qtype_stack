@@ -80,7 +80,9 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		    if (this.get_intput_value() === this.lastvalidatedvalue) {
 		        this.cancel_typing_delay();
 		        this.validationdiv.removeClass('waiting');
-		        this.castextdiv.removeClass('waiting');
+		        if(this.castextdiv != null) {
+		        	this.castextdiv.removeClass('waiting');
+		        }
 		    }
 		};
 	
@@ -130,12 +132,7 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		 * @param e the data that came back from the ajax validation call.
 		 */
 		stack_input.prototype.validation_received = function(rawresponse) {
-		    var response = rawresponse;
-		    if (response.status == 'invalid') {
-		        this.show_validation_failure(rawresponse);
-		        return;
-		    }
-		    this.validationresults[response.input] = rawresponse.contentsdisplayed;
+		    this.validationresults[rawresponse.input] = rawresponse;
 		    this.show_validation_results();
 		};
 	
@@ -171,24 +168,39 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 	
 		    var results = this.validationresults[val];
 		    this.lastvalidatedvalue = val;
+		    
+		    var error = results.status == 'invalid';
 	
 		    var scriptcommands = [];
-		    var html = this.extract_scripts(results, scriptcommands);
-		    this.castextdiv.setContent(html);
-	
-		    // Run script commands.
-		    for (var i = 0; i < scriptcommands.length; i++) {
-		        eval(scriptcommands[i]);
-		    }
-	
+	    	var html = this.extract_scripts(results.message, scriptcommands);
+	    
 		    this.remove_all_classes();
-		    if (!results) {
-		        this.castextdiv.addClass('empty');
-		        this.validationdiv.addClass('empty');
-		    }
-	
-		    Y.fire(M.core.event.FILTER_CONTENT_UPDATED, {nodes: (new Y.NodeList(this.castextdiv))});
 		    
+		    if (error) {    	
+		    	if (this.castextdiv != null) {
+		    		this.castextdiv.setContent('');
+		    		this.castextdiv.addClass('empty');
+		    	}	
+		    	this.validationdiv.setContent(html);
+		    	
+		    	Y.fire(M.core.event.FILTER_CONTENT_UPDATED, {nodes: (new Y.NodeList(this.validationdiv))});    
+				
+		    } else {
+		    	if (this.castextdiv != null) {
+		    		this.validationdiv.setContent('');
+		    		this.validationdiv.addClass('empty');
+		    		
+		    		this.castextdiv.setContent(results.contentsdisplayed);
+		    		
+		    		Y.fire(M.core.event.FILTER_CONTENT_UPDATED, {nodes: (new Y.NodeList(this.castextdiv))});    
+			
+		    	} else {
+		    		this.validationdiv.setContent(html);
+			    	
+			    	Y.fire(M.core.event.FILTER_CONTENT_UPDATED, {nodes: (new Y.NodeList(this.validationdiv))});    		
+		    	}
+		    }
+		    	    
 		    return true;
 		};
 	
@@ -209,8 +221,11 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		 */
 		stack_input.prototype.show_loading = function() {
 		    this.remove_all_classes();
-		    this.validationdiv.addClass('loading');
-		    this.castextdiv.addClass('loading');
+		    if(this.castextdiv != null) {
+		    	this.castextdiv.addClass('loading');
+		    } else {
+		    	this.validationdiv.addClass('loading');
+		    }
 		};
 	
 		/**
@@ -219,8 +234,11 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		 */
 		stack_input.prototype.show_waiting = function() {
 		    this.remove_all_classes();
-		    this.validationdiv.addClass('waiting');
-		    this.castextdiv.addClass('loading');
+		    if(this.castextdiv != null) {
+		    	this.castextdiv.addClass('waiting');
+		    } else {
+		    	this.validationdiv.addClass('waiting');
+		    }
 		};
 	
 		/**
@@ -231,10 +249,12 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		    this.validationdiv.removeClass('error');
 		    this.validationdiv.removeClass('loading');
 		    this.validationdiv.removeClass('waiting');
-		    this.castextdiv.removeClass('empty');
-		    this.castextdiv.removeClass('error');
-		    this.castextdiv.removeClass('loading');
-		    this.castextdiv.removeClass('waiting');
+		    if(this.castextdiv != null) {
+			    this.castextdiv.removeClass('empty');
+			    this.castextdiv.removeClass('error');
+			    this.castextdiv.removeClass('loading');
+			    this.castextdiv.removeClass('waiting');
+		    }
 		};
 	
 		/**
@@ -350,11 +370,8 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		        return false;
 		    }
 		    
+		    // Note that, depending on the input type, casinput could be null
 		    var casinput = Y.one(document.getElementById(prefix + name + '_cas'));
-		    if (!casinput) {
-		    	// If there isn't a separate CAS text element then output the raw validated input to the validation div
-		    	casinput = Y.one(document.getElementById(prefix + name + '_val'));
-		    }
 	
 		    // See if it is an ordinary input.
 		    var input = Y.one(document.getElementById(prefix + name));
