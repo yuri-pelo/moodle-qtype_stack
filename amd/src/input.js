@@ -236,6 +236,7 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		    this.remove_all_classes();
 		    if(this.castextdiv != null) {
 		    	this.castextdiv.addClass('waiting');
+		    	this.validationdiv.addClass('empty');
 		    } else {
 		    	this.validationdiv.addClass('waiting');
 		    }
