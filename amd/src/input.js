@@ -71,6 +71,30 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		        self.check_no_change();
 		    }, 0);
 		};
+		
+		/**
+		 * Event handler that is fired when focus blurs.
+		 * @param e event.
+		 */
+		stack_input.prototype.blur = function() {
+			this.remove_all_classes();
+		    if(this.castextdiv != null) {
+		    	this.castextdiv.setContent('');
+		    	this.castextdiv.addClass('empty');
+		    }
+		    this.validationdiv.setContent('');
+	    	this.validationdiv.addClass('empty');
+		};
+		
+		/**
+		 * Event handler that is fired when input element gains focus.
+		 * @param e event.
+		 */
+		stack_input.prototype.focus = function() {
+			if (!this.show_validation_results()) {
+		        this.validate_input();
+		    }	
+		};	
 	
 		/**
 		 * After a small delay, detect the case where the user has got the input back
@@ -213,6 +237,10 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		    this.lastvalidatedvalue = '';
 		    this.validationdiv.setContent(response);
 		    this.remove_all_classes();
+		    if(this.castextdiv != null) {
+		    	this.castextdiv.setContent('');
+		    	this.castextdiv.removeClass('empty');
+		    }
 		    this.validationdiv.addClass('error');
 		};
 	
@@ -223,6 +251,7 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		    this.remove_all_classes();
 		    if(this.castextdiv != null) {
 		    	this.castextdiv.addClass('loading');
+		    	this.validationdiv.addClass('empty');
 		    } else {
 		    	this.validationdiv.addClass('loading');
 		    }
@@ -273,6 +302,8 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		stack_simple_input.prototype.add_event_handers = function(validator) {
 		    this.input.on('valuechange', validator.value_changing, validator);
 		    this.input.on('change', validator.value_changing, validator);
+		    this.input.on('blur', validator.blur, validator);
+		    this.input.on('focus', validator.focus, validator);
 		};
 	
 		/**
