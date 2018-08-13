@@ -77,10 +77,10 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		 * @param e event.
 		 */
 		stack_input.prototype.blur = function() {
-			this.remove_all_classes();
-		    if(this.castextdiv != null) {
+		    if(this.castextdiv !== null) {
 		    	this.castextdiv.setContent('');
 		    	this.castextdiv.addClass('empty');
+		    	$(this.input.input.getDOMNode()).css('float', 'none');
 		    }
 		    this.validationdiv.setContent('');
 	    	this.validationdiv.addClass('empty');
@@ -104,7 +104,7 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		    if (this.get_intput_value() === this.lastvalidatedvalue) {
 		        this.cancel_typing_delay();
 		        this.validationdiv.removeClass('waiting');
-		        if(this.castextdiv != null) {
+		        if(this.castextdiv !== null) {
 		        	this.castextdiv.removeClass('waiting');
 		        }
 		    }
@@ -197,28 +197,37 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 	
 		    var scriptcommands = [];
 	    	var html = this.extract_scripts(results.message, scriptcommands);
-	    
-		    this.remove_all_classes();
-		    
-		    if (error) {    	
+	      
+		    if (error) {
 		    	if (this.castextdiv != null) {
+		    		$(this.input.input.getDOMNode()).css('float', 'none');
 		    		this.castextdiv.setContent('');
 		    		this.castextdiv.addClass('empty');
-		    	}	
+		    	}
+		    	this.remove_all_validationdiv_classes();
 		    	this.validationdiv.setContent(html);
 		    	
 		    	Y.fire(M.core.event.FILTER_CONTENT_UPDATED, {nodes: (new Y.NodeList(this.validationdiv))});    
 				
 		    } else {
 		    	if (this.castextdiv != null) {
+		    		this.remove_all_castextdiv_classes();
 		    		this.validationdiv.setContent('');
 		    		this.validationdiv.addClass('empty');
 		    		
-		    		this.castextdiv.setContent(results.contentsdisplayed);
+		    		if (results.contentsdisplayed !== "") {
+		    			$(this.input.input.getDOMNode()).css('float', 'left');
+		    			this.castextdiv.setContent(results.contentsdisplayed);
+		    		} else {
+		    			$(this.input.input.getDOMNode()).css('float', 'none');
+		    			this.castextdiv.setContent('');
+			    		this.castextdiv.addClass('empty');	
+		    		}
 		    		
 		    		Y.fire(M.core.event.FILTER_CONTENT_UPDATED, {nodes: (new Y.NodeList(this.castextdiv))});    
 			
 		    	} else {
+		    		this.remove_all_validationdiv_classes();
 		    		this.validationdiv.setContent(html);
 			    	
 			    	Y.fire(M.core.event.FILTER_CONTENT_UPDATED, {nodes: (new Y.NodeList(this.validationdiv))});    		
@@ -236,7 +245,6 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		    var response = rawresponse.message;
 		    this.lastvalidatedvalue = '';
 		    this.validationdiv.setContent(response);
-		    this.remove_all_classes();
 		    if(this.castextdiv != null) {
 		    	this.castextdiv.setContent('');
 		    	this.castextdiv.removeClass('empty');
@@ -248,10 +256,8 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		 * Update the validation div to show that validation is happening.
 		 */
 		stack_input.prototype.show_loading = function() {
-		    this.remove_all_classes();
 		    if(this.castextdiv != null) {
-		    	this.castextdiv.addClass('loading');
-		    	this.validationdiv.addClass('empty');
+		    	this.validationdiv.addClass('loading');
 		    } else {
 		    	this.validationdiv.addClass('loading');
 		    }
@@ -262,10 +268,8 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		 * so the validation results are no longer relevant.
 		 */
 		stack_input.prototype.show_waiting = function() {
-		    this.remove_all_classes();
 		    if(this.castextdiv != null) {
-		    	this.castextdiv.addClass('waiting');
-		    	this.validationdiv.addClass('empty');
+		    	this.validationdiv.addClass('waiting');
 		    } else {
 		    	this.validationdiv.addClass('waiting');
 		    }
@@ -274,17 +278,23 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		/**
 		 * Strip all our class names from the validation div.
 		 */
-		stack_input.prototype.remove_all_classes = function() {
+		stack_input.prototype.remove_all_validationdiv_classes = function() {
 		    this.validationdiv.removeClass('empty');
 		    this.validationdiv.removeClass('error');
 		    this.validationdiv.removeClass('loading');
 		    this.validationdiv.removeClass('waiting');
-		    if(this.castextdiv != null) {
-			    this.castextdiv.removeClass('empty');
-			    this.castextdiv.removeClass('error');
-			    this.castextdiv.removeClass('loading');
-			    this.castextdiv.removeClass('waiting');
-		    }
+		    
+		};
+		
+		/**
+		 * Strip all our class names from the cas text div.
+		 */
+		stack_input.prototype.remove_all_castextdiv_classes = function() {
+			this.castextdiv.removeClass('empty');
+		    this.castextdiv.removeClass('error');
+		    this.castextdiv.removeClass('loading');
+		    this.castextdiv.removeClass('waiting');
+		    
 		};
 	
 		/**
@@ -404,7 +414,7 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		    
 		    // Note that, depending on the input type, casinput could be null
 		    var casinput = Y.one(document.getElementById(prefix + name + '_cas'));
-	
+		    
 		    // See if it is an ordinary input.
 		    var input = Y.one(document.getElementById(prefix + name));
 		    if (input) {
@@ -436,7 +446,7 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		
 			        allok = init_input(name, qaid, prefix) && allok;
 			    }
-		
+		  
 			    var outerdiv = Y.one('input[name="' + prefix + ':sequencecheck"]').ancestor('div.que.stack');
 			    if (allok && outerdiv && (outerdiv.hasClass('dfexplicitvaildate') || outerdiv.hasClass('dfcbmexplicitvaildate'))) {
 			        // With instant validation, we don't need the Check button, so hide it.
