@@ -6,8 +6,9 @@ define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], f
 		 * @param qaid the question-attempt id.
 		 * @param input a YUI Node object for the input element for this input.
 		 */
-		var stack_input = function(name, qaid, input, validationdiv, castextdiv) {
+		var stack_input = function(name, qaid, input, warningdiv, validationdiv, castextdiv) {
 		    this.input         = input;
+		    this.warningdiv    = warningdiv;
 		    this.validationdiv = validationdiv;
 		    this.castextdiv    = castextdiv;
 		    this.name          = name;
@@ -17,6 +18,21 @@ define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], f
 	
 		    this.lastvalidatedvalue = this.get_intput_value();
 		    this.validationresults = {};
+		    
+		    // Need to check if popover function exists:
+		    if (typeof $.fn.popover == 'function') { 
+		    	// Initialise the validation error popover
+			    $(this.warningdiv.getDOMNode()).popover({
+			        content: function () {
+			            var idOfVal = ($(this).attr("id")).slice(0,-5).concat("_val").replace(
+			    /(:|\.|\[|\]|,|=|@)/g, "\\$1" ); /* jQuery does not like : in the
+			    ID! */
+			            console.log(idOfVal+" lookup: "+$("#"+idOfVal).attr("id"))
+			            return $("#"+idOfVal).clone().css('display','block');
+			        },
+			        html: true
+			    });
+		    }
 		};
 	
 		/** Configuration. How long a pause in typing before we make an ajax validation request. */
@@ -82,8 +98,10 @@ define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], f
 		    	this.castextdiv.addClass('empty');
 		    	$(this.input.input.getDOMNode()).css('float', 'none');
 		    }
-		    this.validationdiv.setContent('');
-	    	this.validationdiv.addClass('empty');
+		    if(this.warningdiv === null) {
+		    	this.validationdiv.setContent('');
+		    	this.validationdiv.addClass('empty');
+		    }
 		};
 		
 		/**
@@ -206,6 +224,7 @@ define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], f
 		    	}
 		    	this.remove_all_validationdiv_classes();
 		    	this.validationdiv.setContent(html);
+		    	this.warningdiv.removeClass('empty');
 		    	
 		    	Y.fire(M.core.event.FILTER_CONTENT_UPDATED, {nodes: (new Y.NodeList(this.validationdiv))});    
 				
@@ -213,7 +232,7 @@ define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], f
 		    	if (this.castextdiv != null) {
 		    		this.remove_all_castextdiv_classes();
 		    		this.validationdiv.setContent('');
-		    		this.validationdiv.addClass('empty');
+		    		this.warningdiv.addClass('empty');
 		    		
 		    		if (results.contentsdisplayed !== "") {
 		    			$(this.input.input.getDOMNode()).css('float', 'left');
@@ -256,11 +275,7 @@ define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], f
 		 * Update the validation div to show that validation is happening.
 		 */
 		stack_input.prototype.show_loading = function() {
-		    if(this.castextdiv != null) {
-		    	this.validationdiv.addClass('loading');
-		    } else {
-		    	this.validationdiv.addClass('loading');
-		    }
+		    this.validationdiv.addClass('loading');
 		};
 	
 		/**
@@ -268,18 +283,16 @@ define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], f
 		 * so the validation results are no longer relevant.
 		 */
 		stack_input.prototype.show_waiting = function() {
-		    if(this.castextdiv != null) {
-		    	this.validationdiv.addClass('waiting');
-		    } else {
-		    	this.validationdiv.addClass('waiting');
-		    }
+		    this.validationdiv.addClass('waiting');
 		};
 	
 		/**
 		 * Strip all our class names from the validation div.
 		 */
 		stack_input.prototype.remove_all_validationdiv_classes = function() {
-		    this.validationdiv.removeClass('empty');
+		    if(this.warningdiv === null) {
+		    	this.validationdiv.removeClass('empty');
+		    }
 		    this.validationdiv.removeClass('error');
 		    this.validationdiv.removeClass('loading');
 		    this.validationdiv.removeClass('waiting');
@@ -303,21 +316,6 @@ define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], f
 		 */
 		var stack_simple_input = function(input) {
 		    this.input = input;
-		    
-		    // Need to check if popover function exists:
-		    if (typeof $.fn.popover == 'function') { 
-		    	// Initialise the validation error popover
-			    $("input").popover({
-			        content: function () {
-			            var idOfVal = ($(this).attr("id")+"_val").replace(
-			    /(:|\.|\[|\]|,|=|@)/g, "\\$1" ); /* jQuery does not like : in the
-			    ID! */
-			            console.log(idOfVal+" lookup: "+$("#"+idOfVal).attr("id"))
-			            return $("#"+idOfVal);
-			        },
-			        html: true
-			    });
-		    }
 		    
 		};
 	
@@ -428,16 +426,17 @@ define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], f
 		        return false;
 		    }
 		    
-		    // Note that, depending on the input type, casinput could be null
+		    // Note that, depending on the input type, casinput and warninput could be null
 		    var casinput = Y.one(document.getElementById(prefix + name + '_cas'));
+		    var warninput = Y.one(document.getElementById(prefix + name + '_warn'));
 		    
 		    // See if it is an ordinary input.
 		    var input = Y.one(document.getElementById(prefix + name));
 		    if (input) {
 		        if (input.get('tagName') === 'TEXTAREA') {
-		            new stack_input(name, qaid, new stack_textarea_input(input), valinput, casinput);
+		            new stack_input(name, qaid, new stack_textarea_input(input), warninput, valinput, casinput);
 		        } else {
-		            new stack_input(name, qaid, new stack_simple_input(input), valinput, casinput);
+		            new stack_input(name, qaid, new stack_simple_input(input), warninput, valinput, casinput);
 		        }
 		        return true;
 		    }
@@ -445,7 +444,7 @@ define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], f
 		    // See if it is a matrix input.
 		    var matrix = Y.one(document.getElementById(prefix + name + '_container'));
 		    if (matrix) {
-		        new stack_input(name, qaid, new stack_matrix_input(prefix + name, matrix), valinput, casinput);
+		        new stack_input(name, qaid, new stack_matrix_input(prefix + name, matrix), warninput, valinput, casinput);
 		        return true;
 		    }
 	
