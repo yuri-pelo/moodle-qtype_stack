@@ -1166,3 +1166,5 @@ $string['calc_int_methods_parts_fact'] = '\[
 or alternatively: \[\int_a^bf(x)g(x)\,{\rm d}x=\left[f(x)\,\int
 g(x){\rm d}x\right]_a^b -\int_a^b{{\rm d}f\over {\rm
 d}x}\left\{\int g(x){\rm d}x\right\}{\rm d}x.\]';
+
+$string['validationpopuptitle'] = 'Validation warning';
