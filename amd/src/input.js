@@ -1,4 +1,4 @@
-define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
+define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], function($, Y, cfg) {
 
 		/**
 		 * Constructor.
@@ -303,6 +303,22 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 		 */
 		var stack_simple_input = function(input) {
 		    this.input = input;
+		    
+		    // Need to check if popover function exists:
+		    if (typeof $.fn.popover == 'function') { 
+		    	// Initialise the validation error popover
+			    $("input").popover({
+			        content: function () {
+			            var idOfVal = ($(this).attr("id")+"_val").replace(
+			    /(:|\.|\[|\]|,|=|@)/g, "\\$1" ); /* jQuery does not like : in the
+			    ID! */
+			            console.log(idOfVal+" lookup: "+$("#"+idOfVal).attr("id"))
+			            return $("#"+idOfVal);
+			        },
+			        html: true
+			    });
+		    }
+		    
 		};
 	
 		/**
@@ -460,3 +476,6 @@ define(['jquery', 'core/yui', 'core/config'], function($, Y, cfg) {
 	
 	return t;
 });
+
+
+
