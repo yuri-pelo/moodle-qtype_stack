@@ -14,6 +14,12 @@
     display: inline-block;
 }
 
+.que.stack .warndisplay {
+    margin: 0.2em 0.2em 0.5em;
+    padding: 0.5em 0.5em 0em;
+    display: inline-block;
+}
+
 .que.stack .equivreasoning .casdisplay {
     display: inline-block;
     margin-left: 0.5em;
@@ -23,6 +29,11 @@
 .que.stack .casdisplay.empty {
     display: none;
 }
+
+.que.stack .warndisplay.empty {
+    display: none;
+}
+
 .que.stack .casdisplay.waiting,
 .que.stack .casdisplay.loading {
     color: #888;
