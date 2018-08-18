@@ -13,24 +13,30 @@ define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], f
 		    this.castextdiv    = castextdiv;
 		    this.name          = name;
 		    this.qaid          = qaid;
-	
+		    
 		    this.input.add_event_handers(this);
 	
 		    this.lastvalidatedvalue = this.get_intput_value();
 		    this.validationresults = {};
 		    
+		    
 		    // Need to check if popover function exists:
 		    if (typeof $.fn.popover == 'function') { 
-		    	// Initialise the validation error popover
-			    $(this.warningdiv.getDOMNode()).popover({
+		    	// Initialise the validation error popover    
+		    	$(this.warningdiv.getDOMNode()).popover({
+			    	placement: function (context, source) { 
+			    		return $(source).attr("data-popup-placement");
+			    	},
+			    	html: true,
 			        content: function () {
 			            var idOfVal = ($(this).attr("id")).slice(0,-5).concat("_val").replace(
-			    /(:|\.|\[|\]|,|=|@)/g, "\\$1" ); /* jQuery does not like : in the
-			    ID! */
+			    /(:|\.|\[|\]|,|=|@)/g, "\\$1" ); /* jQuery does not like : in the ID! */
 			            console.log(idOfVal+" lookup: "+$("#"+idOfVal).attr("id"))
-			            return $("#"+idOfVal).clone().css('display','block');
+			            return $("#"+idOfVal).html();
 			        },
-			        html: true
+			        title: function () {
+			        	return $(this).attr("data-popup-title");
+			        }
 			    });
 		    }
 		};
