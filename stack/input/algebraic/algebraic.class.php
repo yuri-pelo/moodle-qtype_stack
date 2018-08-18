@@ -61,7 +61,9 @@ class stack_algebraic_input extends stack_input {
         
         $casdisplay = html_writer::tag('div', '', array('class' => "casdisplay empty", 'id' => $fieldname.'_cas'));
 
-        $display = html_writer::empty_tag('input', $attributes) . $casdisplay;
+        $warndisplay = html_writer::tag('i', '', array('class' => "warndisplay fa fa-warning fa-2x empty", 'id' => $fieldname.'_warn'));
+        
+        $display = html_writer::empty_tag('input', $attributes) . $warndisplay . $casdisplay;
         
         return $display;
     }
