@@ -25,7 +25,8 @@ defined('MOODLE_INTERNAL') || die();
 class stack_algebraic_input extends stack_input {
 
     protected $extraoptions = array(
-        'rationalized' => false
+        'rationalized' => false,
+        'popover' => 'right',
     );
 
     public function render(stack_input_state $state, $fieldname, $readonly, $tavalue) {
