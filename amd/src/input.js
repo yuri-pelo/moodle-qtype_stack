@@ -24,7 +24,7 @@ define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], f
 		    if (typeof $.fn.popover == 'function') { 
 		    	// Initialise the validation error popover    
 		    	$(this.warningdiv.getDOMNode()).popover({
-			    	placement: function (context, source) { 
+		    		placement: function (context, source) { 
 			    		return $(source).attr("data-popup-placement");
 			    	},
 			    	html: true,
@@ -115,6 +115,13 @@ define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], f
 		 * @param e event.
 		 */
 		stack_input.prototype.focus = function() {
+			if (this.castextdiv != null) {
+				this.castextdiv.setContent('');
+		    	this.castextdiv.addClass('empty');
+		    	this.validationdiv.setContent('');
+		    	this.validationdiv.addClass('empty');
+			}
+			
 			if (!this.show_validation_results()) {
 		        this.validate_input();
 		    }	
