@@ -291,7 +291,11 @@ abstract class stack_input {
                         $this->errors[] = stack_string('numericalinputoptbooplerr', array('opt' => $option, 'val' => $arg));
                     }
                     break;
-
+                case 'popover':
+                    if (!in_array($arg, array('top', 'left', 'bottom', 'right'))) {
+                        $this->errors[] = stack_string('popoverpositionerr', array('opt' => $option, 'val' => $arg));
+                    }
+                    break;
                 default:
                     $this->errors[] = stack_string('inputoptionunknown', $option);
             }
@@ -782,7 +786,7 @@ abstract class stack_input {
             $rationalized->get_valid('t');
             $additionalvars['rationalized'] = $rationalized;
         }
-
+        
         if (array_key_exists('assume_pos', $this->extraoptions)) {
             $assumepos = 'false';
             if ($this->extraoptions['assume_pos']) {
@@ -812,7 +816,7 @@ abstract class stack_input {
             $calculus->get_valid('t');
             $additionalvars['calculus'] = $assumereal;
         }
-
+        
         return $additionalvars;
     }
 
