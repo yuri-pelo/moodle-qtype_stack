@@ -67,7 +67,7 @@ class stack_algebraic_input extends stack_input {
             $popover_position = $this->extraoptions['popover'];
         }
 
-        $warndisplay = html_writer::link('#', '', array('rel' => 'popover', 'data-popup-placement' => $popover_position, 'data-popup-title' => stack_string('validationpopuptitle'), 'class' => "warndisplay fa fa-warning empty", 'id' => $fieldname.'_warn'));
+        $warndisplay = html_writer::link('#', '', array('rel' => 'popover', 'data-trigger' => 'focus', 'data-popup-placement' => $popover_position, 'data-popup-title' => stack_string('validationpopuptitle'), 'class' => "warndisplay fa fa-warning empty", 'id' => $fieldname.'_warn'));
         
         
         
