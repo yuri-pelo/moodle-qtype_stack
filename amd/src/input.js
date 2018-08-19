@@ -6,9 +6,9 @@ define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], f
 		 * @param qaid the question-attempt id.
 		 * @param input a YUI Node object for the input element for this input.
 		 */
-		var stack_input = function(name, qaid, input, warningdiv, validationdiv, castextdiv) {
+		var stack_input = function(name, qaid, input, warninganchor, validationdiv, castextdiv) {
 		    this.input         = input;
-		    this.warningdiv    = warningdiv;
+		    this.warninganchor = warninganchor;
 		    this.validationdiv = validationdiv;
 		    this.castextdiv    = castextdiv;
 		    this.name          = name;
@@ -23,7 +23,7 @@ define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], f
 		    // Need to check if popover function exists:
 		    if (typeof $.fn.popover == 'function') { 
 		    	// Initialise the validation error popover    
-		    	$(this.warningdiv.getDOMNode()).popover({
+		    	$(this.warninganchor.getDOMNode()).popover({
 		    		placement: function (context, source) { 
 			    		return $(source).attr("data-popup-placement");
 			    	},
@@ -104,7 +104,7 @@ define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], f
 		    	this.castextdiv.addClass('empty');
 		    	$(this.input.input.getDOMNode()).css('float', 'none');
 		    }
-		    if(this.warningdiv === null) {
+		    if(this.warninganchor === null) {
 		    	this.validationdiv.setContent('');
 		    	this.validationdiv.addClass('empty');
 		    }
@@ -237,7 +237,7 @@ define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], f
 		    	}
 		    	this.remove_all_validationdiv_classes();
 		    	this.validationdiv.setContent(html);
-		    	this.warningdiv.removeClass('empty');
+		    	this.warninganchor.removeClass('empty');
 		    	
 		    	Y.fire(M.core.event.FILTER_CONTENT_UPDATED, {nodes: (new Y.NodeList(this.validationdiv))});    
 				
@@ -245,7 +245,7 @@ define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], f
 		    	if (this.castextdiv != null) {
 		    		this.remove_all_castextdiv_classes();
 		    		this.validationdiv.setContent('');
-		    		this.warningdiv.addClass('empty');
+		    		this.warninganchor.addClass('empty');
 		    		
 		    		if (results.contentsdisplayed !== "") {
 		    			$(this.input.input.getDOMNode()).css('float', 'left');
@@ -303,7 +303,7 @@ define(['jquery', 'core/yui', 'core/config', 'theme_bootstrapbase/bootstrap'], f
 		 * Strip all our class names from the validation div.
 		 */
 		stack_input.prototype.remove_all_validationdiv_classes = function() {
-		    if(this.warningdiv === null) {
+		    if(this.warninganchor === null) {
 		    	this.validationdiv.removeClass('empty');
 		    }
 		    this.validationdiv.removeClass('error');
