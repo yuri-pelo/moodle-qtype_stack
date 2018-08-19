@@ -18,6 +18,7 @@
     margin: 0.2em 0.2em 0.5em;
     padding: 0.5em 0.5em 0em;
     display: inline-block;
+    color: #ff0000;
 }
 
 .que.stack .equivreasoning .casdisplay {
@@ -316,7 +317,7 @@ body.ie:not(.ie11) .stack_abstract_graph {
 #simplemodal-container a.modalCloseImg {background:url(./x.png) no-repeat; width:25px; height:29px; display:inline; z-index:3200; position:absolute; top:-15px; right:-16px; cursor:pointer;}
 
 /* Popover */
-.popover {
+.que.stack .popover {
   position: absolute;
   top: 0;
   left: 0;
@@ -349,19 +350,19 @@ body.ie:not(.ie11) .stack_abstract_graph {
   -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 }
-.popover.top {
+.que.stack .popover.top {
   margin-top: -10px;
 }
-.popover.right {
+.que.stack .popover.right {
   margin-left: 10px;
 }
-.popover.bottom {
+.que.stack .popover.bottom {
   margin-top: 10px;
 }
-.popover.left {
+.que.stack .popover.left {
   margin-left: -10px;
 }
-.popover-title {
+.que.stack .popover-title {
   margin: 0;
   padding: 8px 14px;
   font-size: 14px;
@@ -369,11 +370,11 @@ body.ie:not(.ie11) .stack_abstract_graph {
   border-bottom: 1px solid #ebebeb;
   border-radius: 5px 5px 0 0;
 }
-.popover-content {
+.que.stack .popover-content {
   padding: 9px 14px;
 }
-.popover > .arrow,
-.popover > .arrow:after {
+.que.stack .popover > .arrow,
+.que.stack .popover > .arrow:after {
   position: absolute;
   display: block;
   width: 0;
@@ -381,14 +382,14 @@ body.ie:not(.ie11) .stack_abstract_graph {
   border-color: transparent;
   border-style: solid;
 }
-.popover > .arrow {
+.que.stack .popover > .arrow {
   border-width: 11px;
 }
-.popover > .arrow:after {
+.que.stack .popover > .arrow:after {
   border-width: 10px;
   content: "";
 }
-.popover.top > .arrow {
+.que.stack .popover.top > .arrow {
   left: 50%;
   margin-left: -11px;
   border-bottom-width: 0;
@@ -396,14 +397,14 @@ body.ie:not(.ie11) .stack_abstract_graph {
   border-top-color: rgba(0, 0, 0, 0.25);
   bottom: -11px;
 }
-.popover.top > .arrow:after {
+.que.stack .popover.top > .arrow:after {
   content: " ";
   bottom: 1px;
   margin-left: -10px;
   border-bottom-width: 0;
   border-top-color: #ffffff;
 }
-.popover.right > .arrow {
+.que.stack .popover.right > .arrow {
   top: 50%;
   left: -11px;
   margin-top: -11px;
@@ -411,14 +412,14 @@ body.ie:not(.ie11) .stack_abstract_graph {
   border-right-color: #999999;
   border-right-color: rgba(0, 0, 0, 0.25);
 }
-.popover.right > .arrow:after {
+.que.stack .popover.right > .arrow:after {
   content: " ";
   left: 1px;
   bottom: -10px;
   border-left-width: 0;
   border-right-color: #ffffff;
 }
-.popover.bottom > .arrow {
+.que.stack .popover.bottom > .arrow {
   left: 50%;
   margin-left: -11px;
   border-top-width: 0;
@@ -426,14 +427,14 @@ body.ie:not(.ie11) .stack_abstract_graph {
   border-bottom-color: rgba(0, 0, 0, 0.25);
   top: -11px;
 }
-.popover.bottom > .arrow:after {
+.que.stack .popover.bottom > .arrow:after {
   content: " ";
   top: 1px;
   margin-left: -10px;
   border-top-width: 0;
   border-bottom-color: #ffffff;
 }
-.popover.left > .arrow {
+.que.stack .popover.left > .arrow {
   top: 50%;
   right: -11px;
   margin-top: -11px;
@@ -441,7 +442,7 @@ body.ie:not(.ie11) .stack_abstract_graph {
   border-left-color: #999999;
   border-left-color: rgba(0, 0, 0, 0.25);
 }
-.popover.left > .arrow:after {
+.que.stack .popover.left > .arrow:after {
   content: " ";
   right: 1px;
   border-right-width: 0;
