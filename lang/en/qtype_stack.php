@@ -872,6 +872,10 @@ $string['equiv_MISSINGVAR']              = 'Missing assignments';
 $string['equiv_ASSUMEPOSVARS']           = 'Assume +ve vars';
 $string['equiv_ASSUMEPOSREALVARS']       = 'Assume +ve real vars';
 $string['equiv_LET']                     = 'Let';
+// We could localise the strings below using \vee, \wedge etc.
+$string['equiv_AND']                     = 'and';
+$string['equiv_OR']                      = 'or';
+$string['equiv_NOT']                     = 'not';
 
 $string['studentValidation_contentsdisplayed']  = '{$a}';
 
