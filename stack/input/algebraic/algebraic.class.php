@@ -26,7 +26,7 @@ class stack_algebraic_input extends stack_input {
 
     protected $extraoptions = array(
         'rationalized' => false,
-        'popover' => 'right',
+        'popover' => 'right'
     );
 
     public function render(stack_input_state $state, $fieldname, $readonly, $tavalue) {
@@ -61,8 +61,13 @@ class stack_algebraic_input extends stack_input {
         }
         
         $casdisplay = html_writer::tag('div', '', array('class' => "casdisplay empty", 'id' => $fieldname.'_cas'));
+        
+        $popover_position = 'right';
+        if (array_key_exists('popover', $this->extraoptions)) {
+            $popover_position = $this->extraoptions['popover'];
+        }
 
-        $warndisplay = html_writer::link('#', '', array('rel' => 'popover', 'data-popup-placement' => 'right', 'data-popup-title' => stack_string('validationpopuptitle'), 'class' => "warndisplay fa fa-warning empty", 'id' => $fieldname.'_warn'));
+        $warndisplay = html_writer::link('#', '', array('rel' => 'popover', 'data-popup-placement' => $popover_position, 'data-popup-title' => stack_string('validationpopuptitle'), 'class' => "warndisplay fa fa-warning empty", 'id' => $fieldname.'_warn'));
         
         
         
