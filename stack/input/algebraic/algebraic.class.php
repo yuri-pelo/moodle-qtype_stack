@@ -59,20 +59,20 @@ class stack_algebraic_input extends stack_input {
         if ($readonly) {
             $attributes['readonly'] = 'readonly';
         }
-        
+
         $casdisplay = html_writer::tag('div', '', array('class' => "casdisplay empty", 'id' => $fieldname.'_cas'));
-        
-        $popover_position = 'right';
+
+        $popoverposition = 'right';
         if (array_key_exists('popover', $this->extraoptions)) {
-            $popover_position = $this->extraoptions['popover'];
+            $popoverposition = $this->extraoptions['popover'];
         }
 
-        $warndisplay = html_writer::link('#', '', array('rel' => 'popover', 'data-trigger' => 'focus', 'data-popup-placement' => $popover_position, 'data-popup-title' => stack_string('validationpopuptitle'), 'class' => "warndisplay fa fa-warning empty", 'id' => $fieldname.'_warn'));
-        
-        
-        
+        $warndisplay = html_writer::link('#', '', array('rel' => 'popover', 'data-trigger' => 'focus',
+                'data-popup-placement' => $popoverposition, 'data-popup-title' => stack_string('validationpopuptitle'),
+                'class' => "warndisplay fa fa-warning empty", 'id' => $fieldname.'_warn'));
+
         $display = html_writer::empty_tag('input', $attributes) . $warndisplay . $casdisplay;
-        
+
         return $display;
     }
 
