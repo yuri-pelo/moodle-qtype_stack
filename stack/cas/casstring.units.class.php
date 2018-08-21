@@ -132,7 +132,9 @@ class stack_cas_casstring_units {
         array('in', 'in', 'in', 'inch'),
         array('ft', '12*in', 'ft', 'foot'),
         array('mi', '5280*12*in', 'mi', 'mile'),
-    );
+        array('AU', '1.49597871e11*m', 'mi', 'stronomical Unit'),
+        array('mi', '3.08567758e16*m', 'mi', 'parsec'),
+        );
 
     /* This array keeps a list of synoymns which students are likely to use.
      * These arrays are used for generating helpful feedback.
