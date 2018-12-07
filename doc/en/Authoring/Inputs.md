@@ -106,6 +106,19 @@ A single letter can be entered.  This is useful for creating multiple choice que
 
 ## Options ##
 
+### Popover validation feedback ###
+
+The original, and default validation feedback is to replace the validation tag `[[validation:ans1]]` with either the displayed form of the student's answer, or an error message.
+
+This takes up a lot of space on the screen, especially in multi-part questions.
+
+The extra option `popover` allows a much more compact display of the student's answer attached to the input, with error messages displayed as a popover message.
+
+* `popover:right` puts the messages to the right of the input.
+* `popover:left` puts the messages to the left of the input.
+* `popover:top` puts the messages above the input.
+* `popover:bottom` puts the messages below the input.
+
 ### Input Box Size ### {#Box_Size}
 
 The width of the input box.
@@ -279,6 +292,7 @@ This table lists all options, and which inputs use/respect them.  The `.` means 
 
 Options           | Alg | Num | Units | Matrix | Check | Radio | Drop | T/F | TextArea | Equiv | String | Notes
 ------------------|-----|-----|-------|--------|-------|-------|------|-----|----------|-------|--------|------
+Popover           |  Y  |  !  |  !    |  (!)   |   .   |   .   |   .  |  .  |          |       |        |      
 Box size          |  Y  |  Y  |  Y    |   Y    |   .   |   .   |   .  |  .  |    Y     |   Y   |   Y    |   Y  
 Strict Syn        |  Y  | (1) |  (1)  |   Y    |   .   |   .   |   .  |  .  |    Y     |   Y   |   .    |   .  
 Insert stars      |  Y  |  Y  |  Y    |   Y    |   .   |   .   |   .  |  .  |    Y     |   Y   |   .    |   .  

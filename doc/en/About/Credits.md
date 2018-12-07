@@ -16,6 +16,8 @@ Previous developers have included.
 * Simon Hammond
 * Jonathan Hart
 
+Popover validation was added by Ian Wild in 2018.
+
 # Translation of the STACK Project
 
 STACK is designed to support the straightforward addition of other language packs. If you have translated STACK into other languages - or would be interested in doing so - please let us know! Likewise if you would really like to see STACK in another language please contact us.  Details of how to translate STACK, and forthcoming translations, are given on the [languages](../Developer/Languages.md) developer's page.
