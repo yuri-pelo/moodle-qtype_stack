@@ -20,6 +20,9 @@ TODO for the Better CSS, including "tool tips".
 
 Goal: November 2018 for release in time for STACK conference.
 
+* Removed the maxima mathml code (which wasn't connected or used).
+* Add in extra options in the input `allowempty` and `hideanswer`.
+
 * 1st version of API.
 * Better install code (see #332).
 * Better CSS, including "tool tips".  May need to refactor javascript.  (See issue #380)
@@ -30,3 +33,4 @@ Goal: November 2018 for release in time for STACK conference.
 * Update MCQ to accept units.
 * Add a base N check to the numeric input.* Expand support for input validation options to matrices (e.g. floatnum, rationalize etc.)
 * Add in full parser, to address issue #324.
+

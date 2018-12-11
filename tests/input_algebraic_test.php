@@ -31,6 +31,7 @@ require_once(__DIR__ . '/../stack/input/factory.class.php');
  * @group qtype_stack
  */
 class stack_algebra_input_test extends qtype_stack_testcase {
+
     public function test_internal_validate_parameter() {
         $el = stack_input_factory::make('algebraic', 'input', 'x^2');
         $this->assertTrue($el->validate_parameter('boxWidth', 30));
@@ -45,6 +46,16 @@ class stack_algebra_input_test extends qtype_stack_testcase {
 
     public function test_render_blank() {
         $el = stack_input_factory::make('algebraic', 'ans1', 'x^2');
+        $this->assertEquals('<input type="text" name="stack1__ans1" id="stack1__ans1" '
+                .'size="16.5" style="width: 13.6em" autocapitalize="none" spellcheck="false" value="" />',
+                $el->render(new stack_input_state(stack_input::VALID, array(), '', '', '', '', ''),
+                        'stack1__ans1', false, null));
+    }
+
+    public function test_render_blank_allowempty() {
+        $options = new stack_options();
+        $el = stack_input_factory::make('algebraic', 'ans1', 'x^2');
+        $el->set_parameter('options', 'allowempty');
         $this->assertEquals('<input type="text" name="stack1__ans1" id="stack1__ans1" '
                 .'size="16.5" style="width: 13.6em" autocapitalize="none" spellcheck="false" value="" />',
                 $el->render(new stack_input_state(stack_input::VALID, array(), '', '', '', '', ''),
@@ -398,6 +409,22 @@ class stack_algebra_input_test extends qtype_stack_testcase {
         $this->assertEquals('\[ s^{r^{24}} \]', $state->contentsdisplayed);
     }
 
+    public function test_validate_student_response_display_noundiff() {
+        $options = new stack_options();
+        $el = stack_input_factory::make('algebraic', 'sans1', 'noundiff(y/x^2,x,1)-(2*y)/x = x^3*sin(3*x)');
+        $el->set_parameter('insertStars', 1);
+        $el->set_parameter('strictSyntax', false);
+        // For this test, if sameType is true, old versions of Maxima blow up with
+        // Heap exhausted during allocation: 8481509376 bytes available, 35303692080 requested.
+        $el->set_parameter('sameType', false);
+        $state = $el->validate_student_response(array('sans1' => 'noundiff(y/x^2,x,1)-(2*y)/x = x^3*sin(3*x)'),
+                $options, 'diff(y/x^2,x,1)-(2*y)/x = x^3*sin(3*x)', null);
+        $this->assertEquals(stack_input::VALID, $state->status);
+        $this->assertEquals('noundiff(y/x^2,x,1)-(2*y)/x = x^3*sin(3*x)', $state->contentsmodified);
+        $this->assertEquals('\[ \frac{\mathrm{d} \frac{y}{x^2}}{\mathrm{d} x}-\frac{2\cdot y}{x}' .
+                '=x^3\cdot \sin \left( 3\cdot x \right) \]', $state->contentsdisplayed);
+    }
+
     public function test_validate_student_response_single_var_chars_on() {
         // Check the single variable character option is tested.
         $options = new stack_options();
@@ -465,6 +492,30 @@ class stack_algebra_input_test extends qtype_stack_testcase {
         $this->assertEquals('<span class="stacksyntaxexample">int(x^2+1,x)+c</span>', $state->contentsdisplayed);
         $this->assertEquals('', $state->note);
 
+    }
+
+    public function test_validate_student_response_forbidwords_int() {
+        // We need this as an alias.
+        $options = new stack_options();
+        $el = stack_input_factory::make('algebraic', 'sans1', 'int(x^2+1,x)+c');
+        $state = $el->validate_student_response(array('sans1' => 'integrate(x^2+1,x)+c'), $options, 'int(x^2+1,x)+c', array('ta'));
+        $this->assertEquals(stack_input::VALID, $state->status);
+        $this->assertEquals('nounint(x^2+1,x)+c', $state->contentsmodified);
+        $this->assertEquals('\[ \int {x^2+1}{\;\mathrm{d}x}+c \]', $state->contentsdisplayed);
+        $this->assertEquals('\( \left[ c , x \right]\) ', $state->lvars);
+    }
+
+    public function test_validate_student_response_forbidwords_int_true() {
+        // We need this as an alias.
+        $options = new stack_options();
+        $el = stack_input_factory::make('algebraic', 'sans1', '2*x');
+        $el->set_parameter('forbidWords', 'int, diff');
+        $state = $el->validate_student_response(array('sans1' => 'integrate(x^2+1,x)+c'), $options, 'int(x^2+1,x)+c', array('ta'));
+        // Note the "nounint" in the contentsmodified.
+        $this->assertEquals('nounint(x^2+1,x)+c', $state->contentsmodified);
+        $this->assertEquals(stack_input::INVALID, $state->status);
+        // The noun form has been converted back to "int" in the contentsdisplayed.
+        $this->assertEquals('<span class="stacksyntaxexample">int(x^2+1,x)+c</span>', $state->contentsdisplayed);
     }
 
     public function test_validate_student_response_single_variable() {
@@ -594,5 +645,19 @@ class stack_algebra_input_test extends qtype_stack_testcase {
         $this->assertEquals('CASError: stack_trans(\'ATAlgEquiv_SA_not_string\');', $state->note);
         $this->assertEquals('x^2', $state->contentsmodified);
         $this->assertEquals('\[ x^2 \]', $state->contentsdisplayed);
+    }
+
+    public function test_validate_student_response_with_allowempty() {
+        $options = new stack_options();
+        $el = stack_input_factory::make('algebraic', 'sans1', '1/2');
+        $el->set_parameter('options', 'allowempty');
+        $state = $el->validate_student_response(array('sans1' => ''), $options, '3.14', null);
+        // In this case empty responses jump straight to score.
+        $this->assertEquals(stack_input::SCORE, $state->status);
+        $this->assertEquals('EMPTYANSWER', $state->contentsmodified);
+        $this->assertEquals('\[ {\it EMPTYANSWER} \]', $state->contentsdisplayed);
+        $this->assertEquals('', $state->errors);
+        $this->assertEquals('This input can be left blank.',
+                $el->get_teacher_answer_display($state->contentsmodified, $state->contentsdisplayed));
     }
 }
