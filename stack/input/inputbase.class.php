@@ -304,7 +304,7 @@ abstract class stack_input {
                     }
                     break;
                 case 'popover':
-                    if (!in_array($arg, array('top', 'left', 'bottom', 'right'))) {
+                    if (!in_array($arg, array('top', 'left', 'bottom', 'right', 'auto'))) {
                         $this->errors[] = stack_string('popoverpositionerr', array('opt' => $option, 'val' => $arg));
                     }
                     break;
