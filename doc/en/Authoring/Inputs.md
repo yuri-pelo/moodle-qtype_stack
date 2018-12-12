@@ -114,6 +114,7 @@ This takes up a lot of space on the screen, especially in multi-part questions.
 
 The extra option `popover` allows a much more compact display of the student's answer attached to the input, with error messages displayed as a popover message.
 
+* `popover:auto` lets the browser decide the optimal position for the popover message (the default).
 * `popover:right` puts the messages to the right of the input.
 * `popover:left` puts the messages to the left of the input.
 * `popover:top` puts the messages above the input.
