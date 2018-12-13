@@ -9,12 +9,13 @@ How to report bugs and make suggestions is described on the [community](../About
 
 TODO for the Better CSS, including "tool tips".
 
-0. Merge from master.  (!)
-1. Only use popover style when the extra option is set. See line 65 of algebraic.class.php.
+1. When you navigate away, the MathJax should remain.
 2. Fix CSS so popups remain in the visible window.
-3. Add in for Numerical and units inputs.
-4. Add in for matrices.
-5. Unit tests.
+3. Only use popover style when the extra option is set. See line 65 of algebraic.class.php.
+4. Add in for Numerical and units inputs.
+5. Add in for matrices.
+6. Code style check, unit tests, browsers....
+7. ? When we navigate away, replace the input box with the MathJax displayed form. But, what about screen readers?!
 
 ## Version 4.3
 
@@ -33,4 +34,3 @@ Goal: November 2018 for release in time for STACK conference.
 * Update MCQ to accept units.
 * Add a base N check to the numeric input.* Expand support for input validation options to matrices (e.g. floatnum, rationalize etc.)
 * Add in full parser, to address issue #324.
-
