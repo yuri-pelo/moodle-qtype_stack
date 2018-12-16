@@ -53,7 +53,7 @@ class stack_cas_castext_jsxgraph extends stack_cas_castext_block {
     }
 
     public function clear() {
-        global $PAGE, $CFG;
+        global $PAGE, $MINIMAL_API;
         // Now is the time to replace the block with the div and the code.
         $code = "";
         $iter = $this->get_node()->firstchild;
