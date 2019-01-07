@@ -60,6 +60,9 @@ class qtype_stack_edit_form extends question_edit_form {
     /** @var array the set of choices used for the score mode of all PRT branches. */
     protected $scoremodechoices;
 
+    /** @var array Any "warnings" which the validation system has generated. */
+    protected $stackwarnings = null;
+
     /** Patch up data from the database before a user edits it in the form. */
     public function set_data($question) {
         if (!empty($question->questiontext)) {
@@ -322,6 +325,19 @@ class qtype_stack_edit_form extends question_edit_form {
         $mform->addHelpButton('penalty', 'penalty', 'qtype_stack');
         $mform->setDefault('penalty', 0.1000000);
         $mform->addRule('penalty', null, 'required', null, 'client');
+
+        // Warnings.
+        if ($this->stackwarnings !== null) {
+            $warntext = html_writer::tag('b', stack_string('stackwarnings'), array('class' => 'fail'));
+            $warnings = '';
+            foreach ($this->stackwarnings as $warn) {
+                $warnings .= html_writer::tag('li', $warn);
+            }
+            $warntext .= html_writer::tag('ol', $warnings);
+            $warning = $mform->createElement('static', 'stackwarnings', '', $warntext);
+            $mform->insertElementBefore($warning, 'questionvariables');
+        }
+
     }
 
     /**
@@ -415,6 +431,7 @@ class qtype_stack_edit_form extends question_edit_form {
         $mform->addElement('text', $inputname . 'options', stack_string('inputextraoptions'), array('size' => 20));
         $mform->setType($inputname . 'options', PARAM_RAW);
         $mform->addHelpButton($inputname . 'options', 'inputextraoptions', 'qtype_stack');
+
     }
 
     /**
@@ -751,6 +768,11 @@ class qtype_stack_edit_form extends question_edit_form {
 
         $qtype = new qtype_stack();
         list($errors, $warnings) = $qtype->validate_fromform($fromform, $errors);
+        // TODO: Tim, how do we get this information back through the system?!
+        // I can't find a way to not throw an error, but still have it later....
+        if ($warnings != array()) {
+            $this->stackwarnings = $warnings;
+        }
         return $errors;
     }
 

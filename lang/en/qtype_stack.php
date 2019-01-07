@@ -336,6 +336,10 @@ $string['variantsselectionseed_help'] = 'Normally you can leave this box blank. 
 $string['verifyquestionandupdate'] = 'Verify the question text and update the form';
 $string['youmustconfirm'] = 'You must confirm here.';
 
+// Warnings system
+$string['stackwarnings'] = 'Warnings!';
+$string['stackwarningsjsxgraph'] = 'This question contains JSXGraph blocks.  Do not use a WYSIWYG editor.';
+
 // Strings used by input elements.
 $string['booleangotunrecognisedvalue'] = 'Invalid input.';
 $string['dropdowngotunrecognisedvalue'] = 'Invalid input.';
