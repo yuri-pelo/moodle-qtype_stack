@@ -1626,7 +1626,7 @@ class qtype_stack extends question_type {
 
         // Warn if we should not to use WYSIWYG editor.
         if (!$castext->use_wysiwyg_editor()) {
-             $warnings['jsxgraph'.'_'.$fieldname] = stack_string('stackwarningswysiwyg', stack_string($fieldname));
+             $warnings['wysiwyg'.'_'.$fieldname] = stack_string('stackwarningswysiwyg', stack_string($fieldname));
         }
 
         // Validate any [[facts:...]] tags.
