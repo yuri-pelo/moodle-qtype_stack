@@ -1624,12 +1624,10 @@ class qtype_stack extends question_type {
             return array($errors, $warnings);
         }
 
-        // Warn if we are using the JSXGraph block not to use WYSIWYG editors.
-        // TODO: Matti, can you define a predicate which checks whether a particular block is used in the castext?
-
-        // if ("we have a jsxgraph block") {
-        //     $warnings['jsxgraph'] = stack_string('stackwarningsjsxgraph');
-        // }
+        // Warn if we should not to use WYSIWYG editor.
+        if (!$castext->use_wysiwyg_editor()) {
+             $warnings['jsxgraph'.'_'.$fieldname] = stack_string('stackwarningswysiwyg', stack_string($fieldname));
+        }
 
         // Validate any [[facts:...]] tags.
         $unrecognisedtags = stack_fact_sheets::get_unrecognised_tags($value);

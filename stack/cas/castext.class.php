@@ -531,4 +531,20 @@ class stack_cas_text {
         return $this->session->get_debuginfo();
     }
 
+    /*
+     * This function decides if a WYSIWYG editor is permitted.
+     */
+    public function use_wysiwyg_editor() {
+        // TODO: Matti, can you define a predicate which checks whether a particular block is used in the castext?
+
+        // (1) Do we have any JSXGraph blocks?
+        // (2) Do we have any scripts?
+        // (3) Do we have ...
+        // Then ...
+
+        // return false;
+
+        // Else
+        return true;
+    }
 }

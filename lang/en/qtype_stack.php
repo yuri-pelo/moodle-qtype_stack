@@ -338,7 +338,7 @@ $string['youmustconfirm'] = 'You must confirm here.';
 
 // Warnings system
 $string['stackwarnings'] = 'Warnings!';
-$string['stackwarningsjsxgraph'] = 'This question contains JSXGraph blocks.  Do not use a WYSIWYG editor.';
+$string['stackwarningswysiwyg'] = 'Do not use a WYSIWYG editor to edit this field: {$a}.';
 
 // Strings used by input elements.
 $string['booleangotunrecognisedvalue'] = 'Invalid input.';
