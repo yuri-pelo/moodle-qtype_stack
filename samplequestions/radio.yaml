@@ -1,0 +1,55 @@
+---
+name: Radio (shuffle)
+question_html: <p>Differentiate {@p@} with respect to {@x@}. </p><p>[[input:ans1]]</p><div>[[validation:ans1]]</div>
+penalty: 0.300000
+variables: |-
+  /* Create a list of potential answers. */
+  p:sin(2*x);
+  ta:[[diff(p,x),true],[p,false],[int(p,x),false],[cos(2*x)+c,false]];
+  /* The actual correct answer.    */
+  tac:diff(p,x)
+  /* Randomly shuffle the list "ta". */
+  ta:random_permutation(ta);
+  /* Add in a "None of these" to the end of the list.  The Maxima value is the atom null. */
+  tao:[null, false, "None of these"];
+  ta:append(ta,[tao]);
+specific_feedback_html: '[[feedback:prt1]]'
+note: '{@maplist(first,ta)@}.  Correct answer is {@tac@}.'
+inputs:
+  ans1:
+    type: radio
+    model_answer: ta
+    syntax_attribute: value
+    must_verify: false
+    show_validations: none
+    options: latex
+response_trees:
+  prt1:
+    first_node: node_0
+    nodes:
+      node_0:
+        answer_test: Diff
+        answer: ans1
+        model_answer: diff(p,x)
+        test_options: x
+        T:
+          score_mode: equals
+          answer_note: prt1-1-T
+        F:
+          answer_note: prt1-1-F
+tests:
+  1:
+    ans1: 2*cos(2*x)
+    prt1:
+      score: 1
+      penalty: 0
+      answer_note: prt1-1-T
+  2:
+    ans1: cos(2*x)+c
+    prt1:
+      score: 0
+      penalty: 0.300000
+      answer_note: prt1-1-F
+stackversion: 0
+...
+

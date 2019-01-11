@@ -333,7 +333,10 @@ class stack_dropdown_input extends stack_input {
      * @return string
      */
     public function contents_to_maxima($contents) {
-        return $this->get_input_ddl_value($contents[0]);
+        if (array_key_exists(0, $contents)) {
+            return $this->get_input_ddl_value($contents[0]);
+        }
+        return "null";
     }
 
     /* This function always returns an array where the key is the key in the ddlvalues.
@@ -500,11 +503,6 @@ class stack_dropdown_input extends stack_input {
      * not the CAS values.  These next two methods map between the keys and the CAS values.
      */
     protected function get_input_ddl_value($key) {
-        $val = '';
-        // Resolve confusion over null values in the key.
-        if (0 === $key || '0' === $key) {
-            $key = '';
-        }
         if (array_key_exists($key, $this->ddlvalues)) {
             return $this->ddlvalues[$key]['value'];
         }
