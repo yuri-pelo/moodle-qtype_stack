@@ -114,6 +114,8 @@ abstract class stack_connection_helper {
     }
 
     /**
+     * Check the result of a CAS computation to see if a time-out occurred.
+     * @param array $result as returned from stack_cas_connection::compute.
      * @return bool whether the CAS timed out.
      */
     public static function did_cas_timeout($result) {
@@ -197,7 +199,7 @@ abstract class stack_connection_helper {
     public static function stackmaxima_version_healthcheck() {
         self::ensure_config_loaded();
 
-        $command = 'cab:block([],print("[TimeStamp= [ 0 ], Locals= [ 0=[ error= ["), ' .
+        $command = 'cab:block([],print("[STACKSTART Locals= [ 0=[ error= ["), ' .
                 'cte("__stackmaximaversion",errcatch(__stackmaximaversion:stackmaximaversion)), print("] ]"), return(true));' .
                 "\n";
         $connection = self::make();
@@ -244,6 +246,9 @@ abstract class stack_connection_helper {
 
     /**
      * Exectue a CAS command, without any caching.
+     *
+     * @param string the command to execute.
+     * @return array with tho elements, the results from compute, and the CAS debug output.
      */
     private static function stackmaxima_nocache_call($command) {
         self::ensure_config_loaded();
@@ -274,7 +279,7 @@ abstract class stack_connection_helper {
         // Put something non-trivial in the call.
         $date = date("Y-m-d H:i:s");
 
-        $command = 'cab:block([],print("[TimeStamp= [ 0 ], Locals= [ 0=[ error= ["), ' .
+        $command = 'cab:block([],print("[STACKSTART Locals= [ 0=[ error= ["), ' .
                 'cte("CASresult",errcatch(diff(x^n,x))), print("1=[ error= ["), ' .
                 'cte("STACKversion",errcatch(stackmaximaversion)), print("2=[ error= ["), ' .
                 'cte("MAXIMAversion",errcatch(MAXIMA_VERSION_STR)), print("3=[ error= ["), ' .
@@ -325,7 +330,7 @@ abstract class stack_connection_helper {
             }
         }
 
-        if (strstr($debug, 'failed to load')) {
+        if (strpos($debug, 'failed to load') !== false) {
             $message[] = stack_string('settingmaximalibraries_failed');
             $success = false;
         }

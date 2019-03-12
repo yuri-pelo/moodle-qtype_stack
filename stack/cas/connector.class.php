@@ -208,15 +208,16 @@ abstract class stack_cas_connection_base implements stack_cas_connection {
             return array();
         }
 
-        // Check we have a timestamp & remove everything before it.
-        $ts = substr_count($rawresult, '[TimeStamp');
+        // Check we have a STACKSTART stamp & remove everything before it.
+        $ts = substr_count($rawresult, '[STACKSTART');
         if ($ts != 1) {
-            $this->debug->log('', 'unpack_raw_result: no timestamp returned. Data returned was: '.$rawresult);
+            $this->debug->log('', 'unpack_raw_result: no STACKSTART returned. Data returned was: '.$rawresult);
             return array();
         } else {
-            $result = strstr($rawresult, '[TimeStamp'); // Remove everything before the timestamp.
+            $result = strstr($rawresult, '[STACKSTART'); // Remove everything before the [STACKSTART.
         }
 
+        $result = trim(str_replace("STACKSTART", '', $result));
         $result = trim(str_replace("\n ", '', $result));
         $result = trim(str_replace("\n", '', $result));
 
@@ -261,13 +262,6 @@ abstract class stack_cas_connection_base implements stack_cas_connection {
             // If there are plots in the output.
             $plot = isset($local['display']) ? substr_count($local['display'], '!ploturl!') : 0;
             if ($plot > 0) {
-                // Plots always contain errors, so remove.
-                $local['error'] = '';
-                // For mathml display, remove the mathml that is inserted wrongly round the plot.
-                $local['display'] = str_replace('<math xmlns=\'http://www.w3.org/1998/Math/MathML\'>',
-                    '', $local['display']);
-                $local['display'] = str_replace('</math>', '', $local['display']);
-
                 // @codingStandardsIgnoreStart
                 // For latex mode, remove the mbox.
                 // This handles forms: \mbox{image} and (earlier?) \mbox{{} {image} {}}.
@@ -338,7 +332,7 @@ abstract class stack_cas_connection_base implements stack_cas_connection {
         $error = explode("!NEWLINE!", $errstr);
         $errorclean = array();
         foreach ($error as $err) {
-            // This case arises when we use a numerical text for algebraic equivalence.
+            // This case arises when we use a numerical test for algebraic equivalence.
             if (strpos($err, 'STACK: ignore previous error.') !== false) {
                 $err = '';
             }

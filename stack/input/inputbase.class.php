@@ -107,6 +107,12 @@ abstract class stack_input {
     protected $units = false;
 
     /**
+     * Decide if the input is being used at run-time or just constructed elswhere.
+     * @var bool.
+     */
+    protected $runtime = true;
+
+    /**
      * Constructor
      *
      * @param string $name the name of the input. This is the name of the
@@ -117,14 +123,17 @@ abstract class stack_input {
      * @param int $height height of the input.
      * @param array $parameters The options for this input. All the opitions have default
      *      values, so you only have to give options that are different from the default.
+     * @param bool $runtime This decides if we are at runtime (true) or in edit mode.  Can we rely on the value of
+     * the teacher's answer as an instantiated variable?
      */
-    public function __construct($name, $teacheranswer, $options = null, $parameters = null) {
+    public function __construct($name, $teacheranswer, $options = null, $parameters = null, $runtime = true) {
         if (trim($name) === '') {
             throw new stack_exception('stack_input: $name must be non-empty.');
         }
 
         $this->name = $name;
         $this->teacheranswer = $teacheranswer;
+        $this->runtime = $runtime;
         $class = get_class($this);
         $this->parameters = $class::get_parameters_defaults();
 
@@ -158,7 +167,6 @@ abstract class stack_input {
             foreach ($options as $option) {
                 $option = strtolower(trim($option));
                 list($option, $arg) = stack_utils::parse_option($option);
-
                 // Only accept those options specified in the array for this input type.
                 if (array_key_exists($option, $this->extraoptions)) {
                     if ($arg === '') {
@@ -178,7 +186,7 @@ abstract class stack_input {
     /**
      * Validate the individual extra options.
      */
-    protected function validate_extra_options() {
+    public function validate_extra_options() {
 
         foreach ($this->extraoptions as $option => $arg) {
 
@@ -186,31 +194,43 @@ abstract class stack_input {
 
                 case 'novars':
                     if (!(is_bool($arg))) {
-                        $this->errors[] = stack_string('numericalinputoptbooplerr', array('opt' => $option, 'val' => $arg));
+                        $this->errors[] = stack_string('numericalinputoptboolerr', array('opt' => $option, 'val' => $arg));
                     }
                     break;
 
                 case 'floatnum':
                     if (!(is_bool($arg))) {
-                        $this->errors[] = stack_string('numericalinputoptbooplerr', array('opt' => $option, 'val' => $arg));
+                        $this->errors[] = stack_string('numericalinputoptboolerr', array('opt' => $option, 'val' => $arg));
                     }
                     break;
 
                 case 'rationalnum':
                     if (!(is_bool($arg))) {
-                        $this->errors[] = stack_string('numericalinputoptbooplerr', array('opt' => $option, 'val' => $arg));
+                        $this->errors[] = stack_string('numericalinputoptboolerr', array('opt' => $option, 'val' => $arg));
+                    }
+                    break;
+
+                case 'hideanswer':
+                    if (!(is_bool($arg))) {
+                        $this->errors[] = stack_string('numericalinputoptboolerr', array('opt' => $option, 'val' => $arg));
+                    }
+                    break;
+
+                case 'allowempty':
+                    if (!(is_bool($arg))) {
+                        $this->errors[] = stack_string('numericalinputoptboolerr', array('opt' => $option, 'val' => $arg));
                     }
                     break;
 
                 case 'rationalized':
                     if (!(is_bool($arg))) {
-                        $this->errors[] = stack_string('numericalinputoptbooplerr', array('opt' => $option, 'val' => $arg));
+                        $this->errors[] = stack_string('numericalinputoptboolerr', array('opt' => $option, 'val' => $arg));
                     }
                     break;
 
                 case 'negpow':
                     if (!(is_bool($arg))) {
-                        $this->errors[] = stack_string('numericalinputoptbooplerr', array('opt' => $option, 'val' => $arg));
+                        $this->errors[] = stack_string('numericalinputoptboolerr', array('opt' => $option, 'val' => $arg));
                     }
                     break;
 
@@ -235,6 +255,52 @@ abstract class stack_input {
                 case 'maxsf':
                     if (!($arg === false || is_numeric($arg))) {
                         $this->errors[] = stack_string('numericalinputoptinterr', array('opt' => $option, 'val' => $arg));
+                    }
+                    break;
+
+                case 'mul':
+                    // Mul was depricated in version 4.2.
+                    $this->errors[] = stack_string('stackversionmulerror');
+
+                case 'hideequiv':
+                    if (!(is_bool($arg))) {
+                        $this->errors[] = stack_string('numericalinputoptboolerr', array('opt' => $option, 'val' => $arg));
+                    }
+                    break;
+
+                case 'hidedomain':
+                    if (!(is_bool($arg))) {
+                        $this->errors[] = stack_string('numericalinputoptboolerr', array('opt' => $option, 'val' => $arg));
+                    }
+                    break;
+
+                case 'comments':
+                    if (!(is_bool($arg))) {
+                        $this->errors[] = stack_string('numericalinputoptboolerr', array('opt' => $option, 'val' => $arg));
+                    }
+                    break;
+
+                case 'firstline':
+                    if (!(is_bool($arg))) {
+                        $this->errors[] = stack_string('numericalinputoptboolerr', array('opt' => $option, 'val' => $arg));
+                    }
+                    break;
+
+                case 'assume_pos':
+                    if (!(is_bool($arg))) {
+                        $this->errors[] = stack_string('numericalinputoptboolerr', array('opt' => $option, 'val' => $arg));
+                    }
+                    break;
+
+                case 'assume_real':
+                    if (!(is_bool($arg))) {
+                        $this->errors[] = stack_string('numericalinputoptboolerr', array('opt' => $option, 'val' => $arg));
+                    }
+                    break;
+
+                case 'calculus':
+                    if (!(is_bool($arg))) {
+                        $this->errors[] = stack_string('numericalinputoptboolerr', array('opt' => $option, 'val' => $arg));
                     }
                     break;
 
@@ -317,7 +383,7 @@ abstract class stack_input {
      * @param string $parameter the parameter name
      * @param mixed $default the default to return if this parameter is not set.
      */
-    protected function get_parameter($parameter, $default = null) {
+    public function get_parameter($parameter, $default = null) {
         if (array_key_exists($parameter, $this->parameters)) {
             return $this->parameters[$parameter];
         } else {
@@ -395,6 +461,26 @@ abstract class stack_input {
     }
 
     /**
+     * Get the value of one of the extra options
+     * @param string $topyion the parameter name
+     * @param mixed $default the default to return if this parameter is not set.
+     */
+    public function get_extra_option($option, $default = false) {
+        if (array_key_exists($option, $this->extraoptions)) {
+            return $this->extraoptions[$option];
+        } else {
+            return $default;
+        }
+    }
+
+    /*
+     * Return the value of any errors.
+     */
+    public function get_extra_options() {
+        return $this->extraoptions;
+    }
+
+    /**
      * Get the input variable that this input expects to process.
      * All the variable names should start with $this->name.
      * @return array string input name => PARAM_... type constant.
@@ -421,6 +507,9 @@ abstract class stack_input {
      */
     public function get_teacher_answer_display($value, $display) {
         // By default, we don't show how to "type this in".  This is only done for some, e.g. algebraic and textarea.
+        if (trim($value) == 'EMPTYANSWER') {
+            return stack_string('teacheranswerempty');
+        }
         return stack_string('teacheranswershow_disp', array('display' => '\( '.$display.' \)'));
     }
 
@@ -428,6 +517,9 @@ abstract class stack_input {
     protected function stackeq_to_equals($val) {
         if (substr(trim($val), 0, 8) == 'stackeq(') {
             $val = '= ' . substr(trim($val), 8, -1);
+        }
+        if (substr(trim($val), 0, 9) == 'stacklet(' && substr(trim($val), -1, 1) == ')') {
+            $val = stack_string('equiv_LET') . ' ' . implode('=', explode(',', substr(trim($val), 9, -1)));
         }
         return $val;
     }
@@ -546,13 +638,14 @@ abstract class stack_input {
 
         // Generate an expression from which we extract the list of variables in the student's answer.
         // We do this from the *answer* once interprted, so stars are inserted if insertStars=2.
-        $lvars = new stack_cas_casstring('ev(sort(listofvars('.$this->name.')),simp)');
+        $lvars = new stack_cas_casstring('stack_validate_listofvars('.$this->name.')');
         $lvars->get_valid('t', $this->get_parameter('strictSyntax', true),
                 $this->get_parameter('insertStars', 0), $this->get_parameter('allowWords', ''));
         if ($lvars->get_valid() && $valid && $answer->get_valid()) {
             $sessionvars[] = $lvars;
         }
-        $additionalvars = $this->additional_session_variables($caslines, $teacheranswer);
+        $additionalvars = array_merge($this->extra_option_variables(),
+                $this->additional_session_variables($caslines, $teacheranswer));
         $sessionvars = array_merge($sessionvars, $additionalvars);
 
         $localoptions->set_option('simplify', false);
@@ -590,6 +683,10 @@ abstract class stack_input {
         } else {
             $status = self::SCORE;
         }
+        // The EMPTYANSWER in the response is always at the score state, otherwise you need to "validate" a blank box.
+        if ('EMPTYANSWER' == $answer->get_value() && array_key_exists($this->name, $response)) {
+            $status = self::SCORE;
+        }
 
         return new stack_input_state($status, $contents, $interpretedanswer, $display, $errors, $note, $lvarsdisp);
     }
@@ -609,8 +706,8 @@ abstract class stack_input {
      * Decide if the contents of this attempt is blank.
      *
      * @param array $contents a non-empty array of the student's input as a split array of raw strings.
-     * @return string any error messages describing validation failures. An empty
-     *      string if the input is valid - at least according to this test.
+     * @return boolean
+     *
      */
     protected function is_blank_response($contents) {
         $allblank = true;
@@ -637,7 +734,6 @@ abstract class stack_input {
     protected function validate_contents($contents, $forbiddenkeys, $localoptions) {
         $errors = $this->extra_validation($contents);
         $valid = !$errors;
-
         // Now validate the input as CAS code.
         $modifiedcontents = array();
         $caslines = array();
@@ -700,6 +796,10 @@ abstract class stack_input {
      * If needed, these will be used by the extra options.
      */
     protected function additional_session_variables($caslines, $teacheranswer) {
+        return array();
+    }
+
+    private function extra_option_variables() {
 
         $additionalvars = array();
 
@@ -719,6 +819,36 @@ abstract class stack_input {
             $rationalized = new stack_cas_casstring('rationalized('.$this->name.')');
             $rationalized->get_valid('t');
             $additionalvars['rationalized'] = $rationalized;
+        }
+
+        if (array_key_exists('assume_pos', $this->extraoptions)) {
+            $assumepos = 'false';
+            if ($this->extraoptions['assume_pos']) {
+                $assumepos = 'true';
+            }
+            $assumepos = new stack_cas_casstring('assume_pos:'.$assumepos);
+            $assumepos->get_valid('t');
+            $additionalvars['assume_pos'] = $assumepos;
+        }
+
+        if (array_key_exists('assume_real', $this->extraoptions)) {
+            $assumereal = 'false';
+            if ($this->extraoptions['assume_real']) {
+                $assumereal = 'true';
+            }
+            $assumereal = new stack_cas_casstring('assume_real:'.$assumereal);
+            $assumereal->get_valid('t');
+            $additionalvars['assume_real'] = $assumereal;
+        }
+
+        if (array_key_exists('calculus', $this->extraoptions)) {
+            $calculus = 'false';
+            if ($this->extraoptions['calculus']) {
+                $calculus = 'true';
+            }
+            $calculus = new stack_cas_casstring('stack_calculus:'.$calculus);
+            $calculus->get_valid('t');
+            $additionalvars['calculus'] = $assumereal;
         }
 
         return $additionalvars;
@@ -744,6 +874,13 @@ abstract class stack_input {
             $valid = false;
         } else {
             $display = '\[ ' . $answer->get_display() . ' \]';
+        }
+
+        // The "novars" option is only used by the numerical input type.
+        if (array_key_exists('novars', $this->extraoptions)) {
+            if (!$valid) {
+                $errors[] = stack_string('numericalinputmustnumber');
+            }
         }
 
         // Guard clause at this point.
@@ -888,12 +1025,15 @@ abstract class stack_input {
         if (self::BLANK == $state->status) {
             return '';
         }
-
+        if ($this->get_extra_option('allowempty') && $this->contents_to_maxima($state->contents) == 'EMPTYANSWER') {
+            return '';
+        }
         if ($this->get_parameter('showValidation', 1) == 0 && self::INVALID != $state->status) {
             return '';
         }
         $feedback  = '';
-        $feedback .= html_writer::tag('p', stack_string('studentValidation_yourLastAnswer', $state->contentsdisplayed));
+        $feedback .= html_writer::tag('p', stack_string('studentValidation_yourLastAnswer',
+                stack_utils::logic_nouns_sort($state->contentsdisplayed, 'remove')));
 
         if ($this->requires_validation() && '' !== $state->contents) {
             $feedback .= html_writer::empty_tag('input', array('type' => 'hidden',
@@ -932,7 +1072,11 @@ abstract class stack_input {
 
         $contents = array();
         if (array_key_exists($this->name, $response)) {
-            $contents = array($response[$this->name]);
+            $val = $response[$this->name];
+            if (trim($val) == '' && $this->get_extra_option('allowempty')) {
+                $val = 'EMPTYANSWER';
+            }
+            $contents = array($val);
         }
         return $contents;
     }
@@ -959,6 +1103,9 @@ abstract class stack_input {
      */
     public function get_correct_response($in) {
         $value = stack_utils::logic_nouns_sort($in, 'remove');
+        if (trim($value) == 'EMPTYANSWER') {
+            $value = '';
+        }
         return $this->maxima_to_response_array($value);
     }
 

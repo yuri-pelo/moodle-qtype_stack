@@ -30,7 +30,7 @@ Although CLISP is the most portable - due to being interpreted - other lisps can
 
 ## Create Maxima Image ##
 
-Lisp is able to save a snapshot of its current state to a file. This file can then be used to re-start Lisp, and hence Maxima, in exactly that state. This optimisation involves creating a snap-shot of Lisp with Maxima and all the STACK code loaded, which can speed up launch times by an order of magnitude on Linux. This tip was originally provided Niels Walet.
+Lisp is able to save a snapshot of its current state to a file. This file can then be used to re-start Lisp, and hence Maxima, in exactly that state. This optimization involves creating a snap-shot of Lisp with Maxima and all the STACK code loaded, which can speed up launch times by an order of magnitude on Linux. This tip was originally provided Niels Walet.
 
 The principle is to save an image of Maxima running with STACK libraries already loaded then run this directly.  The healtcheck page contains a link at the bottom "Create Maxima Image".  We strongly recommend you use the automated option to create a Maxima image.
 

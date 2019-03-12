@@ -23,7 +23,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-
 class stack_inputvalidation_test_data {
 
     const RAWSTRING     = 0;
@@ -104,6 +103,8 @@ class stack_inputvalidation_test_data {
         array('{1,2,3.4}', 'php_true', '{1,2,3.4}', 'cas_true', '\left \{1 , 2 , 3.4 \right \}', 'Illegal_floats', ""),
         array('{x, y, z }', 'php_true', '{x, y, z }', 'cas_true', '\left \{x , y , z \right \}', '', ""),
         array('set(x, y, z)', 'php_false', '', '', '', 'unknownFunction', ""),
+        array('matrix([a,b],[c,d])', 'php_true', 'matrix([a,b],[c,d])', 'cas_true', '\left[\begin{array}{cc} a & b \\\\ c & d \end{array}\right]', '', 'Matrices'),
+        array('stackvector(a)', 'php_true', 'stackvector(a)', 'cas_true', '{\bf a}', '', 'Vectors'),
         array('a[2]', 'php_true', 'a[2]', 'cas_true', 'a_{2}', '', "Maxima arrays"),
         array('a[n+1]', 'php_true', 'a[n+1]', 'cas_true', 'a_{n+1}', '', ""),
         array('a[1,2]', 'php_true', 'a[1,2]', 'cas_true', 'a_{1,2}', '', ""),
@@ -278,6 +279,7 @@ class stack_inputvalidation_test_data {
         array('(-b+-sqrt(b^2))/(2*a)', 'php_true', '(-b+-sqrt(b^2))/(2*a)', 'cas_true',
                 '\frac{{-b \pm \sqrt{b^2}}}{2\cdot a}', '', ""),
         array('a+-b', 'php_true', 'a+-b', 'cas_true', '{a \pm b}', '', ""),
+        array('a-+b', 'php_false', 'a-+b', '', '', 'spuriousop', ""),
         array('x & y', 'php_false', 'x & y', '', '', 'spuriousop', "Synonyms"),
         array('x && y', 'php_false', 'x && y', '', '', 'spuriousop', ""),
         array('x and y', 'php_true', 'x nounand y', 'cas_true', 'x\,{\mbox{ and }}\, y', '', ""),
@@ -337,8 +339,8 @@ class stack_inputvalidation_test_data {
         array('fact(13)', 'php_false', '', '', '', 'unknownFunction', ""),
         array('ceiling(x)', 'php_true', 'ceiling(x)', 'cas_true', '\left \lceil x \right \rceil', '', ""),
         array('floor(x)', 'php_true', 'floor(x)', 'cas_true', '\left \lfloor x \right \rfloor', '', ""),
-        array('int(x,y)', 'php_true', 'int(x,y)', 'cas_true', 'x\cdot y', '', ""),
-        array('diff(x,y)', 'php_true', 'diff(x,y)', 'cas_true', '0', '', ""),
+        array('int(x,y)', 'php_true', 'nounint(x,y)', 'cas_true', '\int {x}{\;\mathrm{d}y}', '', ""),
+        array('diff(x,y)', 'php_true', 'noundiff(x,y)', 'cas_true', '\frac{\mathrm{d} x}{\mathrm{d} y}', '', ""),
         array("'int(x,y)", 'php_false', '', 'cas_true', '', 'apostrophe',
             "Note the use of the apostrophe here to make an inert function."),
         array("'diff(x,y)", 'php_false', '', 'cas_true', '', 'apostrophe', "Not ideal...arises because we don't 'simplify'."),
@@ -353,8 +355,12 @@ class stack_inputvalidation_test_data {
         array('tan(x)', 'php_true', 'tan(x)', 'cas_true', '\tan \left( x \right)', '', ""),
         array('sec(x)', 'php_true', 'sec(x)', 'cas_true', '\sec \left( x \right)', '', ""),
         array('cot(x)', 'php_true', 'cot(x)', 'cas_true', '\cot \left( x \right)', '', ""),
+        array('csc(x)', 'php_true', 'csc(x)', 'cas_true', '\csc \left( x \right)', '', ""),
         array('cosec(x)', 'php_true', 'cosec(x)', 'cas_true', '\csc \left( x \right)', '', ""), /* This is now a Maxima alias. */
-        array('cosec(x)', 'php_true', 'cosec(x)', 'cas_true', '\csc \left( x \right)', '', ""), // This is now a Maxima alias.
+        array('csc(6*x)^2*(7*sin(6*x)*cos(7*x)-6*cos(6*x)*sin(7*x))', 'php_true',
+                'csc(6*x)^2*(7*sin(6*x)*cos(7*x)-6*cos(6*x)*sin(7*x))', 'cas_true',
+                '\csc ^2\left(6\cdot x\right)\cdot \left(7\cdot \sin \left( 6\cdot x \right)\cdot \cos \left( 7\cdot x \right)-6\cdot ' .
+                '\cos \left( 6\cdot x \right)\cdot \sin \left( 7\cdot x \right)\right)', '', ""),
         array('Sin(x)', 'php_false', '', '', '', 'unknownFunctionCase', ""),
         array('sim(x)', 'php_false', '', '', '', 'unknownFunction', ""),
         array('asin(x)', 'php_true', 'asin(x)', 'cas_true', '\sin^{-1}\left( x \right)', '', "Maxima uses the asin pattern"),
@@ -408,7 +414,7 @@ class stack_inputvalidation_test_data {
         array('sum(k^n,n,0,3)', 'php_true', 'sum(k^n,n,0,3)', 'cas_true', '\sum_{n=0}^{3}{k^{n}}', '', "Sums and products"),
         array('product(cos(k*x),k,1,3)', 'php_true', 'product(cos(k*x),k,1,3)', 'cas_true',
             '\prod_{k=1}^{3}{\cos \left( k\cdot x \right)}', '', '')
-        );
+    );
 
     public static function get_raw_test_data() {
         return self::$rawdata;

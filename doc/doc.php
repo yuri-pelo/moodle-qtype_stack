@@ -23,7 +23,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+// The docs should be public and not require a login, so we ignore the fact we load config here without a login check.
+// @codingStandardsIgnoreStart
 require_once(__DIR__ . '/../../../../config.php');
+// @codingStandardsIgnoreEnd
 require_once(__DIR__ . '/docslib.php');
 require_once(__DIR__. '/../stack/utils.class.php');
 
@@ -70,9 +73,9 @@ $lastseg = $segs[count($segs) - 1];
 // Links for the end of the page.
 if ($uri == '/') {
     // The docs front page at .../doc.php/.
-    $linkurls = array(
-        $docsurl . '/Site_map' => stack_string('stackDoc_siteMap')
-    );
+    $linkurls = array();
+    $sitemapurl = '<a href = "' . $docsurl . '/Site_map' .'">'
+        . stack_string('stackDoc_siteMap') . '</a>';
 
 } else if ('/Site_map' == $uri) {
     $linkurls = array(
@@ -97,7 +100,6 @@ $links = implode(' | ', $links);
 
 if ('Site_map' == $lastseg) {
     $body = stack_docs_site_map($links, $docsroot, $docsurl);
-
 } else {
     if ('' == $lastseg) {
         $file = $docsroot . $uri . 'index.md';
@@ -113,15 +115,21 @@ if ('Site_map' == $lastseg) {
     }
 }
 
-/* Add the version number to the front page.  */
+/* Add the version number and logos to the front page.  */
 if ($uri == '/') {
-    $settings = stack_utils::get_config();
+    $webpix1  = $CFG->wwwroot . '/question/type/stack/doc/content/logo.png';
+    $webpix2  = $CFG->wwwroot . '/question/type/stack/doc/content/CATE.jpg';
+    $body = $sitemapurl . '<br />'
+        . '<img src="' . $webpix1 . '" width=200 />'
+        . '<img src="' . $webpix2 . '" width=140 style="margin-left: 45px;"/>' . $body;
+
+    $settings = get_config('qtype_stack');
     $body .= '<br/>'.stack_string('stackDoc_version', $settings->version);
 }
 
 
 $webpix  = $CFG->wwwroot . '/question/type/stack/pix/logo-sm.png';
-$pagetitle = '<img src="' . $CFG->wwwroot . '/question/type/stack/pix/logo-sm.png" style="margin-right: 10px;" />' .
+$pagetitle = '<img src="' . $webpix . '" style="margin-right: 15px;" />' .
         stack_string('stackDoc_docs');
 
 echo $OUTPUT->header();

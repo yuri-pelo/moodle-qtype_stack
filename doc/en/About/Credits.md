@@ -20,7 +20,7 @@ Previous developers have included.
 
 STACK is designed to support the straightforward addition of other language packs. If you have translated STACK into other languages - or would be interested in doing so - please let us know! Likewise if you would really like to see STACK in another language please contact us.  Details of how to translate STACK, and forthcoming translations, are given on the [languages](../Developer/Languages.md) developer's page.
 
-Currently STACK is released with the following languages.
+STACK is released in many languages, using Moodle's ATOS language system.
 
   * EN: English (British), by Chris Sangwin (and others)
   * FI: Finnish, by Matti Pauna
@@ -28,13 +28,15 @@ Currently STACK is released with the following languages.
   * ES: Spanish, by Victor Hugo Huerta 
   * JA: Japanese, by Yasuyuki Nakamura and Takahiro Nakahara  
 
+German documentation added in Jan 2019 by Eva Mix of University of Cologne, Germany and Mario Josupeit of University of Cologne, Germany.
+
 # Other implementations and projects
 
 STACK questions have also been included in the ILIAS project.
 
 # User list
 
-The following institutions made use of previous versionf of STACK.  If you are actively using or trialling STACK and would like to be listed below then please contact the developers.
+The following institutions made use of previous versions of STACK.  If you are actively using STACK and would like to be listed below then please contact the developers.
 
 School of Mathematics, The University of Edinburgh
 : The home of STACK. Contact [Chris Sangwin](mailto:c.j.sangwin@ed.ac.uk).

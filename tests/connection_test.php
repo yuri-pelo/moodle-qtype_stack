@@ -30,40 +30,43 @@ class stack_cas_connection_base_test extends qtype_stack_testcase {
 
     public function test_compute_true() {
         $connection = stack_connection_helper::make();
-        $strin = 'cab:block([],print("[TimeStamp= [ 0 ], Locals= [ 0=[ error= ["), cte("p",errcatch(diff(x^n,x))),'
+        $strin = 'cab:block([],print("[STACKSTART Locals= [ 0=[ error= ["), cte("p",errcatch(diff(x^n,x))),'
                 .' print("] ]"), return(true));';
         $return = $connection->compute($strin);
         $expected = array( 0 => array('key' => 'p', 'value' => 'n*x^(n-1)', 'dispvalue' => 'n*x^(n-1)', 'display' => 'n\,x^{n-1}',
                 'error' => ''));
-        $this->assertEquals($return, $expected);
+        $this->assertEquals($expected, $return);
     }
 
     public function test_compute_dispvalue() {
         $connection = stack_connection_helper::make();
-        $strin = 'cab:block([],print("[TimeStamp= [ 0 ], Locals= [ 0=[ error= ["), cte("p",errcatch(dispdp(1,3))),'
+        $strin = 'cab:block([],print("[STACKSTART Locals= [ 0=[ error= ["), cte("p",errcatch(dispdp(1,3))),'
         .' print("] ]"), return(true));';
         $return = $connection->compute($strin);
         $expected = array( 0 => array('key' => 'p', 'value' => 'displaydp(1.0,3)', 'dispvalue' => '1.00', 'display' => '1.00',
                 'error' => ''));
-        $this->assertEquals($return, $expected);
+        $this->assertEquals($expected, $return);
     }
 
     public function test_compute_dispvalue_units() {
         $connection = stack_connection_helper::make();
-        $strin = 'cab:block([],print("[TimeStamp= [ 0 ], Locals= [ 0=[ error= ["), cte("p",errcatch(stackunits(dispsf(30,4),kg))),'
+        $strin = 'cab:block([],print("[STACKSTART Locals= [ 0=[ error= ["), cte("p",errcatch(stackunits(dispsf(30,4),kg))),'
         .' print("] ]"), return(true));';
         $return = $connection->compute($strin);
         $expected = array( 0 => array('key' => 'p', 'value' => 'stackunits(displaydp(30,2),kg)',
                 'dispvalue' => '30.00*kg', 'display' => '30.00\, {\it kg}', 'error' => ''));
-        $this->assertEquals($return, $expected);
+        $this->assertEquals($expected, $return);
     }
 
+    /*
+     * Note, with this test on SBCL the timeout can create a runaway process.
+     */
     public function test_compute_miss_formed_command() {
         $connection = stack_connection_helper::make();
         // This will induce a timeout on the CAS because we don't have a well formed CAS statement.
-        $strin = 'cab:block([],print("[TimeStamp= [ 0 ];';
+        $strin = 'cab:block([],print("[STACKSTART ;';
         $return = $connection->compute($strin);
         $expected = array();
-        $this->assertEquals($return, $expected);
+        $this->assertEquals($expected, $return);
     }
 }

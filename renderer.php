@@ -38,7 +38,6 @@ class qtype_stack_renderer extends qtype_renderer {
         $response = $qa->get_last_qt_data();
 
         $questiontext = $question->questiontextinstantiated;
-
         // Replace inputs.
         $inputstovaldiate = array();
         $qaid = null;
@@ -347,11 +346,11 @@ class qtype_stack_renderer extends qtype_renderer {
         }
 
         $gradingdetails = '';
-        if (!$result->errors && $qa->get_behaviour_name() == 'adaptivemultipart') {
-            // This is rather a hack, but it will probably work.
+        if (!$result->errors && $qa->get_behaviour_name() == 'adaptivemultipart'
+                && $options->marks >= question_display_options::MARK_AND_MAX) {
             $renderer = $this->page->get_renderer('qbehaviour_adaptivemultipart');
             $gradingdetails = $renderer->render_adaptive_marks(
-                    $qa->get_behaviour()->get_part_mark_details($name), $options);
+                $qa->get_behaviour()->get_part_mark_details($name), $options);
         }
 
         if ($includestandardfeedback) {

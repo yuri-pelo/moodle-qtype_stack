@@ -152,7 +152,7 @@ class stack_cas_casstring {
                 'conmetderiv' => true, 'constvalue' => true, 'cont2part' => true, 'context' => true, 'contexts' => true,
                 'contortion' => true, 'contour' => true, 'contour_levels' => true, 'contour_plot' => true,
                 'contract_edge' => true, 'contragrad' => true, 'contrib_ode' => true, 'convert' => true, 'coord' => true,
-                'copy_graph' => true, 'covdiff' => true, 'covers' => true, 'create_list' => true, 'csetup' => true,
+                'copy_graph' => true, 'covdiff' => true, 'covers' => true, 'csetup' => true,
                 'ct_coords' => true, 'ct_coordsys' => true, 'ctaylor' => true, 'ctaypov' => true, 'ctaypt' => true,
                 'ctayswitch' => true, 'ctayvar' => true, 'ctorsion_flag' => true, 'ctransform' => true,
                 'ctrgsimp' => true, 'cunlisp' => true, 'declare_constvalue' => true, 'declare_dimensions' => true,
@@ -483,8 +483,10 @@ class stack_cas_casstring {
                 'var_student_t' => true, 'var_weibull' => true, 'null' => true, 'net' => true, 'texsub' => true,
                 'logbase' => true, 'day' => true, 'year' => true, 'rpm' => true, 'rev' => true, 'product' => true,
                 'gal' => true, 'deg' => true, 'cal' => true, 'btu' => true, 'rem' => true,
-                'nounor' => true, 'nounand' => true, 'xor' => true, 'all' => true, 'none' => true, 'stackeq' => true,
-                'nounint' => true, 'noundiff' => true, 'root' => true);
+                'nounor' => true, 'nounand' => true, 'xor' => true, 'nounint' => true, 'noundiff' => true, 'root' => true,
+                'all' => true, 'none' => true, 'stackeq' => true, 'stacklet' => true,
+                'stackunits' => true, 'stackvector' => true, 'EMPTYANSWER' => true
+                );
 
     /**
      * Upper case Greek letters are allowed.
@@ -555,7 +557,7 @@ class stack_cas_casstring {
         if (!($conditions === null || is_array($conditions))) {
             throw new stack_exception('stack_cas_casstring: conditions must be null or an array.');
         }
-        if (count($conditions) != 0) {
+        if (!empty($conditions)) {
             $this->conditions   = $conditions;
         }
     }
@@ -666,21 +668,16 @@ class stack_cas_casstring {
     }
 
     private function check_constants($stringles) {
-        // Check for % signs, allow %pi %e, %i, %gamma, %phi but nothing else.
+        // Check for % signs, allow a restricted subset of things.
         if (strstr($stringles, '%') !== false) {
             $cmdl = strtolower($stringles);
-            preg_match_all("(\%.*)", $cmdl, $found);
+            preg_match_all("(\%(?!e|pi|i|j|gamma|phi|and|or|union).*)", $cmdl, $found);
 
             foreach ($found[0] as $match) {
-                if (!((strpos($match, '%e') !== false) || (strpos($match, '%pi') !== false)
-                    || (strpos($match, '%i') !== false) || (strpos($match, '%j') !== false)
-                    || (strpos($match, '%gamma') !== false) || (strpos($match, '%phi') !== false))) {
-                    // Constants %e and %pi are allowed. Any other percentages dissallowed.
-                    $this->add_error(stack_string('stackCas_percent',
-                            array('expr' => stack_maxima_format_casstring($this->casstring))));
-                    $this->answernote[] = 'percent';
-                    $this->valid   = false;
-                }
+                $this->add_error(stack_string('stackCas_percent',
+                        array('expr' => stack_maxima_format_casstring($this->casstring))));
+                $this->answernote[] = 'percent';
+                $this->valid   = false;
             }
         }
     }
@@ -888,7 +885,7 @@ class stack_cas_casstring {
 
     private function check_operators($stringles, $security) {
         // Check for spurious operators.
-        $spuriousops = array('<>', '||', '&', '..', ',,', '/*', '*/', '==');
+        $spuriousops = array('<>', '||', '&', '..', ',,', '/*', '*/', '==', '-+');
         foreach ($spuriousops as $op) {
             if (substr_count($stringles, $op) > 0) {
                 $this->valid = false;
@@ -1505,7 +1502,7 @@ class stack_cas_casstring {
         return $this->conditions;
     }
 
-    public function set_key($key, $appendkey=true) {
+    public function set_key($key, $appendkey=false) {
         if (null === $this->valid) {
             $this->validate();
         }
@@ -1612,11 +1609,13 @@ class stack_cas_casstring {
         }
         if ($validationmethod == 'units') {
             // Note, we don't pass in forbidfloats as this option is ignored by the units validation.
-            $this->casstring = 'stack_validate_units(['.$starredanswer.'], '.$lowestterms.', '.$tans.', "inline", '.$fltfmt.')';
+            $this->casstring = '(make_multsgn("blank"),stack_validate_units(['.$starredanswer.'], ' .
+                $lowestterms.', '.$tans.', "inline", '.$fltfmt.'))';
         }
         if ($validationmethod == 'unitsnegpow') {
             // Note, we don't pass in forbidfloats as this option is ignored by the units validation.
-            $this->casstring = 'stack_validate_units(['.$starredanswer.'], '.$lowestterms.', '.$tans.', "negpow", '.$fltfmt.')';
+            $this->casstring = '(make_multsgn("blank"),stack_validate_units(['.$starredanswer.'], ' .
+                $lowestterms.', '.$tans.', "negpow", '.$fltfmt.'))';
         }
 
         return true;

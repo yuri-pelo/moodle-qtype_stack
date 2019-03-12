@@ -72,6 +72,10 @@ This is easier than typing in [Maxima](../CAS/Maxima.md)'s matrix command, but d
 
 _The student may not fill in part of a matrix._  If they do so, the remaining entries will be completed with `?` characters which render the attempt invalid. STACK cannot cope with empty boxes here.
 
+We cannot use the `EMPTYANSWER` tag for the teacher's answer with the matrix input, because the size of the matrix is inferred from the model answer.  If a teacher really wants a correct answer to be empty inputs then they must use a correctly formatted matrix with `null` values
+
+    ta:transpose(matrix([null,null,null]));
+
 #### Text area ####
 
 Enter algebraic expressions on multiple lines.  STACK passes the result to [Maxima](../CAS/Maxima.md) as a list.
@@ -86,6 +90,8 @@ Note, the teacher's answer and any syntax hint must be a list!  If you just pass
 
 Simple drop down. A Boolean value is assigned to the variable name.
 
+If the teacher's correct answer should leave this blank (e.g. not answered at all) then use the tag `EMPTYANSWER`. (There are some edge cases where only some inputs are used in the correct answer to a question, so not answering is correct here).  If you use the extra option `allowempty` then empty answers are considered valid, and the value of this input is `EMPTYANSWER`.
+
 #### Dropdown/Checkbox/Radio ####
 
 The dropdown, checkbox and radio input types enable teachers to create [multiple choice](MCQ.md) questions.  See the separate documentation.
@@ -93,11 +99,12 @@ The dropdown, checkbox and radio input types enable teachers to create [multiple
 #### String input ####
 
 This is a normal input into which students may type whatever they choose.  It is always converted into a Maxima string internally.
-Note that there is no way whatsoever to parse the student's string into a Maxima expression.  If you accept a string, then it will always remain a string! You can't later check for algebraic equivalence, the only tests available will be simple string matches, regular expressions etc.
+Note that there is no way whatsoever to parse the student's string into a Maxima expression.  If you accept a string, then it will always remain a string! You can't later check for algebraic equivalence. The only tests available will be simple string matches, regular expressions etc.
 
 #### Notes input ####
 
-This input is a text area into which students may type whatever they choose.  It can be used to gather their notes or "working".  However, this input always returns an empty value to the CAS, so that the contents are never assessed. Note that any potential response tree which relies on this input will never get evaluated!
+This input is a text area into which students may type whatever they choose.  It can be used to gather their notes or "working".  However, this input always returns a boolean `true` value to the CAS, so that the contents are never assessed. 
+Note that any potential response tree which relies on this input will never get evaluated!
 
 #### Single Character ####
 
@@ -173,9 +180,14 @@ The ? may also be used to give partial credit. Of course it could also be used f
 
 ### Forbidden words ### {#Forbidden_Words}
 
-This is a comma separated list of text strings which are forbidden in a student's answer.  If one of these strings is present then the student's attempt will be considered invalid, and no penalties will be given.  This is an unsophisticated string match.
+This is a comma separated list of text strings which are forbidden in a student's answer.  If one of these strings is present then the student's attempt will be considered invalid, and no penalties will be given.  
+This is an unsophisticated string match.
 
-Note, any variable names longer than one letter in length used in the question variables are automatically forbidden (otherwise the student could potentially use the variable name you have defined, which might be the correct answer).  If the teacher uses a variable name which is two characters or longer, then students will not be able to use this variable name in their input.  Input from students with two character variable names which appear in the question variables will be rejected as invalid.  Students can always use single letter variable names.  Teachers are therefore advised to avoid single letter variable names.
+Note, any variable names longer than one letter in length used in the question variables are automatically forbidden (otherwise the student could potentially use the variable name you have defined, which might be the correct answer).
+If the teacher uses a variable name which is two characters or longer, then students will not be able to use this variable name in their input.  
+Input from students with two character variable names which appear in the question variables will be rejected as invalid.  
+Students can always use single letter variable names.  
+Teachers are therefore advised to avoid single letter variable names.
 
 Note that the string `*` is literally taken as `*` and is not a wild card.  Teachers may ask a student to calculate `2*3` and hence need to forbid multiplication in an answer.
 
@@ -224,11 +236,16 @@ Another useful way of avoiding this problem is to put a LaTeX string such as \(y
 
 ### Student must verify ### {#Student_must_verify}
 
-Specifies whether the student's input is presented back to them before scoring as part of a two step validation process.  Typically the student's mathematical expression is displayed in traditional form.  This is useful for complex algebraic expressions but not needed for constrained input like `yes`/`no`.
+Specifies whether the student's input is presented back to them before scoring as part of a two step validation process.  
+Typically the student's mathematical expression is displayed in traditional form.  
+This is useful for complex algebraic expressions but not needed for constrained input like `yes`/`no`.
 
-Experience strongly supports the use of this two step verification process.  Errors will always be displayed and expressions with errors rejected as invalid. Potential response trees will not execute with invalid input.
+Experience strongly supports the use of this two step verification process.  
+Errors will always be displayed and expressions with errors rejected as invalid. 
+Potential response trees will not execute with invalid input.
 
-The next option controls how the validation feedback is displayed. Note, it is not possible to require a two-step validation but not show some validation feedback.
+The next option controls how the validation feedback is displayed. 
+Note, it is not possible to require a two-step validation but not show some validation feedback.
 
 ### Show validation ### {#Show_validation}
 
@@ -237,7 +254,40 @@ Feedback to students is in two forms.
 * feedback tied to inputs, in particular if the answer is invalid.
 * feedback tied to each potential response tree.
 
-Setting this option displays any feedback from this input, including echoing back their expression in traditional two dimensional notation.  Generally, feedback and verification are used in conjunction.  Errors will always be displayed.  In addition to simply displaying the student's expression, the teacher can display the list of variables which occurs in the expression.  From experience, this is helpful in letting students understand the idea of variable and to spot case insensitivity or wrong variable problems.
+Setting this option displays any feedback from this input, including echoing back their expression in traditional two dimensional notation.  
+Generally, feedback and verification are used in conjunction.  Errors will always be displayed.  
+In addition to simply displaying the student's expression, the teacher can display the list of variables which occurs in the expression.  
+From experience, this is helpful in letting students understand the idea of variable and to spot case insensitivity or wrong variable problems.
+
+### Extra option: hideanswer ###
+
+Users are increasingly using inputs to store _state_, which makes no sense for a user to see.  For example, when using [JSXGraph](JSXGraph.md) users transfer the configuration of the diagram into an input via javascript.  In many situations, it makes no sense for the student to see anything about this input.  The validation can be switched off with the regular "show validation" option, the input box itself can be hidden with javascript/CSS.  Putting `hideanswer` in the extra options stops displaying the "teacher's answer", e.g. at the end of the process.
+
+Do not use this option in questions in place of the normal quiz settings.  For this reason it is only supported in the string input type.
+
+### Extra option: allowempty ###
+
+Normally a _blank_, i.e. empty, answer has a special status and are not considered "valid".  Hence, a PRT relying on an input left blank will not be traversed.  Answers consisting only of whitespace are also considered as empty.  The extra option `allowempty` allows the input to be empty.  Internally an empty answer will be replaced by the maxima atom `EMPTYANSWER`.  Internally it is essential that the variable name of the input, (e.g. `ans1`) is really assigned a specific value. The teacher will need to deal with `EMPTYANSWER` tags in the PRT.
+
+We stronly recommend (with many years of experience) that teachers do not use this option without very careful thought!
+
+For example, if you don't want to give away how many answers you expect, then ask the student to provide a _set_ of answers.  Another option is to use the "textarea" input type.  Each line of the textarea is validated separately, and the resulting mathematical expression is a list.  The student is therefore free to choose how many expressions to type in, as the circumstances require, without a pre-defined number of input boxes.  By design, it is better to use these methods than trying to combine separate inputs, some of which are empty, in the PRT later.
+
+Our experience stronly suggests this option should only be used for edge cases, and not for routine use.
+
+If you use this option when students navigate away from a page the system will "validate" the inputs, and hence any empty boxes will be considered an active empty choice by the student and will be assessed.  If you use this option there is no way to distinguish between an active empty answer choice, and a student who deletes their answer.  (The same problem occurs with radio buttons....)
+
+There are (unfortunately) some edge cases where it is useful to permit the execusion of a PRT without all the inputs containing significant content.  If a teacher has three inputs `ans1`, `ans2`, `ans3`, then they can define a set in the feedback variables as follows
+
+    sa:setdifference({ans1,ans2,ans3},{EMPTYANSWER})
+
+The variable `sa` will be a set containing the non-empty answers (if any).  
+
+The teacher can use the `EMPTYANSWER` tag as a "correct answer".
+
+## Extra options ##
+
+In the future we are likely to add additional functionality via the _extra options_ fields.  This is because the form-based support becomes ever more complex, intimidating and difficult to navigate.
 
 ## Input tips and tricks ##
 
@@ -245,9 +295,11 @@ It is often sensible to use a prefix just in front of the form box.  For example
 
     \(f(x)=\) [[input:ans1]].
 
-This avoids all kinds of problems with students also trying to enter the prefix themselves.  You could also specify units afterwards, but you might also want the student to type these in!
+This avoids all kinds of problems with students also trying to enter the prefix themselves.  
+You could also specify units afterwards, but you might also want the student to type these in!
 
-In Maxima the input `(a,b,c)` is a programmatic block element (see Maxima's manual for `block`). Hence we cannot use this directly for the input of coordinates.  Instead, have the students type in an unnamed function like
+In Maxima the input `(a,b,c)` is a programmatic block element (see Maxima's manual for `block`). 
+Hence we cannot use this directly for the input of coordinates.  Instead, have the students type in an unnamed function like
 
     P(x,y)
 
@@ -281,13 +333,17 @@ min/max sf/dp     |  .  |  Y  |  Y    |   .    |   .   |   .   |   .  |  .  |   
 `floatnum`      |  .  |  Y  |  .    |   .    |   .   |   .   |   .  |  .  |    .     |   .   |   .    |   .  
 `rationalnum`   |  .  |  Y  |  .    |   .    |   .   |   .   |   .  |  .  |    .     |   .   |   .    |   .  
 `negpow`        |  .  |  .  |  Y    |   .    |   .   |   .   |   .  |  .  |    .     |   .   |   .    |   .  
+`allowempty`   |  Y  |  Y  |  .    |   .    |   .   |   .   |   .  |  Y  |    .     |   .   |   .    |   .  
+`hideanswer`   |  .  |  .  |  .    |   .    |   .   |   .   |   .  |  .  |    .     |   .   |   Y    |   .  
 
 For documentation about the various options not documented on this page look at the pages for the specific inputs in which each option is used.
 
 Notes:
 
-1. The numerical and units input type ignore the strict syntax option and always assume strict syntax is "true".  Otherwise patterns for scientific numbers such as `2.23e4` will have multiplication characters inserted.
+1. The numerical and units input type ignore the strict syntax option and always assume strict syntax is "true".  
+Otherwise patterns for scientific numbers such as `2.23e4` will have multiplication characters inserted.
 
 ## Other input types ##
 
-Adding new inputs, or options for existing inputs, is a job for the developers.  The only essential requirement is that the result is a valid CAS expression, which includes of course a string data type, or a list.
+Adding new inputs, or options for existing inputs, is a job for the developers.  
+The only essential requirement is that the result is a valid CAS expression, which includes of course a string data type, or a list.

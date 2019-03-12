@@ -22,6 +22,7 @@ The following things to remember about CASText:
  * The outer `{}` characters of `{@ stuff @}` will be left into the output to ensure that the potentially multiple characters long output value is considered as a single group by LaTeX.
 * Anything enclosed between `{#` and `#}` delimiters is evaluated by the CAS and replaced by the Maxima representing the result. Basically, raw values usable in other tools or examples on how to input the value.
 * If the Maxima variable `x` is a string then `{@x@}` produces the string contents without quote marks or LaTeX environment, while `{#x#}` produces the string contents enclosed by quote marks.
+* If you want comma separated values without the list brackets then use `{@stack_disp_comma_separate( list )@}`.  This function turns a list into a string representation of its arguments, without braces.
 * Multiple CAS expressions may appear in a single LaTeX equation, as needed.  For example `\[  \frac{@p@}{@q@} \]`.  Note that many problems are _best solved_ at the level of the CAS, e.g. by defining a variable `p/q` in the CAS, not at the level of display.  This is a design decision which needs experience to resolve efficiently in each case.  For an example of this, see the example [showing working](../CAS/Matrix.md#Showing_working).
 
 Here is an example
@@ -44,7 +45,7 @@ The question text what the student actually sees.  This was called "question tex
 
 It is a slightly modified form of CAS text.  To allow a student to answer a question you must include an [inputs](Inputs.md) in the question text. For example, students need a box into which their answer will be put.
 
-To place an [input](Inputs.md) into the question enclose the name of the [Maxima](../CAS/Maxima.md) variable to which the student's answer is assigned between inside the following tag.  If the student's answer is going to be assigned to the variable `ans1` then use the tag `[[input:ans1]]`.  You will also be required to place a corresponding tag to indicate the position of any validation feedback (whether or not this is shown to the studen): `[[validation:ans1]]`.  You can use any legitimate variable name.
+To place an [input](Inputs.md) into the question enclose the name of the [Maxima](../CAS/Maxima.md) variable to which the student's answer is assigned between inside the following tag.  If the student's answer is going to be assigned to the variable `ans1` then use the tag `[[input:ans1]]`.  You will also be required to place a corresponding tag to indicate the position of any validation feedback (whether or not this is shown to the student): `[[validation:ans1]]`.  You can use any legitimate variable name.
 
 * When the question is created this is replaced with the appropriate [input](Inputs.md).
 * When the student answers, this variable name is available to each [potential response trees](Potential_response_trees.md).

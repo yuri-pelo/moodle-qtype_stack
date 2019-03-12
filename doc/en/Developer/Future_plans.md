@@ -4,7 +4,7 @@ How to report bugs and make suggestions is described on the [community](../About
 
 Note, where the feature is listed as "(done)" means we have prototype code in the testing phase.
 
-## Features to add for STACK 4.1 or later ##
+## Features to add for STACK 4.3 or later ##
 
 ### Units Inputs ###
 
@@ -21,7 +21,7 @@ Note, where the feature is listed as "(done)" means we have prototype code in th
 * Add new input types
  1. Dragmath (actually, probably use javascript from NUMBAS instead here, or the MathDox editor).
  2. Sliders.
- 3. Geogebra input (protoype already exisits: needs documentation, testing and support).
+ 3. Re-sizable matrix input.  See NUMBAS examples here, with Javascript.
 * It is very useful to be able to embed input elements in equations, and this was working in STACK 2.0. However is it possible with MathJax or other Moodle maths filters?
   This might offer one option:  http://stackoverflow.com/questions/23818478/html-input-field-within-a-mathjax-tex-equation
 * In the MCQ input type: Add choose N (correct) from M feature (used at Aalto).
@@ -29,6 +29,7 @@ Note, where the feature is listed as "(done)" means we have prototype code in th
 * Add an option for "no functions" which will always insert stars and transform "x(" -> "x*(" even when x occurs as both a function and a variable.
 * Make the syntax hint CAS text, to depend on the question variables.
 * Make the extra options CAS text as well.
+* Refactor the validation to use tooltypes to make the validation fit much closer to the input box itself.
 
 ### Improve the editing form ###
 
@@ -49,17 +50,20 @@ Note, where the feature is listed as "(done)" means we have prototype code in th
 * Decimal separator, both input and output.
 * Check CAS/maxima literature on -inf=minf.
 * Introduce a variable so the maxima code "knows the attempt number". [Note to self: check how this changes reporting].  This is now being done with the "state" code in the abacus branch.
-* See YAML developments: facility to import test-cases in-bulk as CSV (or something). Likewise export.
-* Refactor answer tests.
- 1. They should be like inputs. We should return an answer test object, not a controller object.
- 2. at->get_at_mark() really ought to be at->matches(), since that is how it is used.
- 3. Use `defstruct` in Maxima for the return objects. (Note to self: `@` is the element access operator).
 * Make the PRT Score element CAS text, so that a value calculated in the "Feedback variables" could be included here.
 * Refactor the STACK return object in maxima as a structure. ` ? defstruct`.  Note that `@` is the element access operator.
 * Refector blocks parser so that evaluation of anything inside a comment block is ignored, this will allow it to contain contents are syntactically incorrect, e.g. mismatched blocks.
-*   A STACK maxima function which returns the number of decimal places/significant figures in a variable (useful when providing feedback)
 
-## Features that might be attempted in the future - possible self contained projects ##
+## Anser tests
+
+Refactor answer tests so they are all in Maxima.
+
+* Answertests should be like inputs. We should return an answer test object, not a controller object.
+* at->get_at_mark() really ought to be at->matches(), since that is how it is used.
+* Use `defstruct` in Maxima for the return objects. (Note to self: `@` is the element access operator).
+* Investigate how a whole PRT might make only one CAS call.
+
+## Features that might be attempted in the future - possible self contained projects
 
 * Read other file formats into STACK.  In particular
   * AIM
@@ -67,12 +71,10 @@ Note, where the feature is listed as "(done)" means we have prototype code in th
   * MapleTA (underway: see https://github.com/maths/moodle-qformat_mapleta)
   * Wiris
 * Possible Maxima packages:
- * Better support for rational expressions, in particular really firm up the PartFrac and SingleFrac functions with better support.
- * Support for the "draw" package.
+  * Better support for rational expressions, in particular really firm up the PartFrac and SingleFrac functions with better support.
+  * Add in another test for rational algebraic expressions at validation time. See issue #370.
 * Add support for qtype_stack in Moodle's lesson module.
-* Improve the way questions are deployed.
- 1. Auto deploy.  E.g. if the first variable in the question variables is a single a:rand(n), then loop a=0..(n-1).
- 2. Remove many versions at once.
+* Auto deploy.  E.g. if the first variable in the question variables is a single a:rand(n), then loop a=0..(n-1).
 * When validating the editing form, also evaluate the Maxima code in the PRTs, using the teacher's model answers.
 * You cannot use one PRT node to guard the evaluation of another, for example Node 1 check x = 0, and only if that is false, Node 2 do 1 / x. We need to change how PRTs do CAS evaluation.
 
@@ -89,6 +91,35 @@ The current plan is to produce a solid YAML mark up language for PRTs.
 
 Other (past ideas) were http://zaach.github.com/jison/ or https://github.com/hafriedlander/php-peg.
 
+## "Reveal block"
+
+The functionality we want to develop is a block in which the contents is revealed or hidden by javascript, depending on the value of a separate input.
+
+    [[ reveal input="ans1" value="true" ]]
+
+    This will be shown if the value of "ans1" is true.
+
+    [[ else if value="false" ]]
+
+    [[ else ]]
+
+    This will be shown otherwise. (optional)  Perhaps?
+
+    [[/ reveal ]]
+
+This implements a Javascript listener on input "ans1", which reveals or hides the appropriate content.
+
+1. These blocks can be nested.
+2. Inputs can be inside reveal blocks (that is sort of the whole point!).  This works well with the new `EMPTYANSWER` functionality, allowing an input to expect not to be used in a correct response.
+3. What do we do about values of inputs inside the block, when the reveal condition fails and the block is hidden. Is this deleted with warning, or retained? (Option to block?)
+4. Only implement for true/false, or MCQ inputs to start with.
+5. What do we do about two reveal blocks listening to the same input?
+6. On page load, we need the JS to "do the right thing", i.e. interrogate each input and hide/reveal the content.
+
+An example question is included as samplequestions/reveal_block_example.xml
+
+In this example, we have only revealed the first level, which should be linked to ans1.  If this functionality were available and nested then we would add a MCQ checkbox input within the second reveal block, which is linked to reveal further inputs.
+
 
 ## Improvements to the "equiv" input type
 
@@ -103,13 +134,9 @@ Model solutions.
 
 Add mathematical support in the following order.
 
-1. Equating coefficients as a step in reasoning by equivalence. E.g. \( a x^2+b x+c=r x^2+s x+t \leftrightarrow a=r \mbox{ and } b=s \mbox{ and } c=t\). See `poly_equate_coeffs` in assessment.mac
-2. Solving simple simultaneous equations.  (Interface)
-3. Logarithms and simple logarithmic equations.
-4. Include calculus operations.
-5. Allow students to create and use functions of their own (currently forbidden).
-
-* Add a "Not equals" operator.  For example:
+1. Logarithms and simple logarithmic equations.
+2. Allow students to create and use functions of their own (currently forbidden).
+3. Add a "Not equals" operator.  For example:
 
     infix("<>");
     p:x<>y;

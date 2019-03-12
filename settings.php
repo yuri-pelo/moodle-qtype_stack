@@ -83,6 +83,9 @@ $settings->add(new admin_setting_heading('docs',
 
 
 // Options for connection to Maxima.
+// Note that any settings here where we try to set the default
+// intelligently in install.php, the default here must be null.
+// Otherwise, the default here will overwrite anything set in install.php.
 $settings->add(new admin_setting_heading('maixmasettingsheading',
         get_string('settingsmaximasettings', 'qtype_stack'),
         get_string('settingsmaximasettings_desc', 'qtype_stack')));
@@ -112,7 +115,7 @@ $settings->add($monitored[] = new admin_setting_configselect('qtype_stack/lisp',
 
 $settings->add($monitored[] = new admin_setting_configselect('qtype_stack/maximaversion',
         get_string('settingcasmaximaversion', 'qtype_stack'),
-        get_string('settingcasmaximaversion_desc', 'qtype_stack'), 'default',
+        get_string('settingcasmaximaversion_desc', 'qtype_stack'), null,
                 array('5.23.2' => '5.23.2', '5.25.1' => '5.25.1', '5.26.0' => '5.26.0',
                       '5.27.0' => '5.27.0', '5.28.0' => '5.28.0', '5.30.0' => '5.30.0',
                       '5.31.1' => '5.31.1', '5.31.2' => '5.31.2', '5.31.3' => '5.31.3',
@@ -145,7 +148,7 @@ $settings->add($monitored[] = new admin_setting_configtext('qtype_stack/maximapr
 
 $settings->add($monitored[] = new admin_setting_configtext('qtype_stack/maximacommand',
         get_string('settingplatformmaximacommand', 'qtype_stack'),
-        get_string('settingplatformmaximacommand_desc', 'qtype_stack'), ''));
+        get_string('settingplatformmaximacommand_desc', 'qtype_stack'), null));
 
 $settings->add($monitored[] = new admin_setting_configcheckbox('qtype_stack/bypasslaunchscript',
         get_string('settingplatformbypasslaunchscript', 'qtype_stack'),
@@ -161,7 +164,7 @@ $settings->add($monitored[] = new admin_setting_configtext('qtype_stack/plotcomm
 
 $settings->add($monitored[] = new admin_setting_configtext('qtype_stack/maximalibraries',
         get_string('settingmaximalibraries', 'qtype_stack'),
-        get_string('settingmaximalibraries_desc', 'qtype_stack'), 'stats, distrib, descriptive, simplex'));
+        get_string('settingmaximalibraries_desc', 'qtype_stack'), null));
 
 $settings->add(new qtype_stack_admin_timestamp('qtype_stack/criticalsettingsupdated',
         get_string('settingcriticalsettingsupdated', 'qtype_stack'),
