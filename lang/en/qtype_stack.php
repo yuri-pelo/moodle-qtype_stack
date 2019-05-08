@@ -159,6 +159,7 @@ $string['inputtyperadio'] = 'Radio';
 $string['inputtypesinglechar'] = 'Single character';
 $string['inputtypetextarea'] = 'Text area';
 $string['inputtypematrix'] = 'Matrix';
+$string['inputtypevarmatrix'] = 'Matrix of variable size';
 $string['inputtypenotes'] = 'Notes';
 $string['inputtypeunits'] = 'Units';
 $string['inputtypeequiv'] = 'Equivalence reasoning';

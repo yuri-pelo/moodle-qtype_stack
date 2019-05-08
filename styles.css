@@ -618,3 +618,55 @@ a.ui-button:active,
 	-webkit-box-shadow: 0px 0px 5px #666666;
 	box-shadow: 0px 0px 5px #666666;
 }
+
+
+/* Styles for varmatrix_input */
+.varmatrixinputdiv{
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+    position: relative;
+    display:inline-block;
+    padding: 5px;
+    min-width:20px;
+    min-height:20px;
+}
+.varmatrixinputspan{
+    outline:none;
+}
+.varmatrixBorderTopLeft {
+  background: black;
+  content:"";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width:10px;
+  height:1px;
+}          
+.varmatrixBorderTopRight {
+  background: black;
+  content:"";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width:10px;
+  height:1px;
+} 
+.varmatrixBorderBottomLeft {
+  background: black;
+  content:"";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width:10px;
+  height:1px;
+}          
+.varmatrixBorderBottomRight {
+  background: black;
+  content:"";
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width:10px;
+  height:1px;
+}   
+
