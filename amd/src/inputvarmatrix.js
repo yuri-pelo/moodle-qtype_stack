@@ -14,11 +14,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * A javascript module to handle the real-time validation of the input the student types
- * into STACK questions.
+ * A javascript module for the varmatrix input type 
  *
  * @package    qtype_stack
- * @copyright  2018 The Open University
+ * @copyright  2019 Ruhr University Bochum
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 define(['jquery', 'core/ajax', 'core/event'], function($, jqueryui, ajax, coreevent) {
@@ -35,6 +34,7 @@ define(['jquery', 'core/ajax', 'core/event'], function($, jqueryui, ajax, coreev
               lines=lines.map(line=>"["+line.join(",")+"]");
               lines="matrix("+lines.join(",")+")";
               $('[id="'+name+'"]').val(lines);
+              $('[id="'+name+'"]').trigger("input");
           });
         }
     };

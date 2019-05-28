@@ -17,8 +17,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * An input which uses a list of teacher provided options to autocomplete the
- * student's input.
+ * An input which provides a matrix input of variable size
  *
  * @copyright  2019 Ruhr University Bochum
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -72,7 +71,7 @@ class stack_varmatrix_input extends stack_input {
 
         $size = $this->parameters['boxWidth'] * 0.9 + 0.1;
         $attributes = array(
-            'type'  => 'text',
+            'type'  => 'hidden',
             'name'  => $fieldname,
             'id'    => $fieldname,
             'class' => 'varmatrixinput',
