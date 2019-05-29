@@ -25,7 +25,7 @@ define(['jquery', 'core/ajax', 'core/event'], function($, jqueryui, ajax, coreev
     "use strict";
 
      var t = {
-        setupVarmatrix: function(name) {          
+        setupVarmatrix: function(name) {
           $('[id="varmatrixinput'+name+'"]').keyup(function() {
               var lines=$('[id="varmatrixinput'+name+'"]').html().trim().replace(/&nbsp;/g, ' ').split('<br>').filter(Boolean);
               lines=lines.map(line=>line.split(/[\t\ ,;]/).filter(Boolean));

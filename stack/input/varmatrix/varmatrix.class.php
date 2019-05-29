@@ -23,7 +23,6 @@ defined('MOODLE_INTERNAL') || die();
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class stack_varmatrix_input extends stack_input {
-    
 
     /*
      * completeoptions is an array of the possible values the teacher suggests.
@@ -69,7 +68,7 @@ class stack_varmatrix_input extends stack_input {
         }
 
         $this->teacheranswervalue = $cs2->get_value();
-        $this->teacheranswerdisplay =  $cs2->get_display();
+        $this->teacheranswerdisplay = $cs2->get_display();
         $this->completeoptions = $cs3->get_value();
 
         return;
@@ -112,9 +111,9 @@ class stack_varmatrix_input extends stack_input {
             $attributes['readonly'] = 'readonly';
         }
         // Put in the Javascript magic!
-        $PAGE->requires->js_call_amd('qtype_stack/inputvarmatrix','setupVarmatrix',[$attributes['id']]);
+        $PAGE->requires->js_call_amd('qtype_stack/inputvarmatrix', 'setupVarmatrix', [$attributes['id']]);
 
-        $xhtml='    <div class="varmatrixinputdiv">
+        $xhtml = '    <div class="varmatrixinputdiv">
         <div class="varmatrixBorderTopLeft"></div>
         <div class="varmatrixBorderTopRight"></div>
         <span id="varmatrixinput'.$attributes['id'].'" class="varmatrixinputspan" contenteditable="true">&ensp;</span>
@@ -122,7 +121,7 @@ class stack_varmatrix_input extends stack_input {
         <div class="varmatrixBorderBottomRight"></div>
     </div>';
         //$attributes['data-options'] = '["'.implode($this->completeoptions, '","').'"]';
-        $xhtml.=html_writer::empty_tag('input', $attributes);
+        $xhtml .= html_writer::empty_tag('input', $attributes);
         return $xhtml;
     }
 
