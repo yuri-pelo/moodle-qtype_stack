@@ -623,6 +623,8 @@ a.ui-button:active,
 }
 .varmatrixinputspan{
     outline:none;
+    background: white;
+    padding: 3px;
 }
 .varmatrixBorderTopLeft {
     background: black;
