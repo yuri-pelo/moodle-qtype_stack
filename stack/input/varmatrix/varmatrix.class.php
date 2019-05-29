@@ -17,7 +17,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * An input which provides a matrix input of variable size
+ * An input which provides a matrix input of variable size.
  *
  * @copyright  2019 Ruhr University Bochum
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -52,13 +52,26 @@ class stack_varmatrix_input extends stack_input {
         // We need to reset the errors here, now we have a new teacher's answer.
         $this->errors = null;
 
-        $values = stack_utils::list_to_array($teacheranswer, true);
-        // TODO error check this returned lists, and create run-time error when the teacher didn't give a list.
-        $this->teacheranswervalue = $values[0];
-        $this->completeoptions = $values[1];
+        // Work out how big the matrix should be from the INSTANTIATED VALUE of the teacher's answer.
+        $cs1 = new stack_cas_casstring('ta:' . $teacheranswer);
+        $cs1->get_valid('t');
+        $cs2 = new stack_cas_casstring('tav:first(ta)');
+        $cs2->get_valid('t');
+        $cs3 = new stack_cas_casstring('tac:second(ta)');
+        $cs3->get_valid('t');
 
-        // TODO: call the CAS and fill in the values...
-        $this->teacheranswerdisplay = 'TODO';
+        $at1 = new stack_cas_session(array($cs1, $cs2, $cs3), null, 0);
+        $at1->instantiate();
+
+        if ('' != $at1->get_errors()) {
+            $this->errors[] = $at1->get_errors();
+            return false;
+        }
+
+        $this->teacheranswervalue = $cs2->get_value();
+        $this->teacheranswerdisplay =  $cs2->get_display();
+        $this->completeoptions = $cs3->get_value();
+
         return;
     }
 
@@ -137,7 +150,8 @@ class stack_varmatrix_input extends stack_input {
             'allowWords'         => '',
             'forbidFloats'       => true,
             'lowestTerms'        => true,
-            'sameType'           => true,
+            // This looks odd, but the teacher's answer is a list and the student's a matrix.
+            'sameType'           => false,
             'options'            => '');
     }
 

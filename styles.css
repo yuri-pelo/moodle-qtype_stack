@@ -302,12 +302,6 @@ body.ie:not(.ie11) .stack_abstract_graph {
     cursor: pointer;
 }
 
-/* Hide check button when javascript alternative available */
-.jsenabled div.que.stack.dfexplicitvaildate .im-controls input.submit,
-.jsenabled div.que.stack.dfcbmexplicitvaildate .im-controls input.submit {
-    display: none;
-}
-
 /*! jQuery UI - v1.12.1 - 2019-05-02
 * http://jqueryui.com
 * Includes: core.css, autocomplete.css, menu.css, theme.css
@@ -669,4 +663,3 @@ a.ui-button:active,
   width:10px;
   height:1px;
 }   
-
