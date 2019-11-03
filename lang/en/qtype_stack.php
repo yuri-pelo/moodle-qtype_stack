@@ -35,6 +35,8 @@ $string['privacy:metadata'] = 'The STACK question type plugin does not store any
 $string['errors'] = 'Errors';
 $string['debuginfo'] = 'Debug info';
 $string['exceptionmessage'] = '{$a}';
+$string['runtimeerror']    = 'This question generated an unexpected internal error.  Please seek advice, e.g. from a teacher.';
+$string['runtimefielderr'] = 'The field ""{$a->field}"" generated the following error: {$a->err}';
 
 // Capability names.
 $string['stack:usediagnostictools'] = 'Use the STACK tools';
@@ -46,6 +48,7 @@ $string['stackversionnone']   = 'This question has not been edited since questio
 $string['stackversionerror'] = 'This question uses {$a->pat} in the {$a->qfield}, which changed in STACK version {$a->ver} and is no longer supported.';
 $string['stackversionerroralt'] = 'An alternative is {$a}.';
 $string['stackversionmulerror'] = 'This question has an input which uses the "mul" option, which is not suppored after STACK version 4.2.  Please edit this question.';
+$string['stackversionregexp'] = 'The RegExp answer test is not supported after STACK version 4.3.';
 
 // Strings used on the editing form.
 $string['addanothernode'] = 'Add another node';
@@ -180,6 +183,7 @@ $string['numericalinputminmaxerr'] = 'The required minimum number of numerical p
 $string['numericalinputminsfmaxdperr'] = 'Do not specify requirements for both decimal places and significant figures in the same input.';
 $string['numericalinputoptinterr'] = 'The value of the option <code>{$a->opt}</code> should be an integer, but in fact it is <code>{$a->val}</code>.';
 $string['numericalinputoptboolerr'] = 'The value of the option <code>{$a->opt}</code> should be boolean, but in fact it is <code>{$a->val}</code>.';
+$string['inputopterr'] = 'The value of the option <code>{$a->opt}</code> cannot be given as <code>{$a->val}</code>.';
 $string['inputwillberemoved'] = 'This input is no longer referred to in the question text. If you save the question now, the data about this input will be lost. Please confirm that you want to do this. Alternatively edit the question text to put back the \'[[input:{$a}]]\' and \'[[validation:{$a}]]\' placeholders.';
 $string['insertstars'] = 'Insert stars';
 $string['insertstars_help'] = 'This option provides a number of different options for inserting stars where multiplication is implied.  Please read the more detailed documentation.';
@@ -477,6 +481,7 @@ $string['questiondoesnotuserandomisation'] = 'This question does not use randomi
 $string['questionnotdeployedyet'] = 'No variants of this question have been deployed yet.';
 $string['questionpreview'] = 'Question preview';
 $string['questiontests'] = 'Question tests';
+$string['questiontestsfor'] = 'Question tests for seed {$a}';
 $string['questiontestspass'] = 'All question tests passed.';
 $string['runquestiontests'] = 'Question tests & deployed variants';
 $string['seethisquestioninthequestionbank'] = 'See this question in the question bank';
@@ -484,7 +489,7 @@ $string['showingundeployedvariant'] = 'Showing undeployed variant: {$a}';
 $string['switchtovariant'] = 'Switch to arbitrary variant';
 $string['testcasexresult'] = 'Test case {$a->no} {$a->result}';
 $string['testingquestion'] = 'Testing question {$a}';
-$string['testingquestionvariants'] = 'Testing question variants';
+$string['testingquestionvariants'] = 'Preparing question variants';
 $string['testinputs'] = 'Test inputs';
 $string['testinputsimpwarning'] = 'Please note that test inputs are always <em>unsimplified</em> regardless of the question or PRT option setting.  Please use <tt>ev(...,simp)</tt> to simplify part or all of the test input expressions.';
 $string['testthisvariant'] = 'Switch to test this variant';
@@ -605,7 +610,7 @@ $string['cassuitecolerrors'] = 'CAS errors';
 $string['texdisplaystyle'] = 'Display-style equation';
 $string['texinlinestyle'] = 'Inline-style equation';
 
-// Used in casstring.class.php.
+// Used in CAS statement validation.
 $string['stackCas_spaces']                  = 'Illegal spaces found in expression {$a->expr}.';
 $string['stackCas_underscores']             = 'The following use of underscore characters is not permitted: {$a}.';
 $string['stackCas_percent']                 = '&#037; found in expression {$a->expr}.';
@@ -616,12 +621,20 @@ $string['stackCas_newline']                 = 'Newline characters are not permit
 $string['stackCas_forbiddenChar']           = 'CAS commands may not contain the following characters: {$a->char}.';
 $string['stackCas_finalChar']               = '\'{$a->char}\' is an invalid final character in {$a->cmd}';
 $string['stackCas_MissingStars']            = 'You seem to be missing * characters. Perhaps you meant to type {$a->cmd}.';
-$string['stackCas_unknownFunction']         = 'Unknown function: {$a->forbid}.';
-$string['stackCas_unknownFunctionCase']     = 'Input is case sensitive:  {$a->forbid} is an unknown function.  Did you mean {$a->lower}?';
+$string['stackCas_unknownFunction']         = 'Unknown function: {$a->forbid} in the term {$a->term}.';
+$string['stackCas_noFunction']              = 'The use of the function {$a->forbid} in the term {$a->term} is not permitted in this context.';
+$string['stackCas_forbiddenFunction']       = 'Forbidden function: {$a->forbid}.';
+$string['stackCas_spuriousop']              = 'Unknown operator: {$a->cmd}.';
+$string['stackCas_forbiddenOperator']       = 'Forbidden operator: {$a->forbid}.';
+$string['stackCas_forbiddenVariable']       = 'Forbidden variable or constant: {$a->forbid}.';
+$string['stackCas_operatorAsVariable']      = 'Operator {$a->op} interpreted as variable, check syntax.';
+$string['stackCas_redefinitionOfConstant']  = 'Redefinition of key constants is forbidden: {$a->constant}.';
+$string['stackCas_unknownFunctionCase']     = 'Input is case sensitive: {$a->forbid} is an unknown function. Did you mean {$a->lower}?';
+// TODO: the message should say that while these are valid names for variables as long as this case combination is not implicitely allowed we assume that you have typoed the known different case.
+$string['stackCas_unknownVariableCase']     = 'Input is case sensitive: {$a->forbid} is an unknown variable. Did you mean {$a->lower}?';
 $string['stackCas_unsupportedKeyword']      = 'Unsupported keyword: {$a->forbid}.';
 $string['stackCas_forbiddenWord']           = 'The expression {$a->forbid} is forbidden.';
 $string['stackCas_bracketsdontmatch']       = 'The brackets are incorrectly nested in the expression: {$a->cmd}.';
-$string['stackCas_spuriousop']              = 'Unknown operator: {$a->cmd}.';
 $string['stackCas_chained_inequalities']    = 'You appear to have "chained inequalities" e.g. \(a &lt b &lt c\).  You need to connect individual inequalities with logical operations such as \(and\) or \(or\).';
 $string['stackCas_backward_inequalities']   = 'Non-strict inequalities e.g. \( \leq \) or \( \geq \) must be entered as <= or >=.  You have {$a->cmd} in your expression, which is backwards.';
 $string['stackCas_unencpsulated_comma']     = 'A comma in your expression appears in a strange way.  Commas are used to separate items in lists, sets etc.  You need to use a decimal point, not a comma, in floating point numbers.';
@@ -633,6 +646,9 @@ $string['stackCas_triginv']                 = 'Inverse trig functions are writte
 $string['stackCas_badLogIn']                = 'You have typed in the expression <tt>In</tt>.  The natural logarithm is entered as <tt>ln</tt> in lower case.  ("Lima November" not "India November")';
 $string['stackCas_unitssynonym']            = 'You appear to have units {$a->forbid}.  Did you mean {$a->unit}?';
 $string['stackCas_unknownUnitsCase']        = 'Input of units is case sensitive:  {$a->forbid} is an unknown unit. Did you mean one from the following list {$a->unit}?';
+$string['stackCas_applyingnonobviousfunction'] = 'This function call {$a->problem} does not appear to have an easily visible function name. Due to security reasons you may need to simplify the call so that the validator can see the function name.';
+$string['stackCas_callingasfunction']       = 'Calling the result of a function call is forbidden {$a->problem}, lambdas are still allowed.';
+$string['stackCas_badpostfixop']            = 'You have a bad "postfix" operator in your expression.';
 
 // Used in cassession.class.php.
 $string['stackCas_CASError']                = 'The CAS returned the following error(s):';
@@ -661,6 +677,8 @@ $string['stackCas_MissingCloseHTML']        = 'Missing closing html tag. ';
 $string['stackCas_failedValidation']        = 'CASText failed validation. ';
 $string['stackCas_invalidCommand']          = 'CAS commands not valid. ';
 $string['stackCas_CASErrorCaused']          = 'caused the following error:';
+$string['stackCas_errorpos']                = 'At about line {$a->line} character {$a->col}.';
+
 
 // Used in blocks.
 $string['stackBlock_ifNeedsCondition']       = 'If-block needs a test attribute. ';
@@ -679,6 +697,7 @@ $string['Maxima_Args']  = 'args: argument must be a non-atomic expression. ';
 $string['Variable_function']   = 'The following appear in your expression as both a variable and a function: {$a->m0}.  Please clarify your input.  Either insert <code>*</code> symbols to remove functions, or make all occurances functions.';
 $string['Lowest_Terms']   = 'Your answer contains fractions that are not written in lowest terms.  Please cancel factors and try again.';
 $string['Illegal_floats'] = 'Your answer contains floating point numbers, that are not allowed here.  You need to type in numbers as fractions.  For example, you should type 1/3 not 0.3333, which is after all only an approximation to one third.';
+$string['Illegal_strings'] = 'Your answer contains "strings" these are not allowed here.';
 $string['qm_error'] = 'Your answer contains question mark characters, ?, which are not permitted in answers.  You should replace these with a specific value.';
 $string['Equiv_Illegal_set']  = 'Sets are not allowed when reasoning by equivalence.';
 $string['Equiv_Illegal_list']  = 'Lists are not allowed when reasoning by equivalence.';
@@ -727,7 +746,6 @@ $string['stackOptions_AnsTest_values_Diff']                = "Diff";
 $string['stackOptions_AnsTest_values_Int']                 = "Int";
 $string['stackOptions_AnsTest_values_String']              = "String";
 $string['stackOptions_AnsTest_values_StringSloppy']        = "StringSloppy";
-$string['stackOptions_AnsTest_values_RegExp']              = "RegExp";
 
 $string['AT_NOTIMPLEMENTED']        = 'This answer test has not been implemented. ';
 $string['TEST_FAILED']              = 'The answer test failed to execute correctly: please alert your teacher. {$a->errors}';
@@ -847,6 +865,7 @@ $string['ATUnits_correct_numerical']      = 'Please check your units carefully. 
 $string['ATNumDecPlaces_OptNotInt']    = 'For ATNumDecPlaces the test option must be a positive integer, in fact "{$a->opt}" was received. ';
 $string['ATNumDecPlaces_NoDP']         = 'Your answer must be a decimal number, including a decimal point. ';
 $string['ATNumDecPlaces_Wrong_DPs']    = 'Your answer has been given to the wrong number of decimal places.';
+$string['ATNumDecPlaces_Float']        = 'Your answer must be a floating point number, but is not.';
 
 $string['ATNumDecPlacesWrong_OptNotInt']    = 'For ATNumDecPlacesWrong the test option must be a positive integer, in fact "{$a->opt}" was received. ';
 
@@ -858,6 +877,7 @@ $string['ATSysEquiv_SA_not_poly_eq_list']       = 'One or more of your equations
 $string['ATSysEquiv_SB_not_poly_eq_list']       = 'The Teacher\'s answer should be a list of polynomial equations, but is not.  Please contact your teacher.';
 $string['ATSysEquiv_SA_missing_variables']      = 'Your answer is missing one or more variables!';
 $string['ATSysEquiv_SA_extra_variables']        = 'Your answer includes too many variables!';
+$string['ATSysEquiv_SA_wrong_variables']        = 'Your answer uses the wrong variables!';
 $string['ATSysEquiv_SA_system_underdetermined'] = 'The equations in your system appear to be correct, but you need others besides.';
 $string['ATSysEquiv_SA_system_overdetermined']  = 'The entries underlined in red below are those that are incorrect. {$a->m0} ';
 

@@ -54,10 +54,10 @@ class stack_string_input extends stack_algebraic_input {
             if ($this->parameters['syntaxAttribute'] == '1') {
                 $field = 'placeholder';
             }
-            $attributes[$field] = $this->strip_string(stack_utils::logic_nouns_sort($this->parameters['syntaxHint'], 'remove'));
+            $attributes[$field] = $this->parameters['syntaxHint'];
         } else {
             $value = stack_utils::maxima_string_to_php_string($this->contents_to_maxima($state->contents));
-            $attributes['value'] = $in = $this->strip_string($value);
+            $attributes['value'] = $value;
         }
 
         if ($readonly) {
@@ -95,7 +95,6 @@ class stack_string_input extends stack_algebraic_input {
         }
 
         $value = stack_utils::maxima_string_to_php_string($value);
-        $value = $this->strip_string($value);
         return stack_string('teacheranswershow', array('value' => '<code>'.$value.'</code>', 'display' => $display));
     }
 
@@ -105,9 +104,7 @@ class stack_string_input extends stack_algebraic_input {
      * @param unknown_type $in
      */
     public function get_correct_response($in) {
-        $value = stack_utils::logic_nouns_sort($in, 'remove');
-        $value = $this->strip_string($value);
-        return $this->maxima_to_response_array($value);
+        return $this->maxima_to_response_array($in);
     }
 
     /**
@@ -120,7 +117,7 @@ class stack_string_input extends stack_algebraic_input {
      * @return string
      */
     public function maxima_to_response_array($in) {
-        $response[$this->name] = $this->strip_string($in);
+        $response[$this->name] = $in;
         if ($this->requires_validation()) {
             // Do not strip strings from the _val, to enable test inputs to work.
             $response[$this->name . '_val'] = $in;
@@ -141,14 +138,6 @@ class stack_string_input extends stack_algebraic_input {
         } else {
             return '';
         }
-    }
-
-    private function strip_string($ex) {
-        $ex = trim($ex);
-        if (substr($ex, 0, 1) === '"') {
-            $ex = substr($ex, 1, -1);
-        }
-        return $ex;
     }
 
     private function ensure_string($ex) {

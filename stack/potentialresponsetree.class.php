@@ -60,8 +60,12 @@ class stack_potentialresponse_tree {
 
         $this->value = $value;
 
-        if (is_a($feedbackvariables, 'stack_cas_session') || null === $feedbackvariables) {
+        if (is_a($feedbackvariables, 'stack_cas_session2') || null === $feedbackvariables) {
             $this->feedbackvariables = $feedbackvariables;
+            if ($this->feedbackvariables === null) {
+                // Using an empty session here makes life so much more simpler.
+                $this->feedbackvariables = new stack_cas_session2(array());
+            }
         } else {
             throw new stack_exception('stack_potentialresponse_tree: __construct: ' .
                     'expects $feedbackvariables to be null or a stack_cas_session.');
@@ -105,17 +109,13 @@ class stack_potentialresponse_tree {
     protected function create_cas_context_for_evaluation($questionvars, $options, $answers, $seed) {
 
         // Start with the question variables (note that order matters here).
+        // TODO: this clone needs to go, we need a way of pulling the setting and seed
+        // from the questionvars to start up this thing.
         $cascontext = clone $questionvars;
-        // Set the value of simp from this point onwards.
-        // If the question has simp:true, but the prt simp:false, then this needs to be done here.
-        if ($this->simplify) {
-            $simp = 'true';
-        } else {
-            $simp = 'false';
-        }
-        $cs = new stack_cas_casstring($simp);
-        $cs->set_key('simp');
-        $answervars = array($cs);
+
+        // Do not simplify the answers.
+        $sf = stack_ast_container::make_from_teacher_source('simp:false', '', new stack_cas_security(), array());
+        $cascontext->add_statement($sf);
         // Add the student's responses, but only those needed by this prt.
         // Some irrelevant but invalid answers might break the CAS connection.
         foreach ($this->get_required_variables(array_keys($answers)) as $name) {
@@ -124,31 +124,45 @@ class stack_potentialresponse_tree {
             } else {
                 $ans = $answers[$name];
             }
-            // We always add logical nouns to students' answers.
-            $ans = stack_utils::logic_nouns_sort($ans, 'add');
-            $cs = new stack_cas_casstring($ans);
-
             // Validating as teacher at this stage removes the problem of "allowWords" which
             // we don't have access to.  This effectively allows any words here.  But the
             // student's answer has already been through validation.
-            $cs->get_valid('t');
-            // Setting the key must come after validation.
+            $cs = stack_ast_container::make_from_teacher_source($ans, '',
+                    new stack_cas_security(), array());
+            // That all said, we then need to manually add in nouns to ensure these are protected.
+            $cs->set_nounify(true);
             $cs->set_key($name);
-            $answervars[] = $cs;
+            $cs->set_keyless(false);
+            $cascontext->add_statement($cs);
         }
-        $cascontext->add_vars($answervars);
+
+        // Set the value of simp for the feedback variables from this point onwards.
+        // If the question has simp:true, but the prt simp:false, then this needs to be done here.
+        if ($this->simplify) {
+            $simp = 'true';
+        } else {
+            $simp = 'false';
+        }
+        $cs = stack_ast_container::make_from_teacher_source('simp:'.$simp, '', new stack_cas_security(), array());
+        $cascontext->add_statement($cs);
 
         // Add the feedback variables.
-        $cascontext->merge_session($this->feedbackvariables);
+        $this->feedbackvariables->append_to_session($cascontext);
+
+        // Do not simplify the expressions in the context variables.
+        $sf = stack_ast_container::make_from_teacher_source('simp:false', '', new stack_cas_security(), array());
+        $cascontext->add_statement($sf);
 
         // Add all the expressions from all the nodes.
         // Note this approach does not allow for effective guard clauses in the PRT.
         // All the inputs to answer tests are evaluated at the start.
         foreach ($this->nodes as $key => $node) {
-            $cascontext->add_vars($node->get_context_variables($key));
+            $cascontext->add_statements($node->get_context_variables($key));
         }
 
-        $cascontext->instantiate();
+        if ($cascontext->get_valid()) {
+            $cascontext->instantiate();
+        }
 
         return $cascontext;
     }
@@ -162,7 +176,7 @@ class stack_potentialresponse_tree {
      * @param int $seed the random number seed.
      * @return stack_potentialresponse_tree_state the result.
      */
-    public function evaluate_response(stack_cas_session $questionvars, $options, $answers, $seed) {
+    public function evaluate_response(stack_cas_session2 $questionvars, $options, $answers, $seed) {
 
         if (empty($this->nodes)) {
             throw new stack_exception('stack_potentialresponse_tree: evaluate_response ' .
@@ -176,8 +190,10 @@ class stack_potentialresponse_tree {
 
         $results = new stack_potentialresponse_tree_state($this->value, true, 0, 0);
         $fv = $this->feedbackvariables;
-        if ($fv !== null) {
-            $results->add_trace($fv->get_keyval_representation());
+        $tr = $fv->get_keyval_representation();
+        if (trim($tr) != '') {
+            $tr .= "\n/* ------------------- */";
+            $results->add_trace($tr);
         }
 
         // Traverse the tree.
@@ -229,7 +245,7 @@ class stack_potentialresponse_tree {
             $results->_score = null;
             $results->_penalty = null;
         }
-        $results->set_cas_context($cascontext, $seed);
+        $results->set_cas_context($cascontext, $seed, $this->simplify);
         return $results;
     }
 
@@ -243,20 +259,17 @@ class stack_potentialresponse_tree {
      */
     public function get_required_variables($variablenames) {
 
-        $rawcasstrings = array();
+        $usedvariables = array();
         if ($this->feedbackvariables !== null) {
-            $rawcasstrings = $this->feedbackvariables->get_all_raw_casstrings();
+            $usedvariables = $this->feedbackvariables->get_variable_usage($usedvariables);
         }
         foreach ($this->nodes as $node) {
-            $rawcasstrings = array_merge($rawcasstrings, $node->get_required_cas_strings());
+            $usedvariables = $node->get_variable_usage($usedvariables);
         }
-
-        // Remove strings in castrings so that strings like "...ans1..." do not match ans1.
-        $rawcasstring = stack_utils::eliminate_strings(implode('; ', $rawcasstrings));
 
         $requirednames = array();
         foreach ($variablenames as $name) {
-            if ($this->string_contains_variable($name, $rawcasstring)) {
+            if (isset($usedvariables['read']) && isset($usedvariables['read'][$name])) {
                 $requirednames[] = $name;
             }
         }
@@ -340,5 +353,28 @@ class stack_potentialresponse_tree {
             return '';
         }
         return $this->feedbackvariables->get_keyval_representation();
+    }
+
+    /**
+     * @return boolean whether this PRT contains any tests that use units.
+     */
+    public function has_units(): bool {
+        foreach ($this->nodes as $node) {
+            if (strpos($node->get_test(), 'Units') === 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return array Returns the answer tests used by this PRT.
+     */
+    public function get_answertests(): array {
+        $tests = array();
+        foreach ($this->nodes as $node) {
+            $tests[$node->get_test()] = true;
+        }
+        return $tests;
     }
 }

@@ -1,5 +1,5 @@
 <?php
-// This file is part of Stack - http://stack.bham.ac.uk/
+// This file is part of Stack - https://stack.maths.ed.ac.uk
 //
 // Stack is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -61,11 +61,17 @@ class stack_equiv_input extends stack_input {
 
         if ($this->is_blank_response($state->contents)) {
             $current = $this->maxima_to_raw_input($this->parameters['syntaxHint']);
-            $current = stack_utils::logic_nouns_sort($current, 'remove');
+            $cs = stack_ast_container::make_from_teacher_source($current);
+            // The syntax hint need not be valid, but we don't want nouns.
+            if ($cs->get_valid()) {
+                $current = $cs->get_inputform();
+            }
             // Put the first line of the value of the teacher's answer in the input.
             if (trim($this->parameters['syntaxHint']) == 'firstline') {
                 $values = stack_utils::list_to_array($tavalue, false);
-                $current = stack_utils::logic_nouns_sort($values[0], 'remove');
+                $cs = stack_ast_container::make_from_teacher_source($values[0]);
+                $cs->get_valid();
+                $current = $cs->get_inputform();
             }
             // Remove % characters, e.g. %pi should be printed just as "pi".
             $current = str_replace('%', '', $current);
@@ -137,8 +143,21 @@ class stack_equiv_input extends stack_input {
                 }
             }
         }
-
         return $contents;
+    }
+
+    protected function caslines_to_answer($caslines) {
+        $vals = array();
+        foreach ($caslines as $line) {
+            if ($line->get_valid()) {
+                $vals[] = $line->get_evaluationform();
+            } else {
+                // This is an empty place holder for an invalid expression.
+                $vals[] = 'EMPTYCHAR';
+            }
+        }
+        $s = '['.implode(',', $vals).']';
+        return stack_ast_container::make_from_student_source($s, '', $caslines[0]->get_securitymodel());
     }
 
     /**
@@ -163,7 +182,13 @@ class stack_equiv_input extends stack_input {
     private function maxima_to_raw_input($in) {
         $values = stack_utils::list_to_array($in, false);
         foreach ($values as $key => $val) {
-            $values[$key] = $this->stackeq_to_equals($val);
+            if (trim($val) != '') {
+                $cs = stack_ast_container::make_from_teacher_source($val);
+                if ($cs->get_valid()) {
+                    $val = $cs->get_inputform(true, false);
+                }
+            }
+            $values[$key] = $val;
         }
         return implode("\n", $values);
     }
@@ -190,61 +215,50 @@ class stack_equiv_input extends stack_input {
      * @param array $contents the content array of the student's input.
      * @return array of the validity, errors strings and modified contents.
      */
-    protected function validate_contents($contents, $forbiddenkeys, $localoptions) {
+    protected function validate_contents($contents, $basesecurity, $localoptions) {
 
-        $errors = $this->extra_validation($contents);
-        $valid = !$errors;
-
-        // Now validate the input as CAS code.
-        $modifiedcontents = array();
-        $caslines = array();
+        // This input re-defines validate_condents, and so does not make use of extra_validation methods.
         $errors = array();
-        $allowwords = $this->get_parameter('allowWords', '');
+        $notes = array();
+        $valid = true;
+        $caslines = array();
+
+        $secrules = clone $basesecurity;
+        $secrules->set_allowedwords($this->get_parameter('allowWords', ''));
+        $secrules->set_forbiddenwords($this->get_parameter('forbidWords', ''));
+
+        list ($secrules, $filterstoapply) = $this->validate_contents_filters($basesecurity);
 
         foreach ($contents as $index => $val) {
-            if ($this->identify_comments($val)) {
-                $answer = new stack_cas_casstring($val);
-                // Is the student permitted to include comments in their answer?
-                if (!$this->extraoptions['comments']) {
-                    $valid = false;
-                    $answer->add_errors(stack_string('equivnocomments'));
-                }
-            } else {
-                // Process single character variable names in PHP.
-                // This is done before we validate the casstring to split up abc->a*b*c which would otherwise be invalid.
-                if (2 == $this->get_parameter('insertStars', 0) || 5 == $this->get_parameter('insertStars', 0)) {
-                    $val = stack_utils::make_single_char_vars($val, $localoptions,
-                        $this->get_parameter('strictSyntax', true), $this->get_parameter('insertStars', 0),
-                        $this->get_parameter('allowWords', ''));
-                }
-                $val = stack_utils::logic_nouns_sort($val, 'add');
-                $answer = new stack_cas_casstring($val);
+            $val = $this->equals_to_stackeq($val);
+
+            $answer = stack_ast_container::make_from_student_source($val, '', $secrules, $filterstoapply,
+                    array(), 'Equivline');
+
+            // Is the student permitted to include comments in their answer?
+            if (!$this->extraoptions['comments'] && $answer->is_string()) {
+                $valid = false;
+                $answer->add_errors(stack_string('equivnocomments'));
+                $notes['equivnocomments'] = true;
             }
 
-            $answer->get_valid('s', $this->get_parameter('strictSyntax', true),
-                $this->get_parameter('insertStars', 0), $allowwords);
-
-            // Ensure student hasn't used a variable name used by the teacher.
-            if ($forbiddenkeys) {
-                $answer->check_external_forbidden_words($forbiddenkeys);
-            }
-
-            $forbiddenwords = $this->get_parameter('forbidWords', '');
-
-            // Forbid function definition for now.
-            $forbiddenwords .= ', :=';
-            if ($forbiddenwords) {
-                $answer->check_external_forbidden_words_literal($forbiddenwords);
+            $note = $answer->get_answernote(true);
+            if ($note) {
+                foreach ($note as $n) {
+                    $notes[$n] = true;
+                }
             }
 
             $caslines[] = $answer;
-
-            $modifiedcontents[] = $answer->get_casstring();
             $valid = $valid && $answer->get_valid();
-            $errors[] = trim($answer->get_errors());
+            $errors[] = $answer->get_errors();
         }
 
-        return array($valid, $errors, $modifiedcontents, $caslines);
+        // Construct one final "answer" as a single maxima object.
+        $answer = $this->caslines_to_answer($caslines);
+        $answer->get_valid();
+
+        return array($valid, $errors, $notes, $answer, $caslines);
     }
 
     /**
@@ -257,6 +271,7 @@ class stack_equiv_input extends stack_input {
      *      string if the input is valid - at least according to this test.
      */
     protected function validation_display($answer, $lvars, $caslines, $additionalvars, $valid, $errors) {
+
         if ($this->extraoptions['firstline']) {
             $foundfirstline = false;
             foreach ($additionalvars as $index => $cs) {
@@ -265,7 +280,7 @@ class stack_equiv_input extends stack_input {
                     if ('false' === $cs->get_value()) {
                         // Then the first line of the student's response does not match that of the teacher.
                         $valid = false;
-                        $caslines[0]->add_errors(stack_string('equivfirstline'));
+                        $errors[0] = stack_string('equivfirstline');
                     }
                 }
             }
@@ -276,23 +291,37 @@ class stack_equiv_input extends stack_input {
 
         $display = '<center><table style="vertical-align: middle;" ' .
                 'border="0" cellpadding="4" cellspacing="0"><tbody>';
+        $errorfree = true;
         foreach ($caslines as $index => $cs) {
             $display .= '<tr>';
-            if ('' != $cs->get_errors()  || '' == $cs->get_value()) {
-                $valid = false;
-                $errors[$index] = ' '.stack_maxima_translate($cs->get_errors());
-                $cds = stack_utils::logic_nouns_sort($cs->get_raw_casstring(), 'remove');
-                $display .= '<td>'. stack_maxima_format_casstring($cds). '</td>';
-                $display .= '<td>'. stack_maxima_translate($errors[$index]). '</td></tr>';
-            } else {
+            $fb = $cs->get_feedback();
+            if ($cs->is_correctly_evaluated() && $fb == '') {
                 $display .= '<td>\(\displaystyle ' . $cs->get_display() . ' \)</td>';
+                if ($errors[$index]) {
+                    $errorfree = false;
+                    $display .= '<td>' . stack_maxima_translate($errors[$index]) . '</td>';
+                }
+            } else {
+                // Feedback here is always an error.
+                if ($fb !== '') {
+                    $errors[] = $fb;
+                }
+                $valid = false;
+                $errorfree = false;
+                $display .= '<td>' . stack_maxima_format_casstring($this->rawcontents[$index]) . '</td>';
+                $display .= '<td>' . trim(stack_maxima_translate($cs->get_errors()) . ' ' . $fb) . '</td>';
             }
             $display .= '</tr>';
         }
         $display .= '</tbody></table></center>';
-        if ($valid) {
+        if (array_key_exists('equivdisplay', $additionalvars)) {
             $equiv = $additionalvars['equivdisplay'];
-            $display = '\[ ' . $equiv->get_display() . ' \]';
+            if ($equiv->is_correctly_evaluated() && $errorfree) {
+                $display = '\[ ' . $equiv->get_display() . ' \]';
+            } else if ($valid) {
+                // Invalid expressions always throw an error from equivdisplay.
+                $display .= $equiv->get_errors();
+            }
         }
 
         return array($valid, $errors, $display);
@@ -312,36 +341,33 @@ class stack_equiv_input extends stack_input {
             $showdomain = 'false';
         }
         $debuglist = 'false';
-        $an = new stack_cas_casstring('disp_stack_eval_arg('.$this->name.', '.$showlogic.', '.
-                $showdomain.', '.$equivdebug.', '.$debuglist.')');
-        $an->get_valid('t', $this->get_parameter('strictSyntax', true),
-                 $this->get_parameter('insertStars', 0));
-        $an->set_key('equiv'.$this->name);
+        $s = 'equiv'.$this->name.':disp_stack_eval_arg('.$this->name.', '.$showlogic.', '. $showdomain.
+            ', '.$equivdebug.', '.$debuglist.')';
+        $an = stack_ast_container::make_from_teacher_source($s);
 
         $calculus = 'false';
         if ($this->extraoptions['calculus']) {
             $calculus = 'true';
         }
-        $ca = new stack_cas_casstring('stack_calculus:'.$calculus);
-        $ca->get_valid('t');
+        $ca = stack_ast_container::make_from_teacher_source('stack_calculus:'.$calculus);
+        $ca->get_valid();
 
         $tresponse = $this->maxima_to_response_array($teacheranswer);
         $tcontents = $this->response_to_contents($tresponse);
         // Has the student used the correct first line?
-        $fl = new stack_cas_casstring('firstline:true');
+        $fl = stack_ast_container::make_from_teacher_source('firstline:true');
         if ($this->extraoptions['firstline']) {
             if (array_key_exists(0, $tcontents)) {
                 $ta = $tcontents[0];
                 if (array_key_exists(0, $caslines)) {
-                    $sa = $caslines[0]->get_raw_casstring();
-                    $fl = new stack_cas_casstring('firstline:second(ATEqualComAss('.$sa.','.$ta.'))');
+                    $sa = $caslines[0]->get_inputform();
+                    $fl = stack_ast_container::make_from_teacher_source('firstline:second(ATEqualComAss('.$sa.','.$ta.'))');
                 }
             }
         }
         // Looks odd making this true, but if there is a validity error here it will have
         // surfaced somewhere else.
-        if (!($fl->get_valid('t', $this->get_parameter('strictSyntax', true),
-                $this->get_parameter('insertStars', 0)))) {
+        if (!($fl->get_valid())) {
             $fl = new stack_cas_casstring('firstline:true');
         }
 
@@ -352,16 +378,6 @@ class stack_equiv_input extends stack_input {
         return 'equiv';
     }
 
-
-    /** This function decides if an expression looks like a comment in a chain of reasoning.
-     */
-    private function identify_comments($ex) {
-        if (substr(trim($ex), 0, 1) === '"') {
-            return true;
-        }
-        return false;
-    }
-
     private function comment_tag($index) {
         return 'EQUIVCOMMENT'.$index;
     }
@@ -369,12 +385,6 @@ class stack_equiv_input extends stack_input {
     /* Convert an expression starting with an = sign to one with stackeq. */
     private function equals_to_stackeq($val) {
         $val = trim($val);
-        if (substr($val, 0, 1) === "=") {
-            $trimmed = trim(substr($val, 1));
-            if ( $trimmed !== '') {
-                $val = 'stackeq(' . $trimmed . ')';
-            }
-        }
         // Safely wrap "let" statements.
         $langlet = strtolower(stack_string('equiv_LET'));
         if (strtolower(substr($val, 0, strlen($langlet))) === $langlet) {
@@ -433,9 +443,10 @@ class stack_equiv_input extends stack_input {
         $values = stack_utils::list_to_array($value, false);
         foreach ($values as $key => $val) {
             if (trim($val) !== '' ) {
-                $val = stack_utils::logic_nouns_sort($val, 'remove');
+                $cs = stack_ast_container::make_from_teacher_source($val);
+                $cs->get_valid();
+                $val = '<code>'.$cs->get_inputform().'</code>';
             }
-            $val = '<code>'.$this->stackeq_to_equals($val).'</code>';
             $values[$key] = $val;
         }
         $value = "<br/>".implode("<br/>", $values);

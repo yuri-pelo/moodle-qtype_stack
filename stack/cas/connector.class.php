@@ -84,6 +84,39 @@ abstract class stack_cas_connection_base implements stack_cas_connection {
         return $unpackedresult;
     }
 
+    public function json_compute($command): array {
+        $this->debug->log('Maxima command', $command);
+        $raw = $this->call_maxima($command);
+        $this->debug->log('CAS result', $raw);
+
+        $startmark = 'STACK-OUTPUT-BEGINS>';
+        $endmark = '<STACK-OUTPUT-ENDS';
+
+        $split = $raw;
+        if (core_text::strpos($split, $startmark) === false) {
+            $this->debug->log('Timedout', true);
+            return array('timeout' => true, 'debug' => $split);
+        }
+        $split = core_text::substr($split, core_text::strpos($split, $startmark) + core_text::strlen($startmark));
+
+        if (core_text::strpos($split, $endmark) === false) {
+            $this->debug->log('Timedout', 'in the middle of output');
+            return array('timeout' => true, 'debug' => $split);
+        }
+        $split = core_text::substr($split, 0, core_text::strpos($split, $endmark));
+
+        $parsed = json_decode($split, true);
+        if ($parsed === null) {
+            $parsed = [];
+        }
+        // @codingStandardsIgnoreStart
+        $this->debug->log('Parsed result as', print_r($parsed, true));
+        // @codingStandardsIgnoreEnd
+
+        return $parsed;
+    }
+
+
     // @codingStandardsIgnoreStart
     /* @see stack_cas_connection::get_debuginfo() */
     // @codingStandardsIgnoreEnd

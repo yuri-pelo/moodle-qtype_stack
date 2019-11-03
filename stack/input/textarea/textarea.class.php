@@ -101,6 +101,20 @@ class stack_textarea_input extends stack_input {
         return $contents;
     }
 
+    protected function caslines_to_answer($caslines) {
+        $vals = array();
+        foreach ($caslines as $line) {
+            if ($line->get_valid()) {
+                $vals[] = $line->get_evaluationform();
+            } else {
+                // This is an empty place holder for an invalid expression.
+                $vals[] = 'EMPTYCHAR';
+            }
+        }
+        $s = '['.implode(',', $vals).']';
+        return stack_ast_container::make_from_student_source($s, '', $caslines[0]->get_securitymodel());
+    }
+
     /**
      * Transforms the contents array into a maxima expression.
      *
@@ -119,6 +133,15 @@ class stack_textarea_input extends stack_input {
      */
     private function maxima_to_raw_input($in) {
         $values = stack_utils::list_to_array($in, false);
+        foreach ($values as $key => $val) {
+            if (trim($val) != '') {
+                $cs = stack_ast_container::make_from_teacher_source($val);
+                if ($cs->get_valid()) {
+                    $val = $cs->get_inputform();
+                }
+            }
+            $values[$key] = $val;
+        }
         return implode("\n", $values);
     }
 
@@ -156,14 +179,20 @@ class stack_textarea_input extends stack_input {
                    'border="0" cellpadding="4" cellspacing="0"><tbody>';
         foreach ($caslines as $index => $cs) {
             $display .= '<tr>';
-            if ('' != $cs->get_errors()  || '' == $cs->get_value()) {
-                $valid = false;
-                $errors[$index] = ' ' . stack_maxima_translate($cs->get_errors());
-                $cds = stack_utils::logic_nouns_sort($cs->get_raw_casstring(), 'remove');
-                $display .= '<td>'. stack_maxima_format_casstring($cds). '</td>';
-                $display .= '<td>'. stack_maxima_translate($errors[$index]). '</td></tr>';
-            } else {
+            $fb = $cs->get_feedback();
+            if ($cs->is_correctly_evaluated() && $fb == '') {
                 $display .= '<td>\(\displaystyle ' . $cs->get_display() . ' \)</td>';
+                if ($errors[$index]) {
+                    $display .= '<td>' . stack_maxima_translate($errors[$index]) . '</td>';
+                }
+            } else {
+                // Feedback here is always an error.
+                if ($fb !== '') {
+                    $errors[] = $fb;
+                }
+                $valid = false;
+                $display .= '<td>' . stack_maxima_format_casstring($this->rawcontents[$index]) . '</td>';
+                $display .= '<td>' . trim(stack_maxima_translate($cs->get_errors()) . ' ' . $fb) . '</td>';
             }
             $display .= '</tr>';
         }
@@ -180,7 +209,7 @@ class stack_textarea_input extends stack_input {
     public static function get_parameters_defaults() {
         return array(
             'mustVerify'         => true,
-            'showValidation'     => 0,
+            'showValidation'     => 1,
             'boxWidth'           => 20,
             'strictSyntax'       => true,
             'insertStars'        => 0,
@@ -220,9 +249,10 @@ class stack_textarea_input extends stack_input {
         $values = stack_utils::list_to_array($value, false);
         foreach ($values as $key => $val) {
             if (trim($val) !== '' ) {
-                $val = stack_utils::logic_nouns_sort($val, 'remove');
+                $cs = stack_ast_container::make_from_teacher_source($val);
+                $cs->get_valid();
+                $val = '<code>'.$cs->get_inputform().'</code>';
             }
-            $val = '<code>'.$this->stackeq_to_equals($val).'</code>';
             $values[$key] = $val;
         }
         $value = "<br/>".implode("<br/>", $values);

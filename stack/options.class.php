@@ -119,10 +119,10 @@ class stack_options {
 
         // Overright them from any input.
         foreach ($settings as $key => $val) {
-            if (!array_key_exists($key, $this->settings)) {
+            if (!array_key_exists($key, $this->options)) {
                 throw new stack_exception('stack_options construct: $key '.$key.' is not a valid option name.');
             } else {
-                $this->options[$key] = $val;
+                $this->options[$key]['value'] = $val;
             }
         }
     }

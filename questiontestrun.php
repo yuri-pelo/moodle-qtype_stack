@@ -105,6 +105,7 @@ $renderquestion = $quba->render_question($slot, $options);
 // Start output.
 echo $OUTPUT->header();
 $renderer = $PAGE->get_renderer('qtype_stack');
+echo $OUTPUT->heading($question->name, 2);
 flush();
 
 // Load the list of test cases.
@@ -287,7 +288,11 @@ if (!(empty($question->deployedseeds)) && $canedit) {
 }
 
 // Display the controls to add another question test.
-echo $OUTPUT->heading(stack_string('questiontests'), 2);
+$s = $seed;
+if ($s === null) {
+    $s = 0;
+}
+echo $OUTPUT->heading(stack_string('questiontestsfor', $s), 2);
 
 \core\session\manager::write_close();
 
@@ -338,19 +343,25 @@ foreach ($testresults as $key => $result) {
     );
     $inputstable->attributes['class'] = 'generaltable stacktestsuite';
 
+    $typeininputs = array();
     foreach ($result->get_input_states() as $inputname => $inputstate) {
-        $inputval = s($inputstate->input);
+        $inputval = $inputstate->input;
         if (false === $inputstate->input) {
             $inputval = '';
+        } else {
+            $typeininputs[] = $inputname . ':' . $inputval . ";\n";
         }
         $inputstable->data[] = array(
                 s($inputname),
                 s($inputstate->rawinput),
-                $inputval,
+                s($inputval),
                 stack_ouput_castext($inputstate->display),
                 stack_string('inputstatusname' . $inputstate->status),
                 $inputstate->errors,
         );
+    }
+    if ($typeininputs != array()) {
+        $typeininputs[] = "/* ------------------- */\n";
     }
 
     echo html_writer::table($inputstable);
@@ -399,7 +410,7 @@ foreach ($testresults as $key => $result) {
                 $expectedscore,
                 $state->penalty,
                 $expectedpenalty,
-                s($state->answernote) . html_writer::tag('pre', $state->trace),
+                s($state->answernote) . html_writer::tag('pre', implode('', $typeininputs) . $state->trace),
                 s($state->expectedanswernote),
                 format_text($state->feedback),
                 $passedcol,
@@ -442,6 +453,11 @@ if ($canedit) {
 
 echo $renderquestion;
 
+if ($question->runtimeerrors) {
+    echo html_writer::tag('p', stack_string('errors'), array('class' => 'overallresult fail'));
+    echo html_writer::tag('p', implode('<br />', array_keys($question->runtimeerrors)));
+}
+
 // Display the question note.
 echo $OUTPUT->heading(stack_string('questionnote'), 3);
 echo html_writer::tag('p', stack_ouput_castext($question->get_question_summary()),
@@ -450,11 +466,7 @@ echo html_writer::tag('p', stack_ouput_castext($question->get_question_summary()
 // Display the question variables.
 echo $OUTPUT->heading(stack_string('questionvariablevalues'), 3);
 echo html_writer::start_tag('div', array('class' => 'questionvariables'));
-$displayqvs = '';
-foreach ($question->get_question_var_values() as $key => $value) {
-    $displayqvs .= s($key) . ' : ' . s($value). ";\n";
-}
-echo  html_writer::tag('pre', $displayqvs);
+echo html_writer::tag('pre', $question->get_question_session_keyval_representation());
 echo html_writer::end_tag('div');
 
 // Display a representation of the PRT for offline use.

@@ -27,12 +27,12 @@ class stack_potentialresponse_tree_state {
     /**
      * @var string This holds errors needed for the user.
      */
-    public $_errors      = '';
+    public $_errors = '';
 
     /**
      * @var array of stack_prt_feedback_element.
      */
-    public $_feedback    = array();
+    public $_feedback = array();
 
     /**
      * @var array of answernote strings for the teacher.
@@ -47,17 +47,17 @@ class stack_potentialresponse_tree_state {
     /**
      * @var boolean Is this attempt valid?
      */
-    public $_valid       = true;
+    public $_valid = true;
 
     /**
      * @var float The raw score for this attempt.  Penalties are calculated later.
      */
-    public $_score       = 0;
+    public $_score = 0;
 
     /**
      * @var float Penalty attracted by this attempt.
      */
-    public $_penalty     = 0;
+    public $_penalty = 0;
 
     /**
      * @var float Weight of this PRT within the question.
@@ -67,12 +67,17 @@ class stack_potentialresponse_tree_state {
     /**
      * @var stack_cas_session
      */
-    protected $casecontext;
+    protected $cascontext;
 
     /**
      * @var int
      */
     protected $seed;
+
+    /**
+     * @var boolean
+     */
+    protected $simplify;
 
     /**
      * Constructor
@@ -133,9 +138,10 @@ class stack_potentialresponse_tree_state {
      *      feedback variables, sans and tans for each node, etc.
      * @param int $seed the random seed used.
      */
-    public function set_cas_context(stack_cas_session $cascontext, $seed) {
+    public function set_cas_context(stack_cas_session2 $cascontext, $seed, $simp) {
         $this->cascontext = $cascontext;
         $this->seed = $seed;
+        $this->simplify = $simp;
     }
 
     /**
@@ -176,9 +182,33 @@ class stack_potentialresponse_tree_state {
      * @return string the feedback with question variables substituted.
      */
     public function substitue_variables_in_feedback($feedback) {
-        $feedbackct = new stack_cas_text($feedback, $this->cascontext, $this->seed, 't', false, 0);
+        // In this case, we want to get as much castext as possible back to a student.
+        // Some variables might have created a run time error (e.g. division by zero).
+        // These errors render $this->cascontext invalid, so the castext will not evaluate.
+        // However, many (most?) of the variables will exist, and we can generate decent partial castext.
+        // We prune out any invalid variables at this stage.
+        $sessionvars = $this->cascontext->get_session();
+        $cleanvars = array();
+        foreach ($sessionvars as $var) {
+            if ($var->get_valid()) {
+                $cleanvars[] = $var;
+            }
+        }
+
+        $options = $this->cascontext->get_options();
+        // We also need to respect the actual value of simplification and set it explicitly again at the end of the list.
+        if ($this->simplify) {
+            $simp = 'true';
+        } else {
+            $simp = 'false';
+        }
+        $cleanvars[] = stack_ast_container::make_from_teacher_source('simp:'.$simp, '', new stack_cas_security(), array());
+
+        $cleansession = new stack_cas_session2($cleanvars, $options, $this->seed);
+        $feedbackct = new stack_cas_text($feedback, $cleansession, $this->seed);
         $result = $feedbackct->get_display_castext();
         $this->_errors = trim($this->_errors . ' ' . $feedbackct->get_errors());
+        $this->_errors = trim($this->_errors . ' ' . $this->cascontext->get_errors());
         return $result;
     }
 

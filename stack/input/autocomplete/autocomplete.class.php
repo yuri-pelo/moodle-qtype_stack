@@ -45,7 +45,8 @@ class stack_autocomplete_input extends stack_input {
     protected $extraoptions = array(
         'simp' => false,
         'rationalized' => false,
-        'allowempty' => false
+        'allowempty' => false,
+        'align' => 'left'
     );
 
     public function adapt_to_model_answer($teacheranswer) {
@@ -81,6 +82,9 @@ class stack_autocomplete_input extends stack_input {
             'autocapitalize' => 'none',
             'spellcheck'     => 'false',
         );
+        if ($this->extraoptions['align'] === 'right') {
+            $attributes['class'] = 'algebraic-right';
+        }
 
         $value = $this->contents_to_maxima($state->contents);
         if ($value == 'EMPTYANSWER') {
