@@ -1634,12 +1634,9 @@ class qtype_stack extends question_type {
             return $errors;
         }
 
-        if ($session !== null) {
-            $display = $castext->get_display_castext();
-            if ($castext->get_errors()) {
-                $errors[$fieldname][] = $castext->get_errors();
-                return $errors;
-            }
+        if ($castext->get_errors()) {
+            $errors[$fieldname][] = $castext->get_errors();
+            return $errors;
         }
 
         return $errors;
@@ -1684,11 +1681,15 @@ class qtype_stack extends question_type {
 
         $keyval = new stack_cas_keyval($fromform['questionvariables'], $this->options, $this->seed);
         if ($keyval->get_valid()) {
-            $keyval->instantiate();
+            $runtimeerrors = $keyval->instantiate();
+        }
+        if ($runtimeerrors) {
+            $errors['questionvariables'][] = $runtimeerrors;
         }
         $session = $keyval->get_session();
         if ($session->get_errors()) {
-            $errors['questionvariables'][] = $session->get_errors();
+            $errors['questionvariables'][] = $session->get_errors(true);
+            $errors['questionvariables'] = array_unique($errors['questionvariables']);
             return $errors;
         }
 

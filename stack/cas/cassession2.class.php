@@ -45,6 +45,15 @@ class stack_cas_session2 {
 
     private $errors;
 
+    /**
+     * @var string
+     *
+     * In the event that we can't parse the outout this holds an error message which might help
+     * a user track down what has gone wrong. Basically, this is as much raw output from Maxima as
+     * we can manage to reasonably get back.
+     */
+    private $timeouterrmessage;
+
     public function __construct(array $statements, $options = null, $seed = null) {
 
         $this->instantiated = false;
@@ -168,22 +177,39 @@ class stack_cas_session2 {
     /**
      * Returns all the errors related to the session.
      * This includes errors validating castrings prior to instantiation.
+     * And it includes any runtime errors, specifically if we get nothing back.
      */
     public function get_errors($implode = true) {
         $errors = array();
+        $this->timeouterrmessage = trim($this->timeouterrmessage);
         foreach ($this->statements as $num => $statement) {
-            if ($statement->get_errors()) {
-                $errors[$num] = $statement->get_errors(false);
+            $err = $statement->get_errors('implode');
+            if ($err) {
+                if ($err === 'TIMEDOUT' && $this->timeouterrmessage === '') {
+                    $errors[$num] = $statement->get_errors(false);
+                } elseif ($err !== 'TIMEDOUT') {
+                    // Regular error message.
+                    $errors[$num] = $statement->get_errors(false);
+                }
+                // If we have timeout and a nonempty timeout message do nothing.
             }
         }
+
         if ($implode !== true) {
+            if ($this->timeouterrmessage !== '') {
+                $errors[] = $this->timeouterrmessage;
+            }
             return $errors;
         }
+
         $unique = array();
         foreach ($errors as $errs) {
             foreach ($errs as $err) {
                 $unique[$err] = true;
             }
+        }
+        if ($this->timeouterrmessage !== '') {
+            $unique[$this->timeouterrmessage] = true;
         }
         return implode(' ', array_keys($unique));
 
@@ -337,7 +363,7 @@ class stack_cas_session2 {
         $command .= ',print("STACK-OUTPUT-BEGINS>")';
         $command .= ',print(stackjson_stringify(_RESPONSE))';
         $command .= ',print("<STACK-OUTPUT-ENDS")';
-        $command .= ')$';
+        $command .= ')$'."\n";
 
         // Send it to CAS.
         $connection = stack_connection_helper::make();
@@ -347,7 +373,11 @@ class stack_cas_session2 {
         $asts = array();
         $latex = array();
         $display = array();
+
         if (!isset($results['timeout']) || $results['timeout'] === true) {
+            if (array_key_exists('timeouterrmessage', $results)) {
+                $this->timeouterrmessage = $results['timeouterrmessage'];
+            }
             foreach ($this->statements as $num => $statement) {
                 $errors = array('TIMEDOUT');
                 $statement->set_cas_status($errors, array(), array());
@@ -484,7 +514,10 @@ class stack_cas_session2 {
     }
 
     public function get_debuginfo() {
-        // TODO...
+        if (trim($this->timeouterrmessage) !== '') {
+            return $this->timeouterrmessage;
+        }
         return '';
     }
 }
+
