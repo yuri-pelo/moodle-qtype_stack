@@ -48,30 +48,20 @@ class stack_varmatrix_input extends stack_input {
 
     public function adapt_to_model_answer($teacheranswer) {
 
-        // We need to reset the errors here, now we have a new teacher's answer.
-        $this->errors = null;
-
         // Work out how big the matrix should be from the INSTANTIATED VALUE of the teacher's answer.
-        $cs1 = new stack_cas_casstring('ta:' . $teacheranswer);
-        $cs1->get_valid('t');
-        $cs2 = new stack_cas_casstring('tav:first(ta)');
-        $cs2->get_valid('t');
-        $cs3 = new stack_cas_casstring('tac:second(ta)');
-        $cs3->get_valid('t');
-
-        $at1 = new stack_cas_session(array($cs1, $cs2, $cs3), null, 0);
+        $cs = stack_ast_container::make_from_teacher_source('matrix_size(' . $teacheranswer . ')');
+        $cs->get_valid();
+        $at1 = new stack_cas_session2(array($cs), null, 0);
         $at1->instantiate();
 
         if ('' != $at1->get_errors()) {
             $this->errors[] = $at1->get_errors();
-            return false;
+            return;
         }
 
-        $this->teacheranswervalue = $cs2->get_value();
-        $this->teacheranswerdisplay = $cs2->get_display();
-        $this->completeoptions = $cs3->get_value();
-
-        return;
+        // These are ints...
+        $this->height = $cs->get_list_element(0, true)->value;
+        $this->width = $cs->get_list_element(1, true)->value;
     }
 
     public function render(stack_input_state $state, $fieldname, $readonly, $tavalue) {
@@ -102,7 +92,7 @@ class stack_varmatrix_input extends stack_input {
             if ($this->parameters['syntaxAttribute'] == '1') {
                 $field = 'placeholder';
             }
-            $attributes[$field] = stack_utils::logic_nouns_sort($this->parameters['syntaxHint'], 'remove');
+            $attributes[$field] = $this->parameters['syntaxHint'];
         } else {
             $attributes['value'] = $value;
         }

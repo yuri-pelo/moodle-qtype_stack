@@ -95,7 +95,7 @@ class stack_autocomplete_input extends stack_input {
             if ($this->parameters['syntaxAttribute'] == '1') {
                 $field = 'placeholder';
             }
-            $attributes[$field] = stack_utils::logic_nouns_sort($this->parameters['syntaxHint'], 'remove');
+            $attributes[$field] = $this->parameters['syntaxHint'];
         } else {
             $attributes['value'] = $value;
         }
@@ -166,7 +166,13 @@ class stack_autocomplete_input extends stack_input {
      * @return string the teacher's answer, displayed to the student in the general feedback.
      */
     public function get_teacher_answer_display($value, $display) {
-        return stack_string('teacheranswershow',
-                array('value' => '<code>'.$this->teacheranswervalue.'</code>', 'display' => $this->teacheranswerdisplay));
+        if (trim($value) == 'EMPTYANSWER') {
+            return stack_string('teacheranswerempty');
+        }
+        $cs = stack_ast_container::make_from_teacher_source($value, '', new stack_cas_security());
+        $cs->set_nounify(false);
+        $value = $cs->get_evaluationform();
+        return "TODO: sort out the list structure here. " .
+                stack_string('teacheranswershow', array('value' => '<code>'.$value.'</code>', 'display' => $display));
     }
 }
