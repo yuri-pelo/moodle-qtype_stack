@@ -1,0 +1,675 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+<!-- question: 55724  -->
+  <question type="stack">
+    <name>
+      <text>JSXGraph-Applet - Prototyp(Bachelorarbeit_Alexander_Meyer)</text>
+    </name>
+    <questiontext format="html">
+      <text><![CDATA[Betrachten Sie die Funktionsgleichung \( \ f(x)=-x^2+2x+3 \ \).<p></p><p> Zeichnen Sie im folgenden Applet den zugehörigen Graphen im Intervall&nbsp; \( -1\leq x \leq 3\).<br></p>
+  
+
+<script type="text/javascript" src="https://jsxgraph.uni-bayreuth.de/distrib/jsxgraphcore.js"></script>
+<div id="box" class="jxgbox" style="width:600px; height:600px; background-color: #ffffff; border-style: solid; border-width: 1px; border-color: #356AA0; border-radius: 10px;"></div>
+
+
+<script>
+boardXmin = -5;
+boardXmax = 8;
+boardYmin = -5;
+boardYmax = 8;
+boardWidth = 600;//mit der variablen hier die Breite des Divs setzen, um Redundanz zu vermeiden
+boardHeight = 600;
+
+//Buttons are placed according to the coord system, but its limits to the sides are unknown
+//so button coordinates are calculated relatively
+button1X = 0.05*(boardXmax-boardXmin)+boardXmin;
+button1Y = -0.07*(boardYmax-boardYmin)+boardYmax;
+button2X = 0.05*(boardXmax-boardXmin)+boardXmin;
+button2Y = -0.07*(boardYmax-boardYmin)+boardYmax;
+button3X = 0.05*(boardXmax-boardXmin)+boardXmin;
+button3Y = -0.07*(boardYmax-boardYmin)+boardYmax;
+button4X = 0.05*(boardXmax-boardXmin)+boardXmin;
+button4Y = -0.21*(boardYmax-boardYmin)+boardYmax;
+
+drawColor = "#7dd2e4";
+
+points = [];
+
+
+
+
+var board = JXG.JSXGraph.initBoard('box', {boundingbox:[-5,8,8,-5], axis:false, showCopyright: false, showNavigation: false, pan: {enabled: false}, zoom: {enabled: false}});
+xaxis = board.create('axis', [[0, 0], [1,0]], 
+		  {name:'x', 
+			withLabel: true, 
+			label: {position: 'rt',  // possible values are 'lft', 'rt', 'top', 'bot'
+					 offset: [-15, 20]   // (in pixels)
+					 }
+			});
+yaxis = board.create('axis', [[0, 0], [0, 1]], 
+		  {name:'y', 
+			withLabel: true, 
+			label: {
+			  position: 'rt',  // possible values are 'lft', 'rt', 'top', 'bot'
+			  offset: [-20, 0]   // (in pixels)
+				}
+			});				
+
+         
+         var button3 = board.create('button', [button3X, button3Y, 'Zurücksetzen', function() {
+                    
+                     for (var key in points) {
+                        points[key].remove();
+                     }
+                     points = [];
+                     
+         }], {});
+         
+
+
+
+
+
+//########################################################################################
+
+//We need to know if a touch or mouse down is going on in the move event trigger
+var mouseDown = 0;
+var touchDown = 0;
+
+var getMouseCoords = function(e, i) {
+        var cPos = board.getCoordsTopLeftCorner(e, i),
+            absPos = JXG.getPosition(e, i),
+            dx = absPos[0]-cPos[0],
+            dy = absPos[1]-cPos[1];
+
+        return new JXG.Coords(JXG.COORDS_BY_SCREEN, [dx, dy], board);
+    }
+
+    
+    //mousemove, touchmove
+    
+    //TODO: nicht hinter dem button malen!
+board.on('down', function (e, mode) {
+    --mouseDown;
+    --touchDown;
+    
+    if(!(typeof traceListX === "undefined")){
+        return;
+    }
+
+    coords = getMouseCoords(e, 0);
+    
+    if(!(typeof p_temp === "undefined") && p_temp.X() == coords.usrCoords[1] && p_temp.Y() == coords.usrCoords[2]) {
+        return;
+    }
+    
+	p_temp = board.create('point', [coords.usrCoords[1], coords.usrCoords[2]], {style:6, size: 1, name: "", color: "#7dd2e4", fillColor: "#7dd2e4"});
+	points.push(p_temp);
+    //p_temp.cloneToBackground();
+    //p_temp.remove();
+        
+    //console.log(points.length);
+});
+
+board.on('up', function (e, mode) {
+    mouseDown=0;
+    touchDown=0;
+});
+    
+board.on('move', function (e, mode) {
+    console.log("" + mouseDown + " || " + touchDown);
+    
+    if(!(mouseDown||touchDown) || !(typeof traceListX === "undefined")){
+        return;
+    }
+
+    coords = getMouseCoords(e, 0);
+    
+    if(!(typeof p_temp === "undefined") && p_temp.X() == coords.usrCoords[1] && p_temp.Y() == coords.usrCoords[2]) {
+        return;
+    }
+    
+	p_temp = board.create('point', [coords.usrCoords[1], coords.usrCoords[2]], {style:6, size: 1, name: "", color: "#7dd2e4", fillColor: "#7dd2e4"});
+	points.push(p_temp);
+    //p_temp.cloneToBackground();
+    //p_temp.remove();
+        
+    //console.log(points.length);
+});
+
+//########################################################################################
+
+//Add current input to STACK, when anything changes on the board
+board.on('update', function () {
+	feedSTACK();
+});
+
+function feedSTACK() {
+    var xList = [];
+    var yList = [];
+    for (var key in points) {
+        xList.push(points[key].X());
+        yList.push(points[key].Y());
+    }
+    
+    jQuery(document).find("input[name$='ans1']").val( "[" + xList.join(", ") + "]" );//Schreibe Liste in Stack Input Feld
+    jQuery(document).find("input[name$='ans2']").val( "[" + yList.join(", ") + "]" );//Schreibe Liste in Stack Input Feld
+    
+    //doc.querySelector('[id*="_ans1"]').value = "[" + vals + "]";//Alternative way
+}
+
+//Hide STACK input fields
+jQuery(document).find("input[name$='ans1']").hide();
+jQuery(document).find("input[name$='ans2']").hide();
+
+</script>
+
+<p><br></p><p><br></p><p style="display:none">[[input:ans1]] [[validation:ans1]]</p>
+<p style="display:none">[[input:ans2]] [[validation:ans2]]</p><p>[[feedback:prt2]]<br></p>]]></text>
+    </questiontext>
+    <generalfeedback format="html">
+      <text></text>
+    </generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <stackversion>
+      <text>2018120500</text>
+    </stackversion>
+    <questionvariables>
+      <text></text>
+    </questionvariables>
+    <specificfeedback format="html">
+      <text></text>
+    </specificfeedback>
+    <questionnote>
+      <text></text>
+    </questionnote>
+    <questionsimplify>0</questionsimplify>
+    <assumepositive>0</assumepositive>
+    <assumereal>0</assumereal>
+    <prtcorrect format="html">
+      <text></text>
+    </prtcorrect>
+    <prtpartiallycorrect format="html">
+      <text></text>
+    </prtpartiallycorrect>
+    <prtincorrect format="html">
+      <text></text>
+    </prtincorrect>
+    <multiplicationsign>dot</multiplicationsign>
+    <sqrtsign>1</sqrtsign>
+    <complexno>i</complexno>
+    <inversetrig>cos-1</inversetrig>
+    <matrixparens>[</matrixparens>
+    <variantsselectionseed></variantsselectionseed>
+    <input>
+      <name>ans1</name>
+      <type>algebraic</type>
+      <tans>123</tans>
+      <boxsize>15</boxsize>
+      <strictsyntax>1</strictsyntax>
+      <insertstars>0</insertstars>
+      <syntaxhint></syntaxhint>
+      <syntaxattribute>0</syntaxattribute>
+      <forbidwords></forbidwords>
+      <allowwords></allowwords>
+      <forbidfloat>0</forbidfloat>
+      <requirelowestterms>0</requirelowestterms>
+      <checkanswertype>0</checkanswertype>
+      <mustverify>0</mustverify>
+      <showvalidation>0</showvalidation>
+      <options></options>
+    </input>
+    <input>
+      <name>ans2</name>
+      <type>algebraic</type>
+      <tans>123</tans>
+      <boxsize>15</boxsize>
+      <strictsyntax>1</strictsyntax>
+      <insertstars>0</insertstars>
+      <syntaxhint></syntaxhint>
+      <syntaxattribute>0</syntaxattribute>
+      <forbidwords></forbidwords>
+      <allowwords></allowwords>
+      <forbidfloat>0</forbidfloat>
+      <requirelowestterms>0</requirelowestterms>
+      <checkanswertype>0</checkanswertype>
+      <mustverify>0</mustverify>
+      <showvalidation>0</showvalidation>
+      <options></options>
+    </input>
+    <prt>
+      <name>prt2</name>
+      <value>1.0000000</value>
+      <autosimplify>1</autosimplify>
+      <feedbackvariables>
+        <text><![CDATA[/*Existieren genug Punkte fuer eine Auswertung?*/
+/*Knoten 2*/
+
+LaengeDerListe: length(ans1);
+GenugEingezeichnetePunkte: is(LaengeDerListe>=30);
+
+
+
+/*Deckt die Zeichnung das gesamte Intervall -1<=x<=3 ab?*/
+/*Knoten 3*/
+
+ListeMitIndizesVonWertenLinksDesIntervalls: sublist_indices(ans1, lambda ([i], i<-1));
+ListeMitIndizesVonWertenLinksVonNull: sublist_indices(ans1, lambda ([i], i<0));
+ListeMitIndizesVonWertenLinksVonEins: sublist_indices(ans1, lambda ([i], i<1));
+ListeMitIndizesVonWertenLinksVonZwei: sublist_indices(ans1, lambda ([i], i<2));
+ListeMitIndizesVonWertenBisDrei: sublist_indices(ans1, lambda ([i], i<=3));
+
+AnzahlPunkteImErstenIntervall: length(ListeMitIndizesVonWertenLinksVonNull)-length(ListeMitIndizesVonWertenLinksDesIntervalls);
+
+AnzahlPunkteImZweitenIntervall: length(ListeMitIndizesVonWertenLinksVonEins)-length(ListeMitIndizesVonWertenLinksVonNull);
+
+AnzahlPunkteImDrittenIntervall: length(ListeMitIndizesVonWertenLinksVonZwei)-length(ListeMitIndizesVonWertenLinksVonEins);
+
+AnzahlPunkteImViertenIntervall: length(ListeMitIndizesVonWertenBisDrei)-length(ListeMitIndizesVonWertenLinksVonZwei);
+
+InAllenTeilintervallenGenugPunkte: is(AnzahlPunkteImErstenIntervall>3) and is(AnzahlPunkteImZweitenIntervall>3) and is(AnzahlPunkteImDrittenIntervall>3) and is(AnzahlPunkteImViertenIntervall>3);	
+
+
+
+/*Auswertung der Praezision der Zeichnung mit Abstandsmetrik*/
+/*Knoten 4 + 5*/
+
+ListeDerMinimalenAbstaende: [];
+SchleifeFuerMinimaleAbstaende: for i:1 thru LaengeDerListe do ListeDerMinimalenAbstaende: endcons(lmin(makelist(sqrt((ans1[i]-x)^2+(ans2[i]-(-x^2+2*x+3))^2), x, -1, 3, 0.01)), ListeDerMinimalenAbstaende);
+
+SummeDerMinimalenAbstaende: 0;
+SchleifeSumme: for i:1 thru LaengeDerListe do SummeDerMinimalenAbstaende: SummeDerMinimalenAbstaende+ListeDerMinimalenAbstaende[i];
+
+DurchschnittlicherAbstandPunkte: SummeDerMinimalenAbstaende/LaengeDerListe;
+DurchschnittlichPraeziseGenugAbgebildet: is(DurchschnittlicherAbstandPunkte<=0.15);
+DurchschnittlichAusreichendAbgebildet: is(DurchschnittlicherAbstandPunkte<=0.22);
+
+
+
+/*X-Achsenschnittpunkte und Extrempunkt praezise genug abgebildet?*/
+/*Knoten 6*/
+
+/*x-Achsenschnittpunkt bei x=-1*/
+ListeMitPunktAbstaendenZumXPA: [];
+SchleifePunkteAbstaendeZumXPA: for a:1 thru LaengeDerListe do ListeMitPunktAbstaendenZumXPA: endcons(sqrt((ans1[a]-(-1))^2+(ans2[a]-(0))^2), ListeMitPunktAbstaendenZumXPA);
+
+ListeMitIndizesVonPunktenImAbstandskreisXPA: sublist_indices(ListeMitPunktAbstaendenZumXPA, lambda ([i], i<0.2));
+
+ListeMitPunktAbstaendenImAbstandskreisXPANichtLeer: is(length(ListeMitIndizesVonPunktenImAbstandskreisXPA)>0);
+
+
+/*x-Achsenschnittpunkt bei x=3*/
+ListeMitPunktAbstaendenZumXPB: [];
+SchleifePunkteAbstaendeZumXPB: for a:1 thru LaengeDerListe do ListeMitPunktAbstaendenZumXPB: endcons(sqrt((ans1[a]-(3))^2+(ans2[a]-(0))^2), ListeMitPunktAbstaendenZumXPB);
+
+ListeMitIndizesVonPunktenImAbstandskreisXPB: sublist_indices(ListeMitPunktAbstaendenZumXPB, lambda ([i], i<0.2));
+
+ListeMitPunktAbstaendenImAbstandskreisXPBNichtLeer: is(length(ListeMitIndizesVonPunktenImAbstandskreisXPB)>0);
+
+
+/*Extrempunkt bei x=1*/
+ListeMitPunktAbstaendenZumExtrempunkt: [];
+SchleifePunkteAbstaendeZumExtrempunkt: for a:1 thru LaengeDerListe do ListeMitPunktAbstaendenZumExtrempunkt: endcons(sqrt((ans1[a]-(1))^2+(ans2[a]-(4))^2), ListeMitPunktAbstaendenZumExtrempunkt);
+
+ListeMitIndizesVonPunktenImAbstandskreisEP: sublist_indices(ListeMitPunktAbstaendenZumExtrempunkt, lambda ([i], i<0.2));
+
+ListeMitPunktAbstaendenImAbstandskreisEPNichtLeer: is(length( ListeMitIndizesVonPunktenImAbstandskreisEP)>0);
+
+
+/*Gemeinsame Auswertung bezueglich der drei obigen Punkte*/
+AlleWichtigenPunkteGutAbgebildet: is(ListeMitPunktAbstaendenImAbstandskreisXPANichtLeer=true) and is(ListeMitPunktAbstaendenImAbstandskreisXPBNichtLeer=true) and is(ListeMitPunktAbstaendenImAbstandskreisEPNichtLeer=true);
+
+SchleifeFuerUnterschiedlicheAntwortenA: (if(ListeMitPunktAbstaendenImAbstandskreisXPANichtLeer=true) then "" else "Entweder haben Sie den x-Achsenschnittpunkt bei \\(x=(-1)\\) gar nicht oder nicht genau genug abgebildet.");
+SchleifeFuerUnterschiedlicheAntwortenB: (if(ListeMitPunktAbstaendenImAbstandskreisXPBNichtLeer=true) then "" else "Entweder haben Sie den x-Achsenschnittpunkt bei \\(x=3\\) gar nicht oder nicht genau genug abgebildet.");
+SchleifeFuerUnterschiedlicheAntwortenC: (if(ListeMitPunktAbstaendenImAbstandskreisEPNichtLeer=true) then "" else "Entweder haben Sie den Hochpunkt \\(P=(1|4)\\) gar nicht oder nicht genau genug abgebildet.");
+
+
+
+/*Ermittlung der Anzahl der Punkte ausserhalb des Intervalls -1<=x<=3*/
+/*Knoten 7*/
+
+AnzahlPunkteLinksDesIntervalls: length(ListeMitIndizesVonWertenLinksDesIntervalls);
+
+ListeMitIndizesVonWertenRechtsDesIntervalls: sublist_indices(ans1, lambda ([i], i>3));
+AnzahlPunkteRechtsDesIntervalls: length(ListeMitIndizesVonWertenRechtsDesIntervalls);
+
+GesamtzahlPunkteAusserhalbDesIntervalls: AnzahlPunkteLinksDesIntervalls+AnzahlPunkteRechtsDesIntervalls;
+
+ZuVielePunkteAusserhalbDesIntervalls: is(GesamtzahlPunkteAusserhalbDesIntervalls<11);
+
+
+
+/*Ermittlung von Ausreisser-Punkten*/
+/*Knoten 8 + 9*/
+
+/*Abstand zu gross*/	
+ListeMitIndizesVonZuGrossenAbstaenden: sublist_indices(ListeDerMinimalenAbstaende, lambda ([i], i>0.3));
+AnzahlPunkteMitZuGrossenAbstaenden: length(ListeMitIndizesVonZuGrossenAbstaenden);
+GibtEsZuVieleAusreisserMitZuGrossemAbstand: is(AnzahlPunkteMitZuGrossenAbstaenden<10);
+
+/*Abstand tolerierbar*/	
+ListeMitIndizesVonToleriertenAbstaenden: sublist_indices(ListeDerMinimalenAbstaende, lambda ([i], i>0.2 and i<=0.3));
+AnzahlPunkteMitToleriertenAbstaenden: length(ListeMitIndizesVonToleriertenAbstaenden);
+GibtEsZuVieleAusreisserMitToleriertemAbstand: is(AnzahlPunkteMitToleriertenAbstaenden<10);
+
+/*________________________________________________________*/
+/*Input wird fur Output auf 2 Nachkommastellen gerundet*/
+xRounded: ans1;
+yRounded: ans2;
+for i:1 thru length(xRounded) do xRounded[i]:float(round(xRounded[i]*100)/100);
+for i:1 thru length(yRounded) do yRounded[i]:float(round(yRounded[i]*100)/100);
+]]></text>
+      </feedbackvariables>
+      <node>
+        <name>0</name>
+        <answertest>EqualComAss</answertest>
+        <sans>GenugEingezeichnetePunkte</sans>
+        <tans>true</tans>
+        <testoptions></testoptions>
+        <quiet>1</quiet>
+        <truescoremode>=</truescoremode>
+        <truescore>0.0000000</truescore>
+        <truepenalty></truepenalty>
+        <truenextnode>1</truenextnode>
+        <trueanswernote>prt2-1-T</trueanswernote>
+        <truefeedback format="html">
+          <text><![CDATA[<p>Das folgende Koordinatensystem zeigt den Graphen der Funktion und Ihre Skizze in Form ihrer diskreten Punkte: </p>
+
+<div id="box2" class="jxgbox" style="width:600px; height:600px; background-color: #ffffff; border-style: solid; border-width: 1px; border-color: #356AA0; border-radius: 10px;"></div>
+<script>
+
+traceListX = '{@ans1@}'
+traceListY = '{@ans2@}'
+if (!(typeof traceListX === "undefined")) {
+ 
+    //Create second board for showing results
+    var board2 = JXG.JSXGraph.initBoard('box2', {boundingbox:[-5,8,8,-5], axis:false, showCopyright: false, showNavigation: false});
+    xaxis = board2.create('axis', [[0, 0], [1,0]], 
+            {name:'x', 
+                withLabel: true, 
+                label: {position: 'rt',  // possible values are 'lft', 'rt', 'top', 'bot'
+                        offset: [-15, 20]   // (in pixels)
+                        }
+                });
+    yaxis = board2.create('axis', [[0, 0], [0, 1]], 
+            {name:'y', 
+                withLabel: true, 
+                label: {
+                position: 'rt',  // possible values are 'lft', 'rt', 'top', 'bot'
+                offset: [-20, 0]   // (in pixels)
+                    }
+                });				
+
+    board2.create('functiongraph', [function(x){ return (-(x*x))+2*x+3;}, -1,3], {strokeWidth: 3});
+ 
+ 
+    traceListX = traceListX.substring(traceListX.indexOf("[")+1,traceListX.indexOf("]")-4).split(",");
+    traceListY = traceListY.substring(traceListY.indexOf("[")+1,traceListY.indexOf("]")-4).split(",");
+    console.log(traceListX);
+    if(traceListX.length > 0 && traceListX.length == traceListY.length) {
+        for (var i=0; i<traceListX.length;i++) {
+            p_temp = board.create('point', [traceListX[i],traceListY[i]], {style:6, size: 1, name: "", color: "#7dd2e4", fillColor: "#7dd2e4"});
+            p_temp.cloneToBackground();
+            p_temp.remove();
+            p_temp = board2.create('point', [traceListX[i],traceListY[i]], {style:6, size: 1, name: "", color: "#7dd2e4", fillColor: "#7dd2e4"});
+            p_temp.cloneToBackground();
+            p_temp.remove();
+        }
+        //Hide everything else on the board
+        button3.hideElement();
+    }
+}
+</script><p></p>]]></text>
+        </truefeedback>
+        <falsescoremode>=</falsescoremode>
+        <falsescore>0.0000000</falsescore>
+        <falsepenalty></falsepenalty>
+        <falsenextnode>1</falsenextnode>
+        <falseanswernote>prt2-1-F</falseanswernote>
+        <falsefeedback format="html">
+          <text><![CDATA[<p>Das folgende Koordinatensystem zeigt den Graphen der Funktion und Ihre Skizze in Form ihrer diskreten Punkte: <br></p><p></p><div id="box2" class="jxgbox" style="width:600px; height:600px; background-color: #ffffff; border-style: solid; border-width: 1px; border-color: #356AA0; border-radius: 10px;"></div>
+<script>
+
+traceListX = '{@ans1@}'
+traceListY = '{@ans2@}'
+if (!(typeof traceListX === "undefined")) {
+ 
+    //Create second board for showing results
+    var board2 = JXG.JSXGraph.initBoard('box2', {boundingbox:[-5,8,8,-5], axis:false, showCopyright: false, showNavigation: false});
+    xaxis = board2.create('axis', [[0, 0], [1,0]], 
+            {name:'x', 
+                withLabel: true, 
+                label: {position: 'rt',  // possible values are 'lft', 'rt', 'top', 'bot'
+                        offset: [-15, 20]   // (in pixels)
+                        }
+                });
+    yaxis = board2.create('axis', [[0, 0], [0, 1]], 
+            {name:'y', 
+                withLabel: true, 
+                label: {
+                position: 'rt',  // possible values are 'lft', 'rt', 'top', 'bot'
+                offset: [-20, 0]   // (in pixels)
+                    }
+                });				
+
+    board2.create('functiongraph', [function(x){ return (-(x*x))+2*x+3;}, -1,3], {strokeWidth: 3});
+ 
+ 
+    traceListX = traceListX.substring(traceListX.indexOf("[")+1,traceListX.indexOf("]")-4).split(",");
+    traceListY = traceListY.substring(traceListY.indexOf("[")+1,traceListY.indexOf("]")-4).split(",");
+    console.log(traceListX);
+    if(traceListX.length > 0 && traceListX.length == traceListY.length) {
+        for (var i=0; i<traceListX.length;i++) {
+            p_temp = board.create('point', [traceListX[i],traceListY[i]], {style:6, size: 1, name: "", color: "#7dd2e4", fillColor: "#7dd2e4"});
+            p_temp.cloneToBackground();
+            p_temp.remove();
+            p_temp = board2.create('point', [traceListX[i],traceListY[i]], {style:6, size: 1, name: "", color: "#7dd2e4", fillColor: "#7dd2e4"});
+            p_temp.cloneToBackground();
+            p_temp.remove();
+        }
+        //Hide everything else on the board
+        button3.hideElement();
+    }
+}</script><p></p>]]></text>
+        </falsefeedback>
+      </node>
+      <node>
+        <name>1</name>
+        <answertest>EqualComAss</answertest>
+        <sans>GenugEingezeichnetePunkte</sans>
+        <tans>true</tans>
+        <testoptions></testoptions>
+        <quiet>1</quiet>
+        <truescoremode>+</truescoremode>
+        <truescore>0.0000000</truescore>
+        <truepenalty></truepenalty>
+        <truenextnode>2</truenextnode>
+        <trueanswernote>prt2-2-T</trueanswernote>
+        <truefeedback format="html">
+          <text></text>
+        </truefeedback>
+        <falsescoremode>-</falsescoremode>
+        <falsescore>0.0000000</falsescore>
+        <falsepenalty></falsepenalty>
+        <falsenextnode>-1</falsenextnode>
+        <falseanswernote>prt2-2-F</falseanswernote>
+        <falsefeedback format="html">
+          <text><![CDATA[<p><br></p><p>Ihre gezeichnete Spur besteht aus zu wenigen Punkten. Diese Eingabe entspricht nicht einer Skizze des Graphen.<br></p>]]></text>
+        </falsefeedback>
+      </node>
+      <node>
+        <name>2</name>
+        <answertest>EqualComAss</answertest>
+        <sans>InAllenTeilintervallenGenugPunkte</sans>
+        <tans>true</tans>
+        <testoptions></testoptions>
+        <quiet>1</quiet>
+        <truescoremode>+</truescoremode>
+        <truescore>0.0000000</truescore>
+        <truepenalty></truepenalty>
+        <truenextnode>3</truenextnode>
+        <trueanswernote>prt2-3-T</trueanswernote>
+        <truefeedback format="html">
+          <text></text>
+        </truefeedback>
+        <falsescoremode>-</falsescoremode>
+        <falsescore>0.0000000</falsescore>
+        <falsepenalty></falsepenalty>
+        <falsenextnode>-1</falsenextnode>
+        <falseanswernote>prt2-3-F</falseanswernote>
+        <falsefeedback format="html">
+          <text><![CDATA[<p><br></p><p>Sie haben nicht durchgängig skizziert. In einigen Bereichen des vorgegebenen Intervalls besteht Ihre Skizze aus zu wenigen Punkten.<br></p>]]></text>
+        </falsefeedback>
+      </node>
+      <node>
+        <name>3</name>
+        <answertest>EqualComAss</answertest>
+        <sans>DurchschnittlichAusreichendAbgebildet</sans>
+        <tans>true</tans>
+        <testoptions></testoptions>
+        <quiet>1</quiet>
+        <truescoremode>+</truescoremode>
+        <truescore>0.0000000</truescore>
+        <truepenalty></truepenalty>
+        <truenextnode>4</truenextnode>
+        <trueanswernote>prt2-4-T</trueanswernote>
+        <truefeedback format="html">
+          <text></text>
+        </truefeedback>
+        <falsescoremode>+</falsescoremode>
+        <falsescore>0.0000000</falsescore>
+        <falsepenalty></falsepenalty>
+        <falsenextnode>-1</falsenextnode>
+        <falseanswernote>prt2-4-F</falseanswernote>
+        <falsefeedback format="html">
+          <text><![CDATA[<p><br></p><p>Ihre gezeichnete Spur entspricht entweder nicht dem Graphen der Funktion oder sie ist zu ungenau.<br></p>]]></text>
+        </falsefeedback>
+      </node>
+      <node>
+        <name>4</name>
+        <answertest>EqualComAss</answertest>
+        <sans>DurchschnittlichPraeziseGenugAbgebildet</sans>
+        <tans>true</tans>
+        <testoptions></testoptions>
+        <quiet>1</quiet>
+        <truescoremode>+</truescoremode>
+        <truescore>0.5000000</truescore>
+        <truepenalty></truepenalty>
+        <truenextnode>5</truenextnode>
+        <trueanswernote>prt2-5-T</trueanswernote>
+        <truefeedback format="html">
+          <text><![CDATA[<br><p>Ihre gezeichnete Spur entspricht einer guten Zeichnung des Funktionsgraphen.<br></p><p>Gut gemacht!</p>]]></text>
+        </truefeedback>
+        <falsescoremode>+</falsescoremode>
+        <falsescore>0.2500000</falsescore>
+        <falsepenalty></falsepenalty>
+        <falsenextnode>5</falsenextnode>
+        <falseanswernote>prt2-5-F</falseanswernote>
+        <falsefeedback format="html">
+          <text><![CDATA[<br><p>Ihre gezeichnete Spur entspricht dem Funktionsgraphen, weist jedoch im Vergleich mit diesem einige Ungenauigkeiten auf.<br></p>]]></text>
+        </falsefeedback>
+      </node>
+      <node>
+        <name>5</name>
+        <answertest>EqualComAss</answertest>
+        <sans>AlleWichtigenPunkteGutAbgebildet</sans>
+        <tans>true</tans>
+        <testoptions></testoptions>
+        <quiet>1</quiet>
+        <truescoremode>+</truescoremode>
+        <truescore>0.5000000</truescore>
+        <truepenalty></truepenalty>
+        <truenextnode>6</truenextnode>
+        <trueanswernote>prt2-6-T</trueanswernote>
+        <truefeedback format="html">
+          <text></text>
+        </truefeedback>
+        <falsescoremode>-</falsescoremode>
+        <falsescore>0.0000000</falsescore>
+        <falsepenalty></falsepenalty>
+        <falsenextnode>6</falsenextnode>
+        <falseanswernote>prt2-6-F</falseanswernote>
+        <falsefeedback format="html">
+          <text><![CDATA[<br><p>Sie sollten wichtige Punkte wie \(x\)-Achsenschnittpunkte oder Extrema mehr im Auge behalten. Versuchen Sie diese beim nächsten Mal genauer abzubilden.<br>{@SchleifeFuerUnterschiedlicheAntwortenA@}<br>{@SchleifeFuerUnterschiedlicheAntwortenB@}<br>{@SchleifeFuerUnterschiedlicheAntwortenC@}<br></p>]]></text>
+        </falsefeedback>
+      </node>
+      <node>
+        <name>6</name>
+        <answertest>EqualComAss</answertest>
+        <sans>ZuVielePunkteAusserhalbDesIntervalls</sans>
+        <tans>true</tans>
+        <testoptions></testoptions>
+        <quiet>1</quiet>
+        <truescoremode>+</truescoremode>
+        <truescore>0.0000000</truescore>
+        <truepenalty></truepenalty>
+        <truenextnode>7</truenextnode>
+        <trueanswernote>prt2-7-T</trueanswernote>
+        <truefeedback format="html">
+          <text></text>
+        </truefeedback>
+        <falsescoremode>-</falsescoremode>
+        <falsescore>0.2500000</falsescore>
+        <falsepenalty></falsepenalty>
+        <falsenextnode>7</falsenextnode>
+        <falseanswernote>prt2-7-F</falseanswernote>
+        <falsefeedback format="html">
+          <text><![CDATA[<br><p>Unglücklicherweise beinhaltet Ihre Zeichnung zu viele Punkte außerhalb des vorgeschriebenen Intervalls \( \ -1\leq x \leq 3\).<br></p>]]></text>
+        </falsefeedback>
+      </node>
+      <node>
+        <name>7</name>
+        <answertest>EqualComAss</answertest>
+        <sans>GibtEsZuVieleAusreisserMitZuGrossemAbstand</sans>
+        <tans>true</tans>
+        <testoptions></testoptions>
+        <quiet>1</quiet>
+        <truescoremode>+</truescoremode>
+        <truescore>0.0000000</truescore>
+        <truepenalty></truepenalty>
+        <truenextnode>8</truenextnode>
+        <trueanswernote>prt2-8-T</trueanswernote>
+        <truefeedback format="html">
+          <text></text>
+        </truefeedback>
+        <falsescoremode>=</falsescoremode>
+        <falsescore>0.0000000</falsescore>
+        <falsepenalty></falsepenalty>
+        <falsenextnode>-1</falsenextnode>
+        <falseanswernote>prt2-8-F</falseanswernote>
+        <falsefeedback format="html">
+          <text><![CDATA[<br><p>Unglücklicherweise beinhaltet Ihre Zeichnung zu viele Punkte deren Abstand zum Funktionsgraphen zu groß sind.<br>Beispiele für solche Punkte sind \(P_1 = ({@ans1[ListeMitIndizesVonZuGrossenAbstaenden[1]]@}|{@ans2[ListeMitIndizesVonZuGrossenAbstaenden[1]]@})\), \(P_2 = ({@ans1[ListeMitIndizesVonZuGrossenAbstaenden[5]]@}|{@ans2[ListeMitIndizesVonZuGrossenAbstaenden[5]]@})\) oder \(P_3 = ({@ans1[ListeMitIndizesVonZuGrossenAbstaenden[9]]@}|{@ans2[ListeMitIndizesVonZuGrossenAbstaenden[9]]@})\).</p>]]></text>
+        </falsefeedback>
+      </node>
+      <node>
+        <name>8</name>
+        <answertest>AlgEquiv</answertest>
+        <sans>GibtEsZuVieleAusreisserMitToleriertemAbstand</sans>
+        <tans>true</tans>
+        <testoptions></testoptions>
+        <quiet>1</quiet>
+        <truescoremode>+</truescoremode>
+        <truescore>0.0000000</truescore>
+        <truepenalty></truepenalty>
+        <truenextnode>-1</truenextnode>
+        <trueanswernote>prt2-9-T</trueanswernote>
+        <truefeedback format="html">
+          <text></text>
+        </truefeedback>
+        <falsescoremode>-</falsescoremode>
+        <falsescore>0.0000000</falsescore>
+        <falsepenalty></falsepenalty>
+        <falsenextnode>-1</falsenextnode>
+        <falseanswernote>prt2-9-F</falseanswernote>
+        <falsefeedback format="html">
+          <text><![CDATA[<br><p><u><b>Hinweis:</b></u><br>Ihre Zeichnung beinhaltet einige Punkte deren Abstand zum Funktionsgraphen (zu) groß sind.<br>Beispiele für solche Punkte sind \(P_1 = ({@xRounded[ListeMitIndizesVonToleriertenAbstaenden[1]]@}|{@yRounded[ListeMitIndizesVonToleriertenAbstaenden[1]]@})\), \(P_2 = ({@xRounded[ListeMitIndizesVonToleriertenAbstaenden[5]]@}|{@yRounded[ListeMitIndizesVonToleriertenAbstaenden[5]]@})\) oder
+\(P_3 = ({@xRounded[ListeMitIndizesVonToleriertenAbstaenden[9]]@}|{@yRounded[ListeMitIndizesVonToleriertenAbstaenden[9]]@})\).<br></p>]]></text>
+        </falsefeedback>
+      </node>
+    </prt>
+  </question>
+
+</quiz>
