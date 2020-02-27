@@ -3,7 +3,16 @@
 
 /* For examples see: \doc\content\2018-proceedings\mai_tobias_2019_2582427.pdf             */
 
-/* TODO: add in the code!  */
+/* A student's graph comes to Maxima as a "list of points".
+   This code deals with "lists of points".  
 
+   To keep our input/output code as short as possible we use the function "pt" to represent a point.   
+ 
+   So, a student's graph might be something like
+   ans1:[pt(0,0), pt(0.5,0.25), pt(1,2), pt(2,4)];
+*/
+
+pttex(ex) := sconcat("\\left(", simplode(maplist(lambda([ex1], stack_disp_strip_dollars(tex(ex1, false))), args(ex)), ", "), "\\right)");
+texput(pt, pttex);
 
 
