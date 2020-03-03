@@ -92,9 +92,33 @@ PointsWithinTheRadiusAroundE: sublist_indices(ListOfDistancesFromAllPointsToE, l
 SketchDepictsE: is(length(PointsWithinTheRadiusAroundE)>0);
 
 /*Assessment of all three points together*/
-AlleWichtigenPunkteGutAbgebildet: is(SketchDepictsXA=true) and is(SketchDepictsXB=true) and is(SketchDepictsE=true);
+SketchDepictsAllImportantPoints: is(SketchDepictsXA=true) and is(SketchDepictsXB=true) and is(SketchDepictsE=true);
 
-/*Generated Feedback if XA, XB and/or E is not depicted:*/
+/*Generated Feedback if XA, XB and/or E is not depicted:  (Probably unnecessary in future forms of this task)*/
 FeedbackLoopXA: (if(SketchDepictsXA=true) then "" else "Either you did not sketch the x-intercept at \\(x=(-1)\\) or your depiction is not accurate enough.");
 FeedbackLoopXB: (if(SketchDepictsXB=true) then "" else "Either you did not sketch the x-intercept at \\(x=3\\) or your depiction is not accurate enough.");
-FeedbackLoopE: (if(SketchDepictsE=true) then "" else "Either you did not sketch the extrema at \\(P(1|4)\\) or your depiction is not accurate enough.");
+FeedbackLoopE: (if(SketchDepictsE=true) then "" else "Either you did not sketch the extremum at \\(P(1|4)\\) or your depiction is not accurate enough.");
+
+
+
+/*Node 7 - Is there a (too) high amount of points that are not in the interval -1<=x<=3?*/
+
+NumberOfPointsOnTheLeftSideOfTheInterval: length(PointsWithXValuesSmallerMinusOne);
+PointsWithXValuesAboveThree: sublist_indices(ans1, lambda ([i], i>3));
+NumberOfPointsOnTheRightSideOfTheInterval: length(PointsWithXValuesAboveThree);
+NumberOfAllPointsOutsideTheInterval: NumberOfPointsOnTheLeftSideOfTheInterval+NumberOfPointsOnTheRightSideOfTheInterval;
+NumberOfAllPointsOutsideTheIntervalIsTolerable: is(NumberOfAllPointsOutsideTheInterval<11);
+
+
+
+/*Node 8+9 - Does the sketch contain (too) many runawaypoints with (too) high distances to the function's graph?*/
+
+/*Node 8 - distance too high*/	
+PointsWithTooHighDistances: sublist_indices(ListOfMinimalDistances, lambda ([i], i>0.3));
+NumberOfPointsWithTooHighDistances: length(PointsWithTooHighDistances);
+AcceptableAmountOfPointsWithTooHighDistances: is(NumberOfPointsWithTooHighDistances<10);
+
+/*Node 9 - distance tolerable*/	
+PointsWithTolerableDistances: sublist_indices(ListOfMinimalDistances, lambda ([i], i>0.2 and i<=0.3));
+NumberOfPointsWithTolerableDistances: length(PointsWithTolerableDistances);
+AcceptableAmountOfPointsWithTolerableDistances: is(NumberOfPointsWithTolerableDistances<10);	
