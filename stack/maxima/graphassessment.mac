@@ -15,6 +15,7 @@
 pttex(ex) := sconcat("\\left(", simplode(maplist(lambda([ex1], stack_disp_strip_dollars(tex(ex1, false))), args(ex)), ", "), "\\right)");
 texput(pt, pttex);
 
+
 /*Question Variables*/
 
 f(x): -x^2+2*x+3;
