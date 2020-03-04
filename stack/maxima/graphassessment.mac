@@ -22,36 +22,37 @@ f(x): -x^2+2*x+3;
 LeftLimitOfInterval: -1;
 RightLimitOfInterval: 3;
 
-
-/*Feedback Variables*/
-
-/*Node 1 - Feedback Applet*/
+/* Node 1 - Feedback Applet*/
 
 
 
-/*Node 2 - Are there enough points for an assessment?*/
-
-NumberOfSketchedPoints: length(ans1);
-AdequateNumberOfPoints: is(NumberOfSketchedPoints>=30);
-
-
+/* Node 2 - Are there enough points for an assessment?*/
+adequate_number_of_points_p(ans, num):= is(length(ans)>=num)$
 
 /*Node 3 - Does the sketch cover the whole interval -1<=x<=3?*/
 
-PointsWithXValuesSmallerMinusOne: sublist_indices(ans1, lambda ([i], i<-1));
-PointsWithXValuesSmallerZero: sublist_indices(ans1, lambda ([i], i<0));
-PointsWithXValuesSmallerOne: sublist_indices(ans1, lambda ([i], i<1));
-PointsWithXValuesSmallerTwo: sublist_indices(ans1, lambda ([i], i<2));
-PointsWithXValuesUpToThree: sublist_indices(ans1, lambda ([i], i<=3));
+/* 
+
+Make sure the list ans1, has an adequate number of points in the interval ia <= x <= ib, by dividing this into ni regions.
+That is, each interval should contain mpt points at least.
+
+*/
+adequate_distribution_of_points_p(ans, ia, ib, ni, mpt) := block([si, k, reatall],
+  /* Create ni evenly spaced points between ia and ib. */
+  si:ev(makelist(ia+k*(ib-ia)/ni,k,0,ni), simp),
+  if debug then print(si),
+  /* retall is a variable to hold the answer. */
+  retall:true,
+  for k: 1 thru ni do 
+   retall: (retall and is(length(sublist_indices(ans, lambda([ex], ev(is(si[k]<= ex and ex<si[k+1]), simp))))>= mpt)),
+  return(retall)
+)$
+
+
+/* New Feedback Variables. */
 
 /*Dividing -1<=x<=3 in 4 sections: (1) -1<=x<0, (2) 0<=x<1, (3) 1<=x<2, (4) 2<=x<=3*/
-NumberOfPointsInFirstSection: length(PointsWithXValuesSmallerZero)-length(PointsWithXValuesSmallerMinusOne);
-NumberOfPointsInSecondSection: length(PointsWithXValuesSmallerOne)-length(PointsWithXValuesSmallerZero);
-NumberOfPointsInThirdSection: length(PointsWithXValuesSmallerTwo)-length(PointsWithXValuesSmallerOne);
-NumberOfPointsInFourthSection: length(PointsWithXValuesUpToThree)-length(PointsWithXValuesSmallerTwo);
-
-AdequateNumberOfPointsInEachSection: is(NumberOfPointsInFirstSection>3) and is(NumberOfPointsInSecondSection>3) and is(NumberOfPointsInThirdSection>3) and is(NumberOfPointsInFourthSection>3);	
-
+AdequateNumberOfPointsInEachSection: adequate_distribution_of_points_p(ans1, -1, 3, 4, 3);
 
 
 /*Node 4+5 - Assessment of the sketche's accuracy by determining the lowest distance of each sketched Point to the function's graph (approximately)*/
