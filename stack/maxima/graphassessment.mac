@@ -113,7 +113,6 @@ accurate_sketch_p(ans, ia, ib, ri, tacc) := block([md, k, sacc, compare_tacc_sac
 */
 
 /*Examples:
-accurate_sketch_p(ansx1, ansy1, -1, 3, 0.01, 0.22);
 accurate_sketch_p(ansx2, ansy2, -1, 3, 0.01, 0.22);
 accurate_sketch_p(ansx3, ansy3, -1, 3, 0.01, 0.22);
 accurate_sketch_p(ansx4, ansy4, -1, 3, 0.01, 0.15);*/
