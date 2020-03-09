@@ -55,21 +55,46 @@ adequate_distribution_of_points_p(ans, ia, ib, ni, mpt) := block([si, k, retall]
 AdequateNumberOfPointsInEachSection: adequate_distribution_of_points_p(ans1, -1, 3, 4, 3);
 
 
-/*Node 4+5 - Assessment of the sketche's accuracy by determining the lowest distance of each sketched Point to the function's graph (approximately)*/
+/*Node 4+5 - Assessment of the sketch's accuracy*/ 
+/*Determining (approximately) the lowest distance of each sketched Point to the function's graph in the intervall ia <= x <= ib in steps of ri.*/
+/*IDEA OF VERSION FOR TWO INPUTS:*/
+accurate_sketch_p(ansx, ansy, ia, ib, ri, tacc) := block([md, k, sacc, compare_tacc_sacc],
+    
+    /*create list (md) of every point's shortest distence to the function's graph*/
+    md:[],
+    for k:1 thru length(ansx) do 
+    md: endcons(lmin(makelist(sqrt((ansx[k]-x)^2+(ansy[k]-(-x^2+2*x+3))^2), x, ia, ib, ri)), md),
+    /*if debug then print(md),*/
+    
+    /*Calculating the sektch's average of the shortest distances (sacc)*/
+    sacc: (lsum(k , k, md))/(length(ansx)),
+    if debug then print(sacc),
+    
+    /*Compare sacc to the teacher's demanded accuracy (tacc)*/
+    compare_tacc_sacc: is(sacc <= tacc),
+    return(compare_tacc_sacc)
+)$ 
 
-ListOfMinimalDistances: [];
-LoopForMinimalDistances: for i:1 thru NumberOfSketchedPoints do ListOfMinimalDistances: endcons(lmin(makelist(sqrt((ans1[i]-x)^2+(ans2[i]-(-x^2+2*x+3))^2), x, -1, 3, 0.01)), ListOfMinimalDistances);
 
-SumOfAllMinimalDistances: 0;
-LoopForSum: for i:1 thru NumberOfSketchedPoints do SumOfAllMinimalDistances: SumOfAllMinimalDistances+ListOfMinimalDistances[i];
-
-AverageOfMinimalDistances: SumOfAllMinimalDistances/NumberOfSketchedPoints;
-
-/*Node 4*/
-TolerableButImprovableAccuracy: is(AverageOfMinimalDistances<=0.22);
-
-/*Node 5*/
-GoodAccuracy: is(AverageOfMinimalDistances<=0.15);
+/*
+/*IDEA OF VERSION FOR ONLY ONE INPUT:*/
+accurate_sketch_p(ans, ia, ib, ri, tacc) := block([md, k, sacc, compare_tacc_sacc],
+    
+    /*create list (md) of every point's shortest distence to the function's graph*/
+    md:[],
+    for k:1 thru length(ans) do 
+    md: endcons(lmin(makelist(sqrt((ans[k][1]-x)^2+(ans[k][2]-(-x^2+2*x+3))^2), x, ia, ib, ri)), md),
+    /*if debug then print(md),*/
+    
+    /*Calculating the sektch's average of the shortest distances (sacc)*/
+    sacc: (lsum(k , k, md))/(length(ans)),
+    if debug then print(sacc),
+    
+    /*Compare sacc to the teacher's demanded accuracy (tacc)*/
+    compare_tacc_sacc: is(sacc <= tacc),
+    return(compare_tacc_sacc)
+)$ 
+*/
 
 
 
