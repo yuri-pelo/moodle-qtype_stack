@@ -134,13 +134,10 @@ FeedbackLoopE: (if(SketchDepictsE=true) then "" else "Either you did not sketch 
 
 
 
-/*Node 7 - Is there a (too) high amount of points that are not in the interval -1<=x<=3?*/
+/*Node 7 - Is there a (too) high amount of points that are not in the interval ia<=x<=ib?*/
 
-NumberOfPointsOnTheLeftSideOfTheInterval: length(PointsWithXValuesSmallerMinusOne);
-PointsWithXValuesAboveThree: sublist_indices(ans1, lambda ([i], i>3));
-NumberOfPointsOnTheRightSideOfTheInterval: length(PointsWithXValuesAboveThree);
-NumberOfAllPointsOutsideTheInterval: NumberOfPointsOnTheLeftSideOfTheInterval+NumberOfPointsOnTheRightSideOfTheInterval;
-NumberOfAllPointsOutsideTheIntervalIsTolerable: is(NumberOfAllPointsOutsideTheInterval<11);
+
+disregard_for_interval_p(ans, ia, ib) := is((length(sublist_indices(ans, lambda ([ex], ex<ia)))+length(sublist_indices(ans, lambda ([ex], ex>ib))))<=10);
 
 
 
