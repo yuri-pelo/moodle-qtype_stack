@@ -141,14 +141,47 @@ disregard_for_interval_p(ans, ia, ib) := is((length(sublist_indices(ans, lambda 
 
 
 
-/*Node 8+9 - Does the sketch contain (too) many runawaypoints with (too) high distances to the function's graph?*/
+/*Node 8+9 - Does the sketch contain (too) many runaway-points with (too) high distances to the function's graph?*/
 
-/*Node 8 - distance too high*/	
-PointsWithTooHighDistances: sublist_indices(ListOfMinimalDistances, lambda ([i], i>0.3));
-NumberOfPointsWithTooHighDistances: length(PointsWithTooHighDistances);
-AcceptableAmountOfPointsWithTooHighDistances: is(NumberOfPointsWithTooHighDistances<10);
+/*Node 8*/
+/*td is the variable for the teacher's demanded maximal distance to define runaway-points. dpt is the variable for maximal number of runaway-points accepted by the teacher. */
+/*IDEA OF VERSION FOR TWO INPUTS:*/
+searching_for_runaways_p(ansx, ansy, ia, ib, ri, td, dpt) := block([md, k, retall],
+    
+    /*create list (md) of every point's shortest distence to the function's graph*/
+    md:[],
+    for k:1 thru length(ansx) do 
+    md: endcons(lmin(makelist(sqrt((ansx[k]-x)^2+(ansy[k]-(-x^2+2*x+3))^2), x, ia, ib, ri)), md),
+    /*if debug then print(length(md)),*/
+    
+    /* retall is a variable to hold the answer. */
+    retall:true,
+    for k: 1 thru length(ansx) do 
+    retall: (retall and is(length(sublist_indices(md, lambda([ex], ex>=td)))<=dpt)),
+    if debug then print(length(sublist_indices(md, lambda([ex], ex>=td)))),
+    return(retall)
+)$
 
-/*Node 9 - distance tolerable*/	
-PointsWithTolerableDistances: sublist_indices(ListOfMinimalDistances, lambda ([i], i>0.2 and i<=0.3));
-NumberOfPointsWithTolerableDistances: length(PointsWithTolerableDistances);
-AcceptableAmountOfPointsWithTolerableDistances: is(NumberOfPointsWithTolerableDistances<10);	
+
+/*
+/*IDEA OF VERSION FOR ONLY ONE INPUT:*/
+searching_for_runaways_p(ans, ia, ib, ri, td, dpt) := block([md, k, retall],
+    
+    /*create list (md) of every point's shortest distence to the function's graph*/
+    md:[],
+    for k:1 thru length(ans) do 
+    md: endcons(lmin(makelist(sqrt((ans[k][1]-x)^2+(ans[k][2]-(-x^2+2*x+3))^2), x, ia, ib, ri)), md),
+    /*if debug then print(length(md)),*/
+    
+    /* retall is a variable to hold the answer. */
+    retall:true,
+    for k: 1 thru length(ans) do 
+    retall: (retall and is(length(sublist_indices(md, lambda([ex], ex>=td)))<=dpt)),
+    /*if debug then print(sublist_indices(md, lambda([ex], ex>=td))),*/
+    if debug then print(length(sublist_indices(md, lambda([ex], ex>=td)))),
+    return(retall)
+)$
+*/
+
+
+/*Node 9 to follow*/
