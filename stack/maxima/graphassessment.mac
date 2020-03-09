@@ -37,7 +37,7 @@ Make sure the list ans1, has an adequate number of points in the interval ia <= 
 That is, each interval should contain mpt points at least.
 
 */
-adequate_distribution_of_points_p(ans, ia, ib, ni, mpt) := block([si, k, reatall],
+adequate_distribution_of_points_p(ans, ia, ib, ni, mpt) := block([si, k, retall],
   /* Create ni evenly spaced points between ia and ib. */
   si:ev(makelist(ia+k*(ib-ia)/ni,k,0,ni), simp),
   if debug then print(si),
