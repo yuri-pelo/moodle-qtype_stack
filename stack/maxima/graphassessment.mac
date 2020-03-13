@@ -135,8 +135,9 @@ x_intercepts_sketched_p(ansx, ansy, fofx, dr):= block([i, k, xint, retall],
 
 
 /*Node 7 - Is there a (too) high amount of points that are not in the interval ia<=x<=ib?*/
+/* nipts is the variable for the teacher's highest accepted number of points that are outside the interval. */
 
-disregard_for_interval_p(ans, ia, ib) := is((length(sublist_indices(ans, lambda ([ex], ex<ia)))+length(sublist_indices(ans, lambda ([ex], ex>ib))))<=10);
+disregard_for_interval_p(ans, ia, ib, nipts) := is((length(sublist_indices(ans, lambda ([ex], ex<ia)))+length(sublist_indices(ans, lambda ([ex], ex>ib))))<=nipts);
 
 
 
