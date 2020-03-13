@@ -98,13 +98,13 @@ false$
 
 
 
-disregard_for_interval_p(ansx1, -1, 3);
+disregard_for_interval_p(ansx1, -1, 3, 10);
 true$
-disregard_for_interval_p(ansx2, -1, 3);
+disregard_for_interval_p(ansx2, -1, 3, 10);
 true$
-disregard_for_interval_p(ansx3, -1, 3);
+disregard_for_interval_p(ansx3, -1, 3, 10);
 true$
-disregard_for_interval_p(ansx4, -1, 3);
+disregard_for_interval_p(ansx4, -1, 3, 10);
 false$
 
 
