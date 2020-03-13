@@ -119,33 +119,64 @@ accurate_sketch_p(ansx4, ansy4, -1, 3, 0.01, 0.15);*/
 
 
 
-/*Node 6 - Does the sketch contain the function's x-intercepts and/or extrema? (Looking for points within a <0.2 radius around x-intercepts and extrema)*/
+/* Node 6 - Does the sketch contain the function's x-intercepts and/or extrema? */
 
-/*x-intercepts at x=(-1) (In the following variables this point is called XA)*/
-ListOfDistancesFromAllPointsToXA: [];
-LoopForDistancesToXA: for a:1 thru NumberOfSketchedPoints do ListOfDistancesFromAllPointsToXA: endcons(sqrt((ansx1[a]-(-1))^2+(ans2[a]-(0))^2), ListOfDistancesFromAllPointsToXA);
-PointsWithinTheRadiusAroundXA: sublist_indices(ListOfDistancesFromAllPointsToXA, lambda ([i], i<0.2));
-SketchDepictsXA: is(length(PointsWithinTheRadiusAroundXA)>0);
+/* Extrema: Are all extrema (and saddle points) of the function fofx (f of x) within the sketch. */
+/* Considering possible inaccuracies, the following block looks for points within a <dr radius around the extrema (and saddle points). */
 
-/*x-intercepts at x=3  (In the following variables this point is called XB)*/
-ListOfDistancesFromAllPointsToXB: [];
-LoopForDistancesToXB: for a:1 thru NumberOfSketchedPoints do ListOfDistancesFromAllPointsToXB: endcons(sqrt((ansx1[a]-(3))^2+(ans2[a]-(0))^2), ListOfDistancesFromAllPointsToXB);
-PointsWithinTheRadiusAroundXB: sublist_indices(ListOfDistancesFromAllPointsToXB, lambda ([i], i<0.2));
-SketchDepictsXB: is(length(PointsWithinTheRadiusAroundXB)>0);
+extrema_sketched_p(ansx, ansy, fofx, dr):= block([i, k, extr, retall],
+    
+	/* xint is a variable to identify the x-values of extrema (and saddle points). */
+	extr: solve(diff(fofx,x)=0,x),
+    
+	/* retall is a variable to hold the answer. */
+	retall:true,
+    if length(extr)=0 
+    then
+    retall:true
+    else
+    for i:1 thru length(extr) do
+    retall: retall and is(length(sublist_indices(makelist((sqrt((ansx[k]-ev(x, extr[i]))^2+(ansy[k]-ev(fofx, extr[i]))^2)),k,1,length(ansx)), lambda([ex], ex<=dr)))>0),
+    return(retall)
+)$
 
-/*Extremum at x=1  (In the following variables this point is called E)*/
-ListOfDistancesFromAllPointsToE: [];
-LoopForDistancesToE: for a:1 thru NumberOfSketchedPoints do ListOfDistancesFromAllPointsToE: endcons(sqrt((ansx1[a]-(1))^2+(ans2[a]-(4))^2), ListOfDistancesFromAllPointsToE);
-PointsWithinTheRadiusAroundE: sublist_indices(ListOfDistancesFromAllPointsToE, lambda ([i], i<0.2));
-SketchDepictsE: is(length(PointsWithinTheRadiusAroundE)>0);
 
-/*Assessment of all three points together*/
-SketchDepictsAllImportantPoints: is(SketchDepictsXA=true) and is(SketchDepictsXB=true) and is(SketchDepictsE=true);
+/* x-intercepts: Are all x-intercepts of the function fofx (f of x) within the sketch. */
+/* Considering possible inaccuracies, the following block looks for points within a <dr radius around the x-intercepts. */
 
-/*Generated Feedback if XA, XB and/or E is not depicted:  (Probably unnecessary in future forms of this task)*/
-FeedbackLoopXA: (if(SketchDepictsXA=true) then "" else "Either you did not sketch the x-intercept at \\(x=(-1)\\) or your depiction is not accurate enough.");
-FeedbackLoopXB: (if(SketchDepictsXB=true) then "" else "Either you did not sketch the x-intercept at \\(x=3\\) or your depiction is not accurate enough.");
-FeedbackLoopE: (if(SketchDepictsE=true) then "" else "Either you did not sketch the extremum at \\(P(1|4)\\) or your depiction is not accurate enough.");
+x_intercepts_sketched_p(ansx, ansy, fofx, dr):= block([i, k, xint, retall],
+    
+	/* xint is a variable to identify the x-values of x-intercepts. */
+	xint: solve(fofx=0,x),
+    
+	/* retall is a variable to hold the answer. */
+	retall:true,
+    if length(xint)=0 
+    then
+    retall:true
+    else
+    for i:1 thru length(xint) do
+    retall: retall and is(length(sublist_indices(makelist((sqrt((ansx[k]-ev(x, xint[i]))^2+(ansy[k]-ev(fofx, xint[i]))^2)),k,1,length(ansx)), lambda([ex], ex<=dr)))>0),
+    return(retall)
+)$
+
+
+/* Examples */
+extrema_sketched_p(ansx1, ansy1, -x^2+2*x+3, 0.2);
+x_intercepts_sketched_p(ansx1, ansy1, -x^2+2*x+3, 0.2);
+extrema_sketched_p(ansx1, ansy1, -x^2+2*x+3, 0.2) and x_intercepts_sketched_p(ansx1, ansy1, -x^2+2*x+3, 0.2);
+
+extrema_sketched_p(ansx2, ansy2, -x^2+2*x+3, 0.2);
+x_intercepts_sketched_p(ansx2, ansy2, -x^2+2*x+3, 0.2);
+extrema_sketched_p(ansx2, ansy2, -x^2+2*x+3, 0.2) and x_intercepts_sketched_p(ansx2, ansy2, -x^2+2*x+3, 0.2);
+
+extrema_sketched_p(ansx3, ansy3, -x^2+2*x+3, 0.2);
+x_intercepts_sketched_p(ansx3, ansy3, -x^2+2*x+3, 0.2);
+extrema_sketched_p(ansx3, ansy3, -x^2+2*x+3, 0.2) and x_intercepts_sketched_p(ansx3, ansy3, -x^2+2*x+3, 0.2);
+
+extrema_sketched_p(ansx4, ansy4, -x^2+2*x+3, 0.2);
+x_intercepts_sketched_p(ansx4, ansy4, -x^2+2*x+3, 0.2);
+extrema_sketched_p(ansx4, ansy4, -x^2+2*x+3, 0.2) and x_intercepts_sketched_p(ansx4, ansy4, -x^2+2*x+3, 0.2);
 
 
 
