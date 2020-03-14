@@ -193,12 +193,13 @@ searching_for_runaways_p(ans, ia, ib, ri, td, dpt) := block([md, k, retall],
 /* dpt is the variable for maximal number of tolerable but noteworthy/mentionable accepted by the teacher. */
 /*IDEA OF VERSION FOR TWO INPUTS:*/
 
-searching_for_points_with_noteworthy_distances_p(ansx, ansy, ia, ib, ri, tdn, tdr, dpt) := block([md, k, retall],
+searching_for_points_with_noteworthy_distances_p(ansx, ansy, fofx, ia, ib, ri, tdn, tdr, dpt) := block([md, k, i, retall],
     
     /*create list (md) of every point's shortest distence to the function's graph*/
     md:[],
     for k:1 thru length(ansx) do 
-    md: endcons(lmin(makelist(sqrt((ansx[k]-x)^2+(ansy[k]-(-x^2+2*x+3))^2), x, ia, ib, ri)), md),
+    md: endcons(lmin(makelist(sqrt((ansx[k]-i)^2+(ansy[k]-(ev(fofx,x=i)))^2), i, ia, ib, ri)), md),
+    /*if debug then print(md),*/
     
     /* retall is a variable to hold the answer. */
     retall:true,
