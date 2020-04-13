@@ -125,13 +125,24 @@ class stack_cas_session2 {
     }
 
     /**
+     * Add all the statements from the target session to the start of this session.
+     * Note, this uses the options in this session, not the target.
+     *
+     * @param stack_cas_session2 $target
+     */
+    public function prepend_to_this_session(stack_cas_session2 $target) {
+        $this->statements = array_merge($target->statements, $this->statements);
+        $this->instantiated = false;
+    }
+
+    /**
      * Add all the statements from this session at the start of the target session.
      *
      * @param stack_cas_session2 $target
      */
     public function prepend_to_session(stack_cas_session2 $target) {
         $target->statements = array_merge($this->statements, $target->statements);
-        $this->instantiated = false;
+        $target->instantiated = false;
     }
 
     /**
@@ -141,7 +152,7 @@ class stack_cas_session2 {
      */
     public function append_to_session(stack_cas_session2 $target) {
         $target->statements = array_merge($target->statements, $this->statements);
-        $this->instantiated = false;
+        $target->instantiated = false;
     }
 
     public function get_variable_usage(array $updatearray = array()): array {

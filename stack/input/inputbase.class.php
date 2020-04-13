@@ -563,12 +563,13 @@ abstract class stack_input {
      * @param array $response the student response to the question.
      * @param stack_options $options CAS options to use when validating.
      * @param string $teacheranswer the teachers answer as a string representation of the evaluated expression.
+     * @param stack_cas_session2 $questionvars (or null) the context in which to evaluate the student's answer.
      * @param stack_cas_security $basesecurity declares the forbidden keys used in the question
      *             as well as wether we are dealign with units.
      * @return stack_input_state represents the current state of the input.
      */
-    public function validate_student_response($response, $options, $teacheranswer, stack_cas_security $basesecurity,
-            $ajaxinput = false) {
+    public function validate_student_response($response, $options, $teacheranswer,
+            $questionvars, stack_cas_security $basesecurity, $ajaxinput = false) {
         if (!is_a($options, 'stack_options')) {
             throw new stack_exception('stack_input: validate_student_response: options not of class stack_options');
         }
@@ -693,7 +694,11 @@ abstract class stack_input {
                 $this->additional_session_variables($caslines, $teacheranswer));
         $sessionvars = array_merge($sessionvars, $additionalvars);
 
+        // Allow teacher-set context, e.g. vectors, to affect this session.
         $session = new stack_cas_session2($sessionvars, $localoptions, 0);
+        if ($questionvars) {
+            $session->prepend_to_this_session($questionvars);
+        }
 
         // If we are dealing with units in this question we apply units texput rules everywhere.
         if ($basesecurity->get_units()) {
@@ -1302,8 +1307,6 @@ abstract class stack_input {
 
         if (!$feedback) {
             $class .= ' empty';
-            // Don't create a block-level div for empty answers.
-            $divspan = 'span';
         }
 
         $feedback = html_writer::tag($divspan, $feedback, array('class' => $class, 'id' => $fieldname.'_val'));

@@ -601,7 +601,7 @@ class qtype_stack_question extends question_graded_automatically_with_countback
         }
         if (array_key_exists($name, $this->inputs)) {
             $this->inputstates[$name] = $this->inputs[$name]->validate_student_response(
-                $response, $this->options, $teacheranswer, $this->security, $rawinput);
+                $response, $this->options, $teacheranswer, $this->session, $this->security, $rawinput);
             return $this->inputstates[$name];
         }
         return '';
