@@ -100,6 +100,10 @@ class stack_cas_session2 {
         return $this->options;
     }
 
+    public function get_seed() {
+        return $this->seed;
+    }
+
     public function add_statement(cas_evaluatable $statement, bool $append = true) {
         if ($append) {
             $this->statements[] = $statement;

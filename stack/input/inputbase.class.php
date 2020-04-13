@@ -694,8 +694,12 @@ abstract class stack_input {
                 $this->additional_session_variables($caslines, $teacheranswer));
         $sessionvars = array_merge($sessionvars, $additionalvars);
 
+        $seed = 0;
+        if ($questionvars) {
+            $seed = $questionvars->get_seed();
+        }
         // Allow teacher-set context, e.g. vectors, to affect this session.
-        $session = new stack_cas_session2($sessionvars, $localoptions, 0);
+        $session = new stack_cas_session2($sessionvars, $localoptions, $seed);
         if ($questionvars) {
             $session->prepend_to_this_session($questionvars);
         }
