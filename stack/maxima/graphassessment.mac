@@ -97,7 +97,7 @@ accurate_sketch_p(ansx, ansy, fofx, ia, ib, ri, tacc) := block([md, k, x, i, sac
 
 extrema_sketched_p(ansx, ansy, fofx, dr):= block([i, k, extr, retall],
     
-	/* xint is a variable to identify the x-values of extrema (and saddle points). */
+	/* extr is a variable to identify the x-values of extrema (and saddle points). */
 	extr: solve(diff(fofx,x)=0,x),
     
 	/* retall is a variable to hold the answer. */
@@ -211,3 +211,38 @@ searching_for_points_with_noteworthy_distances_p(ansx, ansy, fofx, ia, ib, ri, t
 )$
 
 /*IDEA OF VERSION FOR ONLY ONE INPUT: see approach in node 8*/
+
+
+
+
+/*____________________________________________________________________________________*/
+
+/*Additional assessments/idea that are not part of the prototype yet.*/
+
+
+
+
+/*Here, it is checked if the function's y-intercept lies within the demanded Intervall and if that is the case, it is checked if the y-intercept is (accurately enough) sketched within the sketch.
+(Same approach like for x-intercepts and extrema)*/
+
+y_intercept_sketched_p(ansx, ansy, fofx, ia, ib, dr):= block([i, retall],
+if is(ia<=0) and is(0<=ib)
+then
+retall: is(length(sublist_indices(makelist(sqrt((ansx[i])^2+(ansy[i]-(ev(fofx, x=0)))^2), i, 1, length(ansx)), lambda([ex], ex<=dr)))>0)
+else
+retall:true,
+return(retall)
+)$
+
+
+
+
+/*Joining x- and y-values into one list of points with the pattern [ [ansx[1], ansy[1]] , [ansx[2], ansy[2]] , ... , [ansx[i],ansy[i]]], and sorting that entries according to the x-values from low to high.*/
+list_of_points_sorted(ansx, ansy):= sort(create_list([ansx[i], ansy[i]], i, 1, length(ansx)))$
+
+/*Unsorted:*/
+list_of_points(ansx, ansy):= create_list([ansx[i], ansy[i]], i, 1, length(ansx))$
+
+/*Seperation of the x- y-values back into two lists but now sorted according to the x-values from low to high.*/
+ansx_sorted(ansx, ansy):= create_list(sort(create_list([ansx[i], ansy[i]], i, 1, length(ansx)))[i][1], i, 1, length(ansx))$
+ansy_according_to_ansx_sorted(ansx, ansy):= create_list(sort(create_list([ansx[i], ansy[i]], i, 1, length(ansx)))[i][2], i, 1, length(ansx))$
