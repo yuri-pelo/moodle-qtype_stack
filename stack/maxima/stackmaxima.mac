@@ -194,6 +194,24 @@ make_multsgn(OPT_MULTSGN) := block(
     if OPT_MULTSGN = "blank" then texput("*", "\\, ", nary)
 );
 
+make_logic(OPT_LOGIC) := block(
+    if OPT_LOGIC = "lang" then block(
+        texput("and", "\\,{\\mbox{ !AND! }}\\, ", nary),
+        texput("nounand", "\\,{\\mbox{ !AND! }}\\, ", nary),
+        texput("or", "\\,{\\mbox{ !OR! }}\\, ", nary),
+        texput("nounor", "\\,{\\mbox{ !OR! }}\\, ", nary),
+        texput("not", "{\\rm !NOT!}", prefix)
+    ),
+    if OPT_LOGIC = "symbol" then block(
+        texput("and", "\\land ", nary),
+        texput("nounand", "\\land ", nary),
+        texput("or", "\\lor ", nary),
+        texput("nounor", "\\lor ", nary),
+        texput("not", "\\neg ", prefix)
+    ),
+    return(true)
+)$
+
 /* Options for cos^(-1), acos or arccos. */
 make_arccos(OPT_ACOS) := block(
     if OPT_ACOS = "cos-1" then block(
@@ -1172,7 +1190,8 @@ num_compare_helper(sal, tal, missing, excessive, tol, type) := block([sa, ta, f1
   return(num_compare_helper(sal, rest(tal), append([ta], missing), excessive, tol, type))
 )$
 
-ATNumSigFigs(SA, SB, SO) := block([Validity, RawMark, FeedBack, AnswerNote, ret, ol, nsf, asf, c0, c1, c2, SAA, SBB, SOO],
+ATNumSigFigs(SA, SB, SO) := block([simp, Validity, RawMark, FeedBack, AnswerNote, ret, ol, nsf, asf, c0, c1, c2, SAA, SBB, SOO],
+    simp:false,
     Validity:true, RawMark:true, FeedBack:"", AnswerNote:"",
 
     SAA:errcatch(ev(SA, simp, nouns)),
@@ -1194,9 +1213,10 @@ ATNumSigFigs(SA, SB, SO) := block([Validity, RawMark, FeedBack, AnswerNote, ret,
     /* Remove ephemeral forms from teacher's answers. */
     SB:remove_displaydp(SB),
     /* SA should be only a number. */
-    if is(_EC(errcatch(SA:ev(SA, simp, nouns)), "") = false) then return([false, false, StackAddNote("", "ATNumSigFigs_Error simplifying SAns"),""]),
-    if (not(floatnump(SA)) and not(integerp(SA))) then
+    if (not(ATNumSigFigs_numberp(SA))) then
         return([false, false, StackAddNote("", "ATNumSigFigs_NotDecimal"), StackAddFeedback("", "ATNumSigFigs_NotDecimal")]),
+    /* Don't simplify until now. */
+    if is(_EC(errcatch(SA:ev(SA, simp, nouns)), "") = false) then return([false, false, StackAddNote("", "ATNumSigFigs_Error simplifying SAns"),""]),
     /* In the case of teacher's options [n,0] we ignore the question of numerical accuracy. */
     if ev(is(asf = 0), simp) then
         return([Validity, RawMark, AnswerNote, FeedBack]),
@@ -1236,6 +1256,13 @@ ATNumSigFigs(SA, SB, SO) := block([Validity, RawMark, FeedBack, AnswerNote, ret,
     return(ret)
 )$
 
+ATNumSigFigs_numberp(ex) := block([ts],
+  ts:ex,
+  if safe_op(ts)="-" then ts:first(args(ts)),
+  if floatnump(ts) or integerp(ts) or scientific_notationp(ts) then return(true),
+  return(false)
+  )$
+
 /* ********************************** */
 /* Algebraic tests                    */
 /* ********************************** */
@@ -1250,6 +1277,27 @@ ATAlgEquiv(SA,SB) := block([simp:true, ret, newret, SAN],
     SAN:copy(SA), /* Need this for when we have lists etc. */
     if is(_EC(errcatch(SB:ev(SB, simp, nouns, rat)), "") = false) then
         return([false, false, StackAddNote("", "ATAlgEquiv_STACKERROR_TAns"),""]),
+    /* Start recursive process */
+    ret:ATAlgEquivfun(SA, SB),
+    /* Can we find a permutation of the variables? */
+    if ret[2]=0 then block([p1],
+        p1:subst_equiv(SAN, SB),
+        /* Actually, at this point 2008/7/7, we don't want to give this feedback.  Just leave an answer note. */
+        /* if p1#[] and p1#false then ret:[ret[1], ret[2], StackAddNote(ret[3], concat("ATAlgEquiv_Subst ", string(p1))), StackAddFeedback(ret[4], "Subst", stack_disp(p1, "d"))] */
+        if p1#[] and p1#false then ret:[ret[1], ret[2], StackAddNote(ret[3], concat("ATAlgEquiv_Subst ", string(p1))), ret[4]]
+    ),
+    return(ret)
+)$
+
+/* An algebraic equivalence test which does not evaluate noun forms, but does other simplifications.
+*/
+ATAlgEquivNouns(SA,SB) := block([simp:true, ret, newret, SAN],
+    /* Turn on simplification and error catch */
+    if is(_EC(errcatch(SA:ev(SA, simp, rat)), "") = false) then
+        return([false, false, StackAddNote("", "ATAlgEquivNouns_STACKERROR_SAns"), ""]),
+    SAN:copy(SA), /* Need this for when we have lists etc. */
+    if is(_EC(errcatch(SB:ev(SB, simp, rat)), "") = false) then
+        return([false, false, StackAddNote("", "ATAlgEquivNouns_STACKERROR_TAns"),""]),
     /* Start recursive process */
     ret:ATAlgEquivfun(SA, SB),
     /* Can we find a permutation of the variables? */
@@ -3009,4 +3057,4 @@ load(linearalgebra);
 
 /* Stack expects some output with the version number the output happens at */
 /* maximalocal.mac after additional library loading */
-stackmaximaversion:2020022400$
+stackmaximaversion:2020042000$

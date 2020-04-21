@@ -258,7 +258,8 @@ class stack_anstest_atnumsigfigs extends stack_anstest {
         $this->atvalid     = $unpacked['valid'];
         $this->atansnote  .= str_replace("\n", '', trim($unpacked['answernote']));
         $this->atfeedback .= $unpacked['feedback'];
-        $caserrormsgs = array('ATNumSigFigs_NotDecimal.', 'ATUnits_SA_not_expression.',
+        $caserrormsgs = array('ATNumSigFigs_STACKERROR_SAns.', 'ATNumSigFigs_STACKERROR_TAns.',
+            'ATNumSigFigs_STACKERROR_opt.', 'ATNumSigFigs_NotDecimal.', 'ATUnits_SA_not_expression.',
             'ATUnits_SA_no_units.', 'ATUnits_SA_only_units.');
         if (in_array(trim($unpacked['answernote']), $caserrormsgs)) {
             $this->atansnote  = trim($unpacked['answernote']);
@@ -292,8 +293,8 @@ class stack_anstest_atnumsigfigs extends stack_anstest {
                 $r['answernote'] = $result->items[2]->toString();
             }
             $r['feedback'] = stack_maxima_translate($result->items[3]->value);
-            if (strrpos($r['feedback'], '!NEWLINE!') === core_text::strlen($r['feedback']) - 9) {
-                $r['feedback'] = trim(core_text::substr($r['feedback'], 0, -9));
+            if (strrpos($r['feedback'], '!NEWLINE!') === mb_strlen($r['feedback']) - 9) {
+                $r['feedback'] = trim(mb_substr($r['feedback'], 0, -9));
             }
         }
         return $r;

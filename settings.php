@@ -26,6 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . '/settingslib.php');
 require_once(__DIR__ . '/stack/options.class.php');
+require_once(__DIR__ . '/stack/potentialresponsetree.class.php');
 
 // Useful links.
 $links = array(
@@ -67,14 +68,7 @@ $settings->add(new admin_setting_configselect('qtype_stack/platform',
 $settings->add(new admin_setting_configselect('qtype_stack/maximaversion',
         get_string('settingcasmaximaversion', 'qtype_stack'),
         get_string('settingcasmaximaversion_desc', 'qtype_stack'), null,
-                array('5.23.2' => '5.23.2', '5.25.1' => '5.25.1', '5.26.0' => '5.26.0',
-                      '5.27.0' => '5.27.0', '5.28.0' => '5.28.0', '5.30.0' => '5.30.0',
-                      '5.31.1' => '5.31.1', '5.31.2' => '5.31.2', '5.31.3' => '5.31.3',
-                      '5.32.0' => '5.32.0', '5.32.1' => '5.32.1', '5.33.0' => '5.33.0',
-                      '5.34.0' => '5.34.0', '5.34.1' => '5.34.1', '5.35.1' => '5.35.1',
-                      '5.35.1.2' => '3.35.1.2', '5.36.0' => '5.36.0', '5.36.1' => '5.36.1',
-                      '5.37.3' => '5.37.3', // Recently compiled GCL version for Windows is much faster.
-                      '5.38.0' => '5.38.0', '5.38.1' => '5.38.1', '5.39.0' => '5.39.0',
+                array('5.38.1' => '5.38.1', '5.39.0' => '5.39.0',
                       '5.40.0' => '5.40.0', '5.41.0' => '5.41.0', '5.42.0' => '5.42.0',
                       '5.42.1' => '5.42.1', '5.42.2' => '5.42.2',
                       'default' => 'default')));
@@ -211,17 +205,25 @@ $settings->add(new admin_setting_configselect('qtype_stack/assumereal',
         get_string('assumereal_help', 'qtype_stack'), '0',
         stack_options::get_yes_no_options()));
 
+$settings->add(new admin_setting_configselect('qtype_stack/feedbackstyle',
+        get_string('feedbackstyle', 'qtype_stack'),
+        get_string('feedbackstyle', 'qtype_stack'), '1',
+        stack_potentialresponse_tree::get_feedbackstyle_options()));
+
 $settings->add(new admin_setting_configtextarea('qtype_stack/prtcorrect',
         get_string('prtcorrectfeedback', 'qtype_stack'), '',
-        get_string('defaultprtcorrectfeedback', 'qtype_stack'), PARAM_RAW, 60, 3));
+        get_string('symbolicprtcorrectfeedback', 'qtype_stack') . ' ' .
+            get_string('defaultprtcorrectfeedback', 'qtype_stack'), PARAM_RAW, 60, 3));
 
 $settings->add(new admin_setting_configtextarea('qtype_stack/prtpartiallycorrect',
         get_string('prtpartiallycorrectfeedback', 'qtype_stack'), '',
-        get_string('defaultprtpartiallycorrectfeedback', 'qtype_stack'), PARAM_RAW, 60, 3));
+        get_string('symbolicprtpartiallycorrectfeedback', 'qtype_stack') . ' ' .
+            get_string('defaultprtpartiallycorrectfeedback', 'qtype_stack'), PARAM_RAW, 60, 3));
 
 $settings->add(new admin_setting_configtextarea('qtype_stack/prtincorrect',
         get_string('prtincorrectfeedback', 'qtype_stack'), '',
-        get_string('defaultprtincorrectfeedback', 'qtype_stack'), PARAM_RAW, 60, 3));
+        get_string('symbolicprtincorrectfeedback', 'qtype_stack') . ' ' .
+            get_string('defaultprtincorrectfeedback', 'qtype_stack'), PARAM_RAW, 60, 3));
 
 $settings->add(new admin_setting_configselect('qtype_stack/multiplicationsign',
         get_string('multiplicationsign', 'qtype_stack'),
@@ -242,6 +244,11 @@ $settings->add(new admin_setting_configselect('qtype_stack/inversetrig',
         get_string('inversetrig', 'qtype_stack'),
         get_string('inversetrig_help', 'qtype_stack'), 'cos-1',
         stack_options::get_inverse_trig_options()));
+
+$settings->add(new admin_setting_configselect('qtype_stack/logicsymbol',
+        get_string('logicsymbol', 'qtype_stack'),
+        get_string('logicsymbol_help', 'qtype_stack'), 'lang',
+        stack_options::get_logic_options()));
 
 $settings->add(new admin_setting_configselect('qtype_stack/matrixparens',
         get_string('matrixparens', 'qtype_stack'),

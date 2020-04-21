@@ -170,8 +170,8 @@ abstract class qtype_stack_testcase extends advanced_testcase {
     }
 
     /**
-     * Compares two strings for equality. Ignoring multiplied whitespace e.g. 
-     * '\t\n ' ~ ' ' but '' != ' ' and E-surrounded by numeric characters is 
+     * Compares two strings for equality. Ignoring multiplied whitespace e.g.
+     * '\t\n ' ~ ' ' but '' != ' ' and E-surrounded by numeric characters is
      * assumed to be a float an thus case insensitive.
      */
     public function assertEqualsIgnoreSpacesAndE(string $expected, string $actual) {
@@ -262,6 +262,7 @@ abstract class qtype_stack_walkthrough_test_base extends qbehaviour_walkthrough_
         if (!$enabled) {
             $attributes['readonly'] = 'readonly';
         }
+
         $matcher = $this->get_tag_matcher('input', $attributes);
         $this->assertTag($matcher, $this->currentoutput,
                 'Looking for an input with attributes ' . html_writer::attributes($attributes) . ' in ' . $this->currentoutput);
@@ -283,7 +284,8 @@ abstract class qtype_stack_walkthrough_test_base extends qbehaviour_walkthrough_
         }
         $matcher = $this->get_tag_matcher('textarea', $attributes);
         $this->assertTag($matcher, $this->currentoutput,
-                'Looking for a textarea with attributes ' . html_writer::attributes($attributes) . ' in ' . $this->currentoutput);
+                'Looking for a textarea with attributes ' . html_writer::attributes($attributes) . ' in ' .
+                $this->currentoutput);
 
         if ($content) {
             $this->assertRegExp('/' . preg_quote(s($content), '/') . '/', $this->currentoutput);
@@ -299,12 +301,22 @@ abstract class qtype_stack_walkthrough_test_base extends qbehaviour_walkthrough_
 
     protected function check_output_contains_input_validation($name) {
         $id = $this->quba->get_question_attempt($this->slot)->get_qt_field_name($name . '_val');
-        $this->assertRegExp('~<div (?=[^>]*\bclass="stackinputfeedback standard")(?=[^>]*\bid="' . $id . '")~', $this->currentoutput,
+        $this->assertRegExp('~<div (?=[^>]*\bclass="stackinputfeedback standard")(?=[^>]*\bid="' . $id . '")~',
+                $this->currentoutput,
+                'Input validation for ' . $name . ' not found in ' . $this->currentoutput);
+    }
+
+    protected function check_output_contains_input_validation_compact($name) {
+        $id = $this->quba->get_question_attempt($this->slot)->get_qt_field_name($name . '_val');
+        $this->assertRegExp('~<span (?=[^>]*\bclass="stackinputfeedback compact")(?=[^>]*\bid="' . $id . '")~',
+                $this->currentoutput,
                 'Input validation for ' . $name . ' not found in ' . $this->currentoutput);
     }
 
     protected function check_output_does_not_contain_any_input_validation() {
         $this->assertNotRegExp('~<div [^>]*\bclass="stackinputfeedback standard(?:(?! empty)[^"])*"~',
+                $this->currentoutput, 'Input validation should not be present in ' . $this->currentoutput);
+        $this->assertNotRegExp('~<div [^>]*\bclass="stackinputfeedback compact(?:(?! empty)[^"])*"~',
                 $this->currentoutput, 'Input validation should not be present in ' . $this->currentoutput);
     }
 
@@ -314,7 +326,8 @@ abstract class qtype_stack_walkthrough_test_base extends qbehaviour_walkthrough_
             return;
         }
         $id = $this->quba->get_question_attempt($this->slot)->get_qt_field_name($name . '_val');
-        $this->assertNotRegExp('~<div (?=[^>]*\bclass="stackinputfeedback standard")(?=[^>]*\bid="' . $id . '")~', $this->currentoutput,
+        $this->assertNotRegExp('~<div (?=[^>]*\bclass="stackinputfeedback standard")(?=[^>]*\bid="' . $id . '")~',
+                $this->currentoutput,
                 'Input validation for ' . $name . ' should not be present in ' . $this->currentoutput);
     }
 

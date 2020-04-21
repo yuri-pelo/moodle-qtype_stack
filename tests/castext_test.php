@@ -1113,4 +1113,77 @@ class stack_cas_text_test extends qtype_stack_testcase {
         $this->assertEquals('\({\left[ 2 , 3 , 7 , 23 \right]}\), \({528}\)',
             $at1->get_display_castext());
     }
+
+
+    public function test_orderless() {
+        // The unorder() function is not supported due to the way STACK interacts with Maxima.
+        $vars = "orderless(b);\np1:a+b+c;";
+        $at1 = new stack_cas_keyval($vars, null, 123);
+        $this->assertTrue($at1->get_valid());
+
+        $at2 = new stack_cas_text('\[{@p1@}\]', $at1->get_session(), 0);
+        $this->assertTrue($at2->get_valid());
+        $at2->get_display_castext();
+        $this->assertEquals('\[{c+a+b}\]', $at2->get_display_castext());
+
+        // Simplification is needed to reorder expressions.
+        $vars = "simp:false;\norderless(b);\np1:a+b+c;";
+        $at1 = new stack_cas_keyval($vars, null, 123);
+        $this->assertTrue($at1->get_valid());
+
+        $at2 = new stack_cas_text('\[{@p1@}\]', $at1->get_session(), 0);
+        $this->assertTrue($at2->get_valid());
+        $at2->get_display_castext();
+
+        $this->assertEquals('\[{a+b+c}\]', $at2->get_display_castext());
+    }
+
+    public function test_display_complex_numbers() {
+        // Typically with simp:true this does not display as a+bi.
+        $vars = "p1:a+b*%i;";
+        $at1 = new stack_cas_keyval($vars, null, 123);
+        $this->assertTrue($at1->get_valid());
+
+        $at2 = new stack_cas_text('\[{@p1@}\]', $at1->get_session(), 0);
+        $this->assertTrue($at2->get_valid());
+        $at2->get_display_castext();
+        $this->assertEquals('\[{\mathrm{i}\cdot b+a}\]', $at2->get_display_castext());
+    }
+
+    public function test_display_logic() {
+        $vars = 'make_logic("lang");';
+        $at1 = new stack_cas_keyval($vars, null, 123);
+        $this->assertTrue($at1->get_valid());
+
+        $at2 = new stack_cas_text('{@A and B@}, {@A nounand B@}. ' .
+                '{@A or B@}, {@A nounor B@}. ' .
+                '{@(A or B) and C@}; {@(A and B) or C@}. ' .
+                '{@(A nounor B) nounand C@}; {@(A nounand B) nounor C@}. {@not A@}.',
+                $at1->get_session(), 0);
+        $this->assertTrue($at2->get_valid());
+        $at2->get_display_castext();
+        $this->assertEquals('\({A\,{\mbox{ and }}\, B}\), \({A\,{\mbox{ and }}\, B}\). ' .
+                '\({A\,{\mbox{ or }}\, B}\), \({A\,{\mbox{ or }}\, B}\). ' .
+                '\({\left(A\,{\mbox{ or }}\, B\right)\,{\mbox{ and }}\, C}\); ' .
+                '\({A\,{\mbox{ and }}\, B\,{\mbox{ or }}\, C}\). ' .
+                '\({\left(A\,{\mbox{ or }}\, B\right)\,{\mbox{ and }}\, C}\); ' .
+                '\({A\,{\mbox{ and }}\, B\,{\mbox{ or }}\, C}\). ' .
+                '\({{\rm not}\left( A \right)}\).', $at2->get_display_castext());
+
+        $vars = 'make_logic("symbol");';
+        $at1 = new stack_cas_keyval($vars, null, 123);
+        $this->assertTrue($at1->get_valid());
+
+        $at2 = new stack_cas_text('{@A and B@}, {@A nounand B@}. ' .
+                '{@A or B@}, {@A nounor B@}. ' .
+                '{@(A or B) and C@}; {@(A and B) or C@}. ' .
+                '{@(A nounor B) nounand C@}; {@(A nounand B) nounor C@}. {@not A@}.',
+                $at1->get_session(), 0);
+        $this->assertTrue($at2->get_valid());
+        $at2->get_display_castext();
+        $this->assertEquals('\({A\land B}\), \({A\land B}\). \({A\lor B}\), \({A\lor B}\). ' .
+                '\({\left(A\lor B\right)\land C}\); \({A\land B\lor C}\). ' .
+                '\({\left(A\lor B\right)\land C}\); \({A\land B\lor C}\). \({\neg \left( A \right)}\).',
+                $at2->get_display_castext());
+    }
 }

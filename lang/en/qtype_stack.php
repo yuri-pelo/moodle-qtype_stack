@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Stack.  If not, see <http://www.gnu.org/licenses/>.
 
-
 /**
  * Language strings for the STACK question type.
  *
@@ -31,6 +30,9 @@ $string['pluginnamesummary'] = 'STACK provides mathematical questions for the Mo
 
 $string['privacy:metadata']  = 'The STACK question type plugin does not store any personal data.';
 $string['cachedef_parsercache'] = 'STACK parsed Maxima expressions';
+
+$string['mbstringrequired'] = 'Installing the MBSTRING library is required for STACK.';
+$string['yamlrecommended']  = 'Installing the YAML library is recommended for STACK.';
 
 // General strings.
 $string['errors']            = 'Errors';
@@ -86,15 +88,23 @@ $string['complexno'] = 'Meaning and display of sqrt(-1)';
 $string['complexno_help'] = 'Controls the meaning and display of the symbol i and sqrt(-1)';
 $string['complexno_link'] = '%%WWWROOT%%/question/type/stack/doc/doc.php/Authoring/Options.md#sqrt_minus_one.';
 $string['defaultmarkzeroifnoprts'] = 'The default mark must be 0 if this question has no PRTs.';
-$string['defaultprtcorrectfeedback'] = '<span style="font-size: 1.5em; color:green;"><i class="fa fa-check"></i></span> Correct answer, well done.';
-$string['defaultprtincorrectfeedback'] = '<span style="font-size: 1.5em; color:red;"><i class="fa fa-times"></i></span> Incorrect answer.';
-$string['defaultprtpartiallycorrectfeedback'] = '<span style="font-size: 1.5em; color:orange;"><i class="fa fa-adjust"></i></span> Your answer is partially correct.';
+$string['defaultprtcorrectfeedback'] = 'Correct answer, well done.';
+$string['defaultprtincorrectfeedback'] = 'Incorrect answer.';
+$string['defaultprtpartiallycorrectfeedback'] = 'Your answer is partially correct.';
+$string['symbolicprtcorrectfeedback'] = '<span style="font-size: 1.5em; color:green;"><i class="fa fa-check"></i></span>';
+$string['symbolicprtincorrectfeedback'] = '<span style="font-size: 1.5em; color:red;"><i class="fa fa-times"></i></span>';
+$string['symbolicprtpartiallycorrectfeedback'] = '<span style="font-size: 1.5em; color:orange;"><i class="fa fa-adjust"></i>';
 $string['branchfeedback'] = 'Node branch feedback';
 $string['branchfeedback_help'] = 'This is CASText which may depend on any of the question variables, input elements or the feedback variables. This is evaluated and displayed to the student if they pass down this branch.';
 $string['inputtest'] = 'Input test';
 $string['inversetrig'] = 'Inverse trigonometric functions';
 $string['inversetrig_help'] = 'Controls how inverse trigonometric functions are displayed in CAS output.';
 $string['inversetrig_link'] = '%%WWWROOT%%/question/type/stack/doc/doc.php/Authoring/Options.md#inverse_trig';
+$string['logicsymbol'] = 'Logic symbols';
+$string['logicsymbol_help'] = 'Controls how logical symbols should be displayed in CAS output.';
+$string['logicsymbol_link'] = '%%WWWROOT%%/question/type/stack/doc/doc.php/Authoring/Options.md#logicsymbol';
+$string['logicsymbollang'] = 'Language';
+$string['logicsymbolsymbol'] = 'Symbolic';
 $string['matrixparens'] = 'Default shape of matrix parentheses';
 $string['matrixparens_help'] = 'Controls the default shape of matrix parentheses when displayed in CAS output.';
 $string['matrixparens_link'] = '%%WWWROOT%%/question/type/stack/doc/doc.php/CAS/Matrix.md#matrixparens';
@@ -151,6 +161,7 @@ $string['inputextraoptions_link'] = '%%WWWROOT%%/question/type/stack/doc/doc.php
 $string['inputoptionunknown'] = 'This input does not support the option \'{$a}\'.';
 $string['inputheading'] = 'Input: {$a}';
 $string['inputnamelength'] = 'Input names cannot be longer than 18 characters. \'{$a}\' is too long.';
+$string['inputnameform'] = 'Input names must only be letters followed (optionally) by numbers. \'{$a}\' is illegal.';
 $string['inputremovedconfirmbelow'] = 'Input \'{$a}\' has been removed. Please confirm this below.';
 $string['inputremovedconfirm'] = 'I confirm that I want to remove this input from this question.';
 $string['inputlanguageproblems'] = 'There are inconsistencies in the input and validation tags between languages.';
@@ -255,6 +266,13 @@ $string['prts'] = 'Potential response trees';
 $string['prtwillbecomeactivewhen'] = 'This potential response tree will become active when the student has answered: {$a}';
 $string['prtruntimeerror'] = 'Node {$a->node} generated the following runtime error: {$a->error}';
 $string['prtwillberemoved'] = 'This potential response tree is no longer referred to in the question text or specific feedback. If you save the question now, the data about this potential response tree will be lost. Please confirm that you want to do this. Alternatively edit the question text or specific feedback to put back the \'[[feedback:{$a}]]\' placeholder.';
+$string['feedbackstyle'] = 'PRT feedback style';
+$string['feedbackstyle_help'] = 'Controls how PRT feedback is displayed.';
+$string['feedbackstyle_link'] = '%%WWWROOT%%/question/type/stack/doc/doc.php/Authoring/Potential_response_trees.md';
+$string['feedbackstyle0'] = 'Formative';
+$string['feedbackstyle1'] = 'Standard';
+$string['feedbackstyle2'] = 'Compact';
+$string['feedbackstyle3'] = 'Symbol only';
 $string['questionnote'] = 'Question note';
 $string['questionnote_help'] = 'The question note is CASText.  The purpose of a question note is to distinguish between random variants of a question. Two question variants are equal if and only if the question notes are equal.  In later analysis it is very helpful to leave a meaningful question note.';
 $string['questionnote_link'] = '%%WWWROOT%%/question/type/stack/doc/doc.php/Authoring/Question_note.md';
@@ -510,6 +528,7 @@ $string['basicreportraw'] = 'Raw data';
 $string['basicreportnotes'] = 'Frequency of answer notes, for each PRT, regardless of which variant was used.';
 $string['basicreportnotessplit'] = 'Frequency of answer notes, for each PRT, split by |, regardless of which variant was used.';
 $string['basicreportvariants'] = 'Raw inputs and PRT answer notes by variant.';
+$string['basicreportinputsummary'] = 'Raw inputs, regardless of which variant was used.';
 
 // Equiv input specific string.
 $string['equivnocomments'] = 'You are not permitted to use comments in this input type.  Please just work line by line.';
@@ -538,13 +557,14 @@ $string['healthcheckconfigintro2'] = 'Trying to automatically write the Maxima c
 $string['healthcheckconnect'] = 'Trying to connect to the CAS';
 $string['healthcheckconnectintro'] = 'We are trying to evaluate the following CAS text:';
 $string['healthcheckfilters'] = 'Please ensure that the {$a->filter} is enabled on the <a href="{$a->url}">Manage filters</a> page.';
+$string['healthchecknombstring'] = 'STACK v4.3 and later requires the PHP module mbstring, which is missing.  Please read the installation docs.';
 $string['healthchecklatex'] = 'Check LaTeX is being converted correctly';
 $string['healthchecklatexintro'] = 'STACK generates LaTeX on the fly, and enables teachers to write LaTeX in questions. It assumes that LaTeX will be converted by a moodle filter.  Below are samples of displayed and inline expressions in LaTeX which should be appear correctly in your browser.  Problems here indicate incorrect moodle filter settings, not faults with STACK itself. STACK only uses the single and double dollar notation itself, but some question authors may be relying on the other forms.';
 $string['healthchecklatexmathjax'] = 'STACK relies on the Moodle MathJax filter.  An alternative is to add javascript code to Moodle\'s additional HTML.  See the STACK installation docs for more details of this option.';
 $string['healthcheckmathsdisplaymethod'] = 'Maths display method being used: {$a}.';
 $string['healthcheckmaximabat'] = 'The maxima.bat file is missing';
 $string['healthcheckmaximabatinfo'] = 'This script tried to automatically copy the maxima.bat script from inside "C:\Program files\Maxima-1.xx.y\bin" into "{$a}\stack". However, this seems not to have worked. Please copy this file manually.';
-$string['healthchecksamplecas'] = 'The derivative of {@ x^4/(1+x^4) @} is \[ \frac{d}{dx} \frac{x^4}{1+x^4} = {@ diff(x^4/(1+x^4),x) @}. \]';
+$string['healthchecksamplecas'] = 'The derivative of {@ x^4/(1+x^4) @} is \[ \frac{d}{dx} \frac{x^4}{1+x^4} = {@ diff(x^4/(1+x^4),x) @}. \]  Confirm if unicode is supported: \(\forall\) should be displayed {@unicode(2200)@}.';
 $string['healthchecksampledisplaytex'] = '\[\sum_{n=1}^\infty \frac{1}{n^2} = \frac{\pi^2}{6}.\]';
 $string['healthchecksampleinlinetex'] = '\(\sum_{n=1}^\infty \frac{1}{n^2} = \frac{\pi^2}{6}\).';
 $string['healthcheckplots'] = 'Graph plotting';
@@ -633,6 +653,7 @@ $string['stackCas_qmarkoperators']          = 'Question marks are not permitted 
 $string['stackCas_apostrophe']              = 'Apostrophes are not permitted in responses.';
 $string['stackCas_newline']                 = 'Newline characters are not permitted in responses.';
 $string['stackCas_forbiddenChar']           = 'CAS commands may not contain the following characters: {$a->char}.';
+$string['stackCas_useinsteadChar']          = 'Please replace <span class="stacksyntaxexample">{$a->bad}</span> with \'<span class="stacksyntaxexample">{$a->char}</span>\'.';
 $string['stackCas_finalChar']               = '\'{$a->char}\' is an invalid final character in {$a->cmd}';
 $string['stackCas_MissingStars']            = 'You seem to be missing * characters. Perhaps you meant to type {$a->cmd}.';
 $string['stackCas_unknownFunction']         = 'Unknown function: {$a->forbid} in the term {$a->term}.';
@@ -726,6 +747,8 @@ $string['Illegal_identifiers_in_units']           = 'The input contains a variab
 $string['Illegal_illegal_operation_in_units']     = 'The operator <code>{$a}</code> is not allowed in this input.';
 $string['Illegal_illegal_power_of_ten_in_units']  = 'The value may not contain non integer powers of ten.';
 $string['Illegal_input_form_units']               = 'This input expects a numerical value followed or multiplied by an expression defining an unit, e.g. <code>1.23*W/m^2</code>. Note that the unit required here may be something else.';
+$string['Illegal_x10'] = 'Your answer appears to use the character "x" as a multiplication sign.  Please use <code>*</code> for multiplication.';
+
 
 $string['stackBlock_jsxgraph_width']       = 'The width of a JSXGraph must use a known CSS-length unit.';
 $string['stackBlock_jsxgraph_height']      = 'The height of a JSXGraph must use a known CSS-length unit.';
@@ -736,6 +759,7 @@ $string['stackBlock_jsxgraph_param']       = 'The jsxgraph-block supports only t
 
 // Answer tests.
 $string['stackOptions_AnsTest_values_AlgEquiv']            = "AlgEquiv";
+$string['stackOptions_AnsTest_values_AlgEquivNouns']       = "AlgEquivNouns";
 $string['stackOptions_AnsTest_values_EqualComAss']         = "EqualComAss";
 $string['stackOptions_AnsTest_values_CasEqual']            = "CasEqual";
 $string['stackOptions_AnsTest_values_SameType']            = "SameType";
@@ -881,6 +905,7 @@ $string['ATUnits_SA_excess_units']        = 'Your answer has used units (or vari
 $string['ATUnits_SA_only_units']          = 'Your answer needs to be a number together with units. Your answer only has units. ';
 $string['ATUnits_SA_bad_units']           = 'Your answer must have units, and you must use multiplication to attach the units to a value, e.g. <code>3.2*m/s</code>. ';
 $string['ATUnits_SA_errorbounds_invalid'] = 'Your answer has error bounds.  In this case do not indicate error bounds, instead use just the quantity and units. ';
+$string['ATUnits_SO_wrong_units']         = 'The units specified for the numerical tolerance must match the units used for the teacher\'s answer.  This is an internal error with the test.  Please ask your teacher about this. ';
 $string['ATUnits_incompatible_units']     = 'Your units are incompatible with those used by the teacher. ';
 $string['ATUnits_compatible_units']       = 'Your units are different from those used by the teacher, but are compatible with them.  Numerical values are being converted to SI base units for comparison. ';
 $string['ATUnits_correct_numerical']      = 'Please check your units carefully. ';
