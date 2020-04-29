@@ -307,13 +307,38 @@ class stack_ast_filter_auto_gen_030_no_trig_space_testcase extends qtype_stack_a
                       array(),
                       true, false);
 
+        $this->expect('-0.2433 + 0.1111',
+                      '-0.2433+0.1111',
+                      array(),
+                      true, false);
+
+        $this->expect('-0.2433e23 + 0.1111e-45 * 0.23e12 / -0.11e-11',
+                      '-0.2433E23+0.1111E-45*0.23E12/-0.11E-11',
+                      array(),
+                      true, false);
+
+        $this->expect('-35.3 * 10^23',
+                      '-35.3*10^23',
+                      array(),
+                      true, false);
+
         $this->expect('0..1',
-                      '0..1',
+                      '0. . 1',
                       array(),
                       true, false);
 
         $this->expect('0.1..1.2',
-                      '0.1..1.2',
+                      '0.1 . .1 . 2',
+                      array(),
+                      true, false);
+
+        $this->expect('0.1.1.2',
+                      '0.1 . 1.2',
+                      array(),
+                      true, false);
+
+        $this->expect('0.1. 1.2',
+                      '0.1 . 1.2',
                       array(),
                       true, false);
 
@@ -387,6 +412,41 @@ class stack_ast_filter_auto_gen_030_no_trig_space_testcase extends qtype_stack_a
                       array(),
                       true, false);
 
+        $this->expect('23.2*x*10^5',
+                      '23.2*x*10^5',
+                      array(),
+                      true, false);
+
+        $this->expect('23.2 x 10^5',
+                      '23.2*x*10^5',
+                      array(),
+                      true, false);
+
+        $this->expect('23.2x10^5',
+                      '23.2*x10^5',
+                      array(),
+                      true, false);
+
+        $this->expect('23.2x 10^5',
+                      '23.2*x*10^5',
+                      array(),
+                      true, false);
+
+        $this->expect('23.2 x10^5',
+                      '23.2*x10^5',
+                      array(),
+                      true, false);
+
+        $this->expect('9.81x10^2*m/s',
+                      '9.81*x10^2*m/s',
+                      array(),
+                      true, false);
+
+        $this->expect('9.81x*10^2*m/s',
+                      '9.81*x*10^2*m/s',
+                      array(),
+                      true, false);
+
         $this->expect('1x',
                       '1*x',
                       array(),
@@ -439,6 +499,41 @@ class stack_ast_filter_auto_gen_030_no_trig_space_testcase extends qtype_stack_a
 
         $this->expect('3-i',
                       '3-i',
+                      array(),
+                      true, false);
+
+        $this->expect('3 5',
+                      '3*5',
+                      array(),
+                      true, false);
+
+        $this->expect('3.14 5',
+                      '3.14*5',
+                      array(),
+                      true, false);
+
+        $this->expect('3 5.2789',
+                      '3*5.2789',
+                      array(),
+                      true, false);
+
+        $this->expect('3.14 5.2789',
+                      '3.14*5.2789',
+                      array(),
+                      true, false);
+
+        $this->expect('33 578 32',
+                      '33*578*32',
+                      array(),
+                      true, false);
+
+        $this->expect('9 8 7.6',
+                      '9*8*7.6',
+                      array(),
+                      true, false);
+
+        $this->expect('9 8.5 7.6',
+                      '9*8.5*7.6',
                       array(),
                       true, false);
 
@@ -1923,13 +2018,38 @@ class stack_ast_filter_auto_gen_030_no_trig_space_testcase extends qtype_stack_a
                       array(),
                       true, false);
 
+        $this->expect('-0.2433 + 0.1111',
+                      '-0.2433+0.1111',
+                      array(),
+                      true, false);
+
+        $this->expect('-0.2433e23 + 0.1111e-45 * 0.23e12 / -0.11e-11',
+                      '-0.2433E23+0.1111E-45*0.23E12/-0.11E-11',
+                      array(),
+                      true, false);
+
+        $this->expect('-35.3 * 10^23',
+                      '-35.3*10^23',
+                      array(),
+                      true, false);
+
         $this->expect('0..1',
-                      '0..1',
+                      '0. . 1',
                       array(),
                       true, false);
 
         $this->expect('0.1..1.2',
-                      '0.1..1.2',
+                      '0.1 . .1 . 2',
+                      array(),
+                      true, false);
+
+        $this->expect('0.1.1.2',
+                      '0.1 . 1.2',
+                      array(),
+                      true, false);
+
+        $this->expect('0.1. 1.2',
+                      '0.1 . 1.2',
                       array(),
                       true, false);
 
@@ -2003,6 +2123,41 @@ class stack_ast_filter_auto_gen_030_no_trig_space_testcase extends qtype_stack_a
                       array(),
                       true, false);
 
+        $this->expect('23.2*x*10^5',
+                      '23.2*x*10^5',
+                      array(),
+                      true, false);
+
+        $this->expect('23.2 x 10^5',
+                      '23.2*x*10^5',
+                      array(),
+                      true, false);
+
+        $this->expect('23.2x10^5',
+                      '23.2*x10^5',
+                      array(),
+                      true, false);
+
+        $this->expect('23.2x 10^5',
+                      '23.2*x*10^5',
+                      array(),
+                      true, false);
+
+        $this->expect('23.2 x10^5',
+                      '23.2*x10^5',
+                      array(),
+                      true, false);
+
+        $this->expect('9.81x10^2*m/s',
+                      '9.81*x10^2*m/s',
+                      array(),
+                      true, false);
+
+        $this->expect('9.81x*10^2*m/s',
+                      '9.81*x*10^2*m/s',
+                      array(),
+                      true, false);
+
         $this->expect('1x',
                       '1*x',
                       array(),
@@ -2055,6 +2210,41 @@ class stack_ast_filter_auto_gen_030_no_trig_space_testcase extends qtype_stack_a
 
         $this->expect('3-i',
                       '3-i',
+                      array(),
+                      true, false);
+
+        $this->expect('3 5',
+                      '3*5',
+                      array(),
+                      true, false);
+
+        $this->expect('3.14 5',
+                      '3.14*5',
+                      array(),
+                      true, false);
+
+        $this->expect('3 5.2789',
+                      '3*5.2789',
+                      array(),
+                      true, false);
+
+        $this->expect('3.14 5.2789',
+                      '3.14*5.2789',
+                      array(),
+                      true, false);
+
+        $this->expect('33 578 32',
+                      '33*578*32',
+                      array(),
+                      true, false);
+
+        $this->expect('9 8 7.6',
+                      '9*8*7.6',
+                      array(),
+                      true, false);
+
+        $this->expect('9 8.5 7.6',
+                      '9*8.5*7.6',
                       array(),
                       true, false);
 

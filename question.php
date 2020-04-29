@@ -66,19 +66,19 @@ class qtype_stack_question extends question_graded_automatically_with_countback
     /** @var int one of the FORMAT_... constants */
     public $specificfeedbackformat;
 
-    /** @var Feedback that is displayed for any PRT that returns a score of 1. */
+    /** @var string Feedback that is displayed for any PRT that returns a score of 1. */
     public $prtcorrect;
 
     /** @var int one of the FORMAT_... constants */
     public $prtcorrectformat;
 
-    /** @var Feedback that is displayed for any PRT that returns a score between 0 and 1. */
+    /** @var string Feedback that is displayed for any PRT that returns a score between 0 and 1. */
     public $prtpartiallycorrect;
 
     /** @var int one of the FORMAT_... constants */
     public $prtpartiallycorrectformat;
 
-    /** @var Feedback that is displayed for any PRT that returns a score of 0. */
+    /** @var string Feedback that is displayed for any PRT that returns a score of 0. */
     public $prtincorrect;
 
     /** @var int one of the FORMAT_... constants */
@@ -88,12 +88,12 @@ class qtype_stack_question extends question_graded_automatically_with_countback
     public $variantsselectionseed;
 
     /**
-     * @var array STACK specific: string name as it appears in the question text => stack_input
+     * @var stack_input[] STACK specific: string name as it appears in the question text => stack_input
      */
     public $inputs = array();
 
     /**
-     * @var array stack_potentialresponse_tree STACK specific: respones tree number => ...
+     * @var stack_potentialresponse_tree[] STACK specific: respones tree number => ...
      */
     public $prts = array();
 
@@ -103,7 +103,7 @@ class qtype_stack_question extends question_graded_automatically_with_countback
     public $options;
 
     /**
-     * @var array of seed values that have been deployed.
+     * @var int[] of seed values that have been deployed.
      */
     public $deployedseeds;
 
@@ -118,7 +118,7 @@ class qtype_stack_question extends question_graded_automatically_with_countback
     protected $session;
 
     /**
-     * @var array stack_ast_container STACK specific: the teachers answers for each input
+     * @var stack_ast_container[] STACK specific: the teacher's answers for each input.
      */
     private $tas;
 
@@ -132,7 +132,7 @@ class qtype_stack_question extends question_graded_automatically_with_countback
     private $security;
 
     /**
-     * @var array stack_cas_session STACK specific: session of variables.
+     * @var stack_cas_session2 STACK specific: session of variables.
      */
     protected $questionnoteinstantiated;
 
@@ -187,7 +187,7 @@ class qtype_stack_question extends question_graded_automatically_with_countback
     protected $lastacceptvalid = null;
 
     /**
-     * @var array input name => stack_input_state.
+     * @var stack_input_state[] input name => stack_input_state.
      * This caches the results of validate_student_response for $lastresponse.
      */
     protected $inputstates = array();
@@ -199,6 +199,8 @@ class qtype_stack_question extends question_graded_automatically_with_countback
 
     /**
      * Make sure the cache is valid for the current response. If not, clear it.
+     *
+     * @param array $response the response.
      * @param bool $acceptvalid if this is true, then we will grade things even
      * if the corresponding inputs are only VALID, and not SCORE.
      */
@@ -427,7 +429,7 @@ class qtype_stack_question extends question_graded_automatically_with_countback
     /**
      * Helper method used by initialise_question_from_seed.
      * @param string $text a textual part of the question that is CAS text.
-     * @param stack_cas_session $session the question's CAS session.
+     * @param stack_cas_session2 $session the question's CAS session.
      * @return stack_cas_text the CAS text version of $text.
      */
     protected function prepare_cas_text($text, $session) {
@@ -519,21 +521,25 @@ class qtype_stack_question extends question_graded_automatically_with_countback
     }
 
     public function summarise_response(array $response) {
-        $bits = array();
+        // Provide seed information on student's version via the normal moodle quiz report.
+        $bits = array('Seed: ' . $this->seed);
         foreach ($this->inputs as $name => $input) {
             $state = $this->get_input_state($name, $response);
             if (stack_input::BLANK != $state->status) {
-                $bits[] = $name . ': ' . $input->contents_to_maxima($state->contents) . ' [' . $state->status . ']';
+                $bits[] = $input->summarise_response($name, $state, $response);
             }
         }
         // Add in the answer note for this response.
         foreach ($this->prts as $name => $prt) {
             $state = $this->get_prt_result($name, $response, false);
             $note = implode(' | ', $state->answernotes);
+            $score = '';
             if (trim($note) == '') {
-                $note = '#';
+                $note = '!';
+            } else {
+                $score = "# = " . $state->score . " | ";
             }
-            $bits[] = $name . ": " . $note;
+            $bits[] = $name . ": " . $score . $note;
         }
         return implode('; ', $bits);
     }
@@ -579,7 +585,7 @@ class qtype_stack_question extends question_graded_automatically_with_countback
      * @param string $name the name of one of the input elements.
      * @param array $response the response, in Maxima format.
      * @param bool $rawinput the response in raw form. Needs converting to Maxima format by the input.
-     * @return stack_input_state the result of calling validate_student_response() on the input.
+     * @return stack_input_state|string the result of calling validate_student_response() on the input.
      */
     public function get_input_state($name, $response, $rawinput=false) {
         $this->validate_cache($response, null);
@@ -637,7 +643,8 @@ class qtype_stack_question extends question_graded_automatically_with_countback
 
         // If all PRTs are gradable, then the question is complete. (Optional inputs may be blank.)
         foreach ($this->prts as $index => $prt) {
-            if (!$this->can_execute_prt($prt, $response, false)) {
+            // Formative PRTs do not contribute to complete responses.
+            if (!$prt->is_formative() && !$this->can_execute_prt($prt, $response, false)) {
                 return false;
             }
         }
@@ -659,7 +666,8 @@ class qtype_stack_question extends question_graded_automatically_with_countback
         $noprts = true;
         foreach ($this->prts as $index => $prt) {
             $noprts = false;
-            if ($this->can_execute_prt($prt, $response, true)) {
+            // Whether formative PRTs can be executed is not relevant to gradability.
+            if (!$prt->is_formative() && $this->can_execute_prt($prt, $response, true)) {
                 return true;
             }
         }
@@ -693,8 +701,10 @@ class qtype_stack_question extends question_graded_automatically_with_countback
         $fraction = 0;
 
         foreach ($this->prts as $index => $prt) {
-            $results = $this->get_prt_result($index, $response, true);
-            $fraction += $results->fraction;
+            if (!$prt->is_formative()) {
+                $results = $this->get_prt_result($index, $response, true);
+                $fraction += $results->fraction;
+            }
         }
         return array($fraction, question_state::graded_state_for_fraction($fraction));
     }
@@ -711,7 +721,9 @@ class qtype_stack_question extends question_graded_automatically_with_countback
     public function get_parts_and_weights() {
         $weights = array();
         foreach ($this->prts as $index => $prt) {
-            $weights[$index] = $prt->get_value();
+            if (!$prt->is_formative()) {
+                $weights[$index] = $prt->get_value();
+            }
         }
         return $weights;
     }
@@ -766,6 +778,10 @@ class qtype_stack_question extends question_graded_automatically_with_countback
 
         $fraction = 0;
         foreach ($this->prts as $index => $prt) {
+            if ($prt->is_formative()) {
+                continue;
+            }
+
             $accumulatedpenalty = 0;
             $lastinput = array();
             $penaltytoapply = null;
@@ -850,7 +866,11 @@ class qtype_stack_question extends question_graded_automatically_with_countback
         foreach ($prt->get_required_variables(array_keys($this->inputs)) as $name) {
             $state = $this->get_input_state($name, $response);
             if (stack_input::SCORE == $state->status || ($acceptvalid && stack_input::VALID == $state->status)) {
-                $prtinput[$name] = $state->contentsmodified;
+                $val = $state->contentsmodified;
+                if ($state->simp === true) {
+                    $val = 'ev(' . $val . ',simp)';
+                }
+                $prtinput[$name] = $val;
             }
         }
 
@@ -891,9 +911,9 @@ class qtype_stack_question extends question_graded_automatically_with_countback
 
     /**
      * For a possibly nested array, replace all the values with $newvalue.
-     * @param array $array input array.
+     * @param string|array $arrayorscalar input array/value.
      * @param mixed $newvalue the new value to set.
-     * @return modified array.
+     * @return string|array array.
      */
     protected function set_value_in_nested_arrays($arrayorscalar, $newvalue) {
         if (!is_array($arrayorscalar)) {
@@ -1016,7 +1036,7 @@ class qtype_stack_question extends question_graded_automatically_with_countback
      * Add all the question variables to a give CAS session. This can be used to
      * initialise that session, so expressions can be evaluated in the context of
      * the question variables.
-     * @param stack_cas_session $session the CAS session to add the question variables to.
+     * @param stack_cas_session2 $session the CAS session to add the question variables to.
      */
     public function add_question_vars_to_session(stack_cas_session2 $session) {
         // Question vars will always get added to the beginning of whatever session you give.
@@ -1026,7 +1046,7 @@ class qtype_stack_question extends question_graded_automatically_with_countback
     /**
      * Enable the renderer to access the teacher's answer in the session.
      * TODO: should we give the whole thing?
-     * @param vname variable name.
+     * @param string $vname variable name.
      */
     public function get_ta_for_input(string $vname): string {
         if ($this->tas[$vname]->is_correctly_evaluated()) {
@@ -1039,6 +1059,10 @@ class qtype_stack_question extends question_graded_automatically_with_countback
         $classification = array();
 
         foreach ($this->prts as $index => $prt) {
+            if ($prt->is_formative()) {
+                continue;
+            }
+
             if (!$this->can_execute_prt($prt, $response, true)) {
                 foreach ($prt->get_nodes_summary() as $nodeid => $choices) {
                     $classification[$index . '-' . $nodeid] = question_classified_response::no_response();
@@ -1068,7 +1092,6 @@ class qtype_stack_question extends question_graded_automatically_with_countback
             }
 
         }
-
         return $classification;
     }
 
@@ -1135,6 +1158,11 @@ class qtype_stack_question extends question_graded_automatically_with_countback
         // Mul is no longer supported.
         // We don't need to include a date check here because it is not a change in behaviour.
         foreach ($this->inputs as $inputname => $input) {
+
+            if (!preg_match('/^([a-zA-Z]+|[a-zA-Z]+[0-9a-zA-Z_]*[0-9a-zA-Z]+)$/', $inputname)) {
+                $errors[] = stack_string('inputnameform', $inputname);
+            }
+
             $options = $input->get_parameter('options');
             if (trim($options) !== '') {
                 $options = explode(',', $options);

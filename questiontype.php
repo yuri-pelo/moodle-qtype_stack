@@ -143,6 +143,7 @@ class qtype_stack extends question_type {
         $options->sqrtsign                  = $fromform->sqrtsign;
         $options->complexno                 = $fromform->complexno;
         $options->inversetrig               = $fromform->inversetrig;
+        $options->logicsymbol               = $fromform->logicsymbol;
         $options->matrixparens              = $fromform->matrixparens;
         $options->variantsselectionseed     = $fromform->variantsselectionseed;
         $DB->update_record('qtype_stack_options', $options);
@@ -243,6 +244,7 @@ class qtype_stack extends question_type {
 
             $prt->value             = $fromform->{$prtname . 'value'};
             $prt->autosimplify      = $fromform->{$prtname . 'autosimplify'};
+            $prt->feedbackstyle     = $fromform->{$prtname . 'feedbackstyle'};
             $prt->feedbackvariables = $fromform->{$prtname . 'feedbackvariables'};
             $prt->firstnodename     = $firstnode;
             $DB->update_record('qtype_stack_prts', $prt);
@@ -378,7 +380,7 @@ class qtype_stack extends question_type {
 
         $question->prts = $DB->get_records('qtype_stack_prts',
                 array('questionid' => $question->id), 'name',
-                'name, id, questionid, value, autosimplify, feedbackvariables, firstnodename');
+                'name, id, questionid, value, autosimplify, feedbackstyle, feedbackvariables, firstnodename');
 
         $noders = $DB->get_recordset('qtype_stack_prt_nodes',
                 array('questionid' => $question->id),
@@ -417,6 +419,7 @@ class qtype_stack extends question_type {
         $question->options->set_option('multiplicationsign', $questiondata->options->multiplicationsign);
         $question->options->set_option('complexno',          $questiondata->options->complexno);
         $question->options->set_option('inversetrig',        $questiondata->options->inversetrig);
+        $question->options->set_option('logicsymbol',        $questiondata->options->logicsymbol);
         $question->options->set_option('matrixparens',       $questiondata->options->matrixparens);
         $question->options->set_option('sqrtsign',    (bool) $questiondata->options->sqrtsign);
         $question->options->set_option('simplify',    (bool) $questiondata->options->questionsimplify);
@@ -424,7 +427,7 @@ class qtype_stack extends question_type {
         $question->options->set_option('assumereal',  (bool) $questiondata->options->assumereal);
 
         $requiredparams = stack_input_factory::get_parameters_used();
-        foreach (array_keys($this->get_input_names_from_question_text($question->questiontext)) as $name) {
+        foreach (stack_utils::extract_placeholders($question->questiontext, 'input') as $name) {
             $inputdata = $questiondata->inputs[$name];
             $allparameters = array(
                 'boxWidth'        => $inputdata->boxsize,
@@ -454,7 +457,10 @@ class qtype_stack extends question_type {
 
         $totalvalue = 0;
         foreach ($questiondata->prts as $name => $prtdata) {
-            $totalvalue += $prtdata->value;
+            // At this point we do not have the PRT method is_formative() available to us.
+            if ($prtdata->feedbackstyle > 0) {
+                $totalvalue += $prtdata->value;
+            }
         }
         if ($questiondata->prts && $totalvalue < 0.0000001) {
             throw new coding_exception('There is an error authoring your question. ' .
@@ -503,10 +509,91 @@ class qtype_stack extends question_type {
 
             $question->prts[$name] = new stack_potentialresponse_tree($name, '',
                     (bool) $prtdata->autosimplify, $prtdata->value / $totalvalue,
-                    $feedbackvariables, $nodes, (string) $prtdata->firstnodename);
+                    $feedbackvariables, $nodes, (string) $prtdata->firstnodename, (int) $prtdata->feedbackstyle);
         }
 
         $question->deployedseeds = array_values($questiondata->deployedseeds);
+    }
+
+    /**
+     * Get the URL params required for linking to associated scripts like
+     * questiontestrun.php.
+     *
+     * @param stdClass|qtype_stack_question $question question data, as from question_bank::load_question
+     *      or question_bank::load_question_data.
+     * @return array of URL params. Can be passed to moodle_url.
+     */
+    protected function get_question_url_params($question) {
+        $urlparams = ['questionid' => $question->id];
+
+        // This is a bit of a hack to find the right thing to put in the URL.
+        // If we are already on a URL that gives us a clue what to do, use that.
+        $context = context::instance_by_id($question->contextid);
+        if ($cmid = optional_param('cmid', null, PARAM_INT)) {
+            $urlparams['cmid'] = $cmid;
+
+        } else if ($courseid = optional_param('courseid', null, PARAM_INT)) {
+            $urlparams['courseid'] = $courseid;
+
+        } else if ($context->contextlevel == CONTEXT_MODULE) {
+            $urlparams['cmid'] = $context->instanceid;
+
+        } else if ($context->contextlevel == CONTEXT_COURSE) {
+            $urlparams['courseid'] = $context->instanceid;
+
+        } else {
+            $urlparams['courseid'] = get_site()->id;
+        }
+
+        return $urlparams;
+    }
+
+    /**
+     * Get the URL for questiontestrun.php for a question.
+     *
+     * @param stdClass|qtype_stack_question $question question data, as from question_bank::load_question
+     *      or question_bank::load_question_data.
+     * @return moodle_url the URL.
+     */
+    public function get_question_test_url($question) {
+        $linkparams = $this->get_question_url_params($question);
+        return new moodle_url('/question/type/stack/questiontestrun.php', $linkparams);
+    }
+
+    /**
+     * Get the URL for tidyquestion.php for a question.
+     *
+     * @param stdClass|qtype_stack_question $question question data, as from question_bank::load_question
+     *      or question_bank::load_question_data.
+     * @return moodle_url the URL.
+     */
+    public function get_tidy_question_url($question) {
+        $linkparams = $this->get_question_url_params($question);
+        return new moodle_url('/question/type/stack/tidyquestion.php', $linkparams);
+    }
+
+    public function get_extra_question_bank_actions(stdClass $question): array {
+        $actions = parent::get_extra_question_bank_actions($question);
+
+        $linkparams = $this->get_question_url_params($question);
+
+        // Directly link to question tests and deployed variants.
+        if (question_has_capability_on($question, 'view')) {
+            $actions[] = new \action_menu_link_secondary(
+                    new moodle_url('/question/type/stack/questiontestrun.php', $linkparams),
+                    new \pix_icon('t/approve', ''),
+                    get_string('runquestiontests', 'qtype_stack'));
+        }
+
+        // Directly link to tidy question script.
+        if (question_has_capability_on($question, 'view')) {
+            $actions[] = new \action_menu_link_secondary(
+                    new moodle_url('/question/type/stack/tidyquestiont.php', $linkparams),
+                    new \pix_icon('t/edit', ''),
+                    get_string('tidyquestion', 'qtype_stack'));
+        }
+
+        return $actions;
     }
 
     public function delete_question($questionid, $contextid) {
@@ -1012,6 +1099,7 @@ class qtype_stack extends question_type {
         $output .= "    <sqrtsign>{$options->sqrtsign}</sqrtsign>\n";
         $output .= "    <complexno>{$options->complexno}</complexno>\n";
         $output .= "    <inversetrig>{$options->inversetrig}</inversetrig>\n";
+        $output .= "    <logicsymbol>{$options->logicsymbol}</logicsymbol>\n";
         $output .= "    <matrixparens>{$options->matrixparens}</matrixparens>\n";
         $output .= "    <variantsselectionseed>{$format->xml_escape($options->variantsselectionseed)}</variantsselectionseed>\n";
 
@@ -1041,6 +1129,7 @@ class qtype_stack extends question_type {
             $output .= "      <name>{$prt->name}</name>\n";
             $output .= "      <value>{$prt->value}</value>\n";
             $output .= "      <autosimplify>{$prt->autosimplify}</autosimplify>\n";
+            $output .= "      <feedbackstyle>{$prt->feedbackstyle}</feedbackstyle>\n";
             $output .= "      <feedbackvariables>\n";
             $output .= "        " . $format->writetext($prt->feedbackvariables, 0);
             $output .= "      </feedbackvariables>\n";
@@ -1128,6 +1217,7 @@ class qtype_stack extends question_type {
         $fromform->sqrtsign              = $format->getpath($xml, array('#', 'sqrtsign', 0, '#'), 1);
         $fromform->complexno             = $format->getpath($xml, array('#', 'complexno', 0, '#'), 'i');
         $fromform->inversetrig           = $format->getpath($xml, array('#', 'inversetrig', 0, '#'), 'cos-1');
+        $fromform->logicsymbol           = $format->getpath($xml, array('#', 'logicsymbol', 0, '#'), 'lang');
         $fromform->matrixparens          = $format->getpath($xml, array('#', 'matrixparens', 0, '#'), '[');
         $fromform->variantsselectionseed = $format->getpath($xml, array('#', 'variantsselectionseed', 0, '#'), 'i');
 
@@ -1225,6 +1315,7 @@ class qtype_stack extends question_type {
 
         $fromform->{$name . 'value'}             = $format->getpath($xml, array('#', 'value', 0, '#'), 1);
         $fromform->{$name . 'autosimplify'}      = $format->getpath($xml, array('#', 'autosimplify', 0, '#'), 1);
+        $fromform->{$name . 'feedbackstyle'}     = $format->getpath($xml, array('#', 'feedbackstyle', 0, '#'), 1);
         $fromform->{$name . 'feedbackvariables'} = $format->getpath($xml,
                             array('#', 'feedbackvariables', 0, '#', 'text', 0, '#'), '', true);
 
@@ -1322,6 +1413,7 @@ class qtype_stack extends question_type {
         $this->options->set_option('multiplicationsign', $fromform['multiplicationsign']);
         $this->options->set_option('complexno',          $fromform['complexno']);
         $this->options->set_option('inversetrig',        $fromform['inversetrig']);
+        $this->options->set_option('logicsymbol',        $fromform['logicsymbol']);
         $this->options->set_option('matrixparens',       $fromform['matrixparens']);
         $this->options->set_option('sqrtsign',    (bool) $fromform['sqrtsign']);
         $this->options->set_option('simplify',    (bool) $fromform['questionsimplify']);
@@ -1491,6 +1583,11 @@ class qtype_stack extends question_type {
 
             if (strlen($inputname) > 18 && !isset($fromform[$inputname . 'deleteconfirm'])) {
                 $errors['questiontext'][] = stack_string('inputnamelength', $inputname);
+            }
+
+            if (!preg_match('/^([a-zA-Z]+|[a-zA-Z]+[0-9a-zA-Z_]*[0-9a-zA-Z]+)$/', $inputname) &&
+                    !isset($fromform[$inputname . 'deleteconfirm'])) {
+                $errors['questiontext'][] = stack_string('inputnameform', $inputname);
             }
 
             if ($fromform[$inputname . 'mustverify'] and $fromform[$inputname . 'showvalidation'] == 0) {
@@ -1719,7 +1816,8 @@ class qtype_stack extends question_type {
 
         $getdebuginfo = false;
         foreach ($inputs as $inputname) {
-            if ($inputsession->get_by_key($inputname)->get_errors() !== '') {
+            if ($inputsession->get_by_key($inputname) !== null &&
+                    $inputsession->get_by_key($inputname)->get_errors() !== '') {
                 $errors[$inputname . 'modelans'][] = $inputsession->get_by_key($inputname)->get_errors();
                 $in = $inputsession->get_by_key($inputname);
                 if (!$in->is_correctly_evaluated()) {
@@ -1891,7 +1989,7 @@ class qtype_stack extends question_type {
             if ('' === trim($opt)) {
                 $errors[$nodegroup][] = stack_string('testoptionsrequired');
 
-            } else if (strlen($opt > 255)) {
+            } else if (strlen($opt) > 255) {
                 $errors[$nodegroup][] = stack_string('testoptionsinvalid',
                         stack_string('strlengtherror'));
 
@@ -1931,6 +2029,8 @@ class qtype_stack extends question_type {
                         $interror[$prtname.'nodewhen'.$branch.'['.$key.']'][] = stack_string('answernote_err');
                     }
                 }
+            } else if (strstr($answernote, ';') !== false || strstr($answernote, ':') !== false) {
+                $errors[$branchgroup][] = stack_string('answernote_err2');
             }
 
             $errors = $this->validate_cas_text($errors, $fromform[$prtname . $branch . 'feedback'][$nodekey]['text'],
@@ -2079,7 +2179,7 @@ class qtype_stack extends question_type {
 
             if (optional_param($prtname . 'nodeadd', false, PARAM_BOOL)) {
                 $graph->add_node($lastkey + 2, null, null, '+0', '-0',
-                        '#fgroup_id_' . $prtname . 'node_' . $lastkey + 1);
+                        '#fgroup_id_' . $prtname . 'node_' . ($lastkey + 1));
             }
 
             if (!is_null($deletednode)) {
@@ -2172,7 +2272,7 @@ class qtype_stack extends question_type {
         }
         $feedbackvariables = new stack_cas_keyval($prt->feedbackvariables);
         $potentialresponsetree = new stack_potentialresponse_tree(
-                '', '', false, 0, $feedbackvariables->get_session(), $prtnodes, (string) $prt->firstnodename);
+                '', '', false, 0, $feedbackvariables->get_session(), $prtnodes, (string) $prt->firstnodename, 1);
         return $potentialresponsetree->get_required_variables($inputkeys);
     }
 }

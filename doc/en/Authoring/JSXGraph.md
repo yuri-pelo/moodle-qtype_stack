@@ -187,3 +187,9 @@ This function turns a list into a string representation of its arguments, withou
 Internally, it applies `string` to the list of values (not TeX!).  However, you might still get things like `%pi` in the output.
 
 You can use this with mathematical input: `{@stack_disp_comma_separate([a,b,sin(pi)])@}` and you will get the result `a, b, sin(%pi/7)` (without the string quotes) because when a Maxima variable is a string we strip off the outside quotes and don't typeset this in maths mode.
+
+
+## Discrete mathematics and graph theory.
+
+
+A graph can be displayed with JSXGraph, see [discrete mathematics](../CAS/Discrete_mathematics.md) for examples.

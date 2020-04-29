@@ -77,7 +77,10 @@ class stack_ast_container_silent implements cas_evaluatable {
 
     /**
      * Do we nounify all operators in this expression?
-     * If true we do, if false we remove them, if null we leave well alone.
+     * If null we leave well alone.
+     * If 0 we remove all nouns.
+     * If 1 we add all nouns.
+     * If 2 we only add logic nouns such as nounand.
      */
     protected $nounify = null;
 
@@ -157,7 +160,7 @@ class stack_ast_container_silent implements cas_evaluatable {
         $astc->valid = null;
         $astc->feedback = array();
         // Always add nouns to student input.
-        $astc->nounify = true;
+        $astc->nounify = 1;
 
         return $astc;
     }
@@ -234,23 +237,7 @@ class stack_ast_container_silent implements cas_evaluatable {
         return $astc;
     }
 
-    protected function __constructor($ast, string $source, string $context,
-                                   stack_cas_security $securitymodel,
-                                   array $errors, array $answernotes) {
-
-        $this->ast = $ast;
-        $this->source = $source;
-        $this->context = $context;
-        $this->securitymodel = $securitymodel;
-        $this->errors = $errors;
-        $this->answernotes = $answernotes;
-        $this->valid = null;
-        $this->feedback = array();
-        $this->keyless = false;
-
-        if (!('s' === $source || 't' === $source)) {
-            throw new stack_exception('stack_ast_container: source, must be "s" or "t" only.');
-        }
+    protected function __construct() {
     }
 
     public function set_keyless(bool $key=true) {
@@ -258,7 +245,7 @@ class stack_ast_container_silent implements cas_evaluatable {
     }
 
     /* TODO: a more coherent system for dealing with all options such as keyless, nounify. */
-    public function set_nounify(bool $key=true) {
+    public function set_nounify(int $key=1) {
         $this->nounify = $key;
     }
 
@@ -287,53 +274,45 @@ class stack_ast_container_silent implements cas_evaluatable {
         return $this->valid;
     }
 
+    /*
+     * This is the string which actually gets sent to Maxima.
+     */
     public function get_evaluationform(): string {
         if (false === $this->get_valid()) {
             throw new stack_exception('stack_ast_container: tried to get the evaluation form of an invalid casstring.');
         }
-        return $this->ast_to_casstring($this->ast);
+        $params = array('pmchar' => 1);
+        return $this->ast_to_string($this->ast, $params);
     }
 
     // This returns the fully filtered AST as it should be inputted were it inputted perfectly.
     public function get_inputform(bool $keyless = false, $nounify = null): string {
-        if ($this->ast) {
-            $params = array('inputform' => true, 'qmchar' => true, 'nosemicolon' => true);
-            if ($nounify !== null) {
-                $params['nounify'] = $nounify;
-            }
-
-            if ($keyless === true && $this->get_key() !== '') {
-                $root = $this->ast;
-                if ($root instanceof MP_Root) {
-                    // Null items fail here.
-                    // Indeed but there should be no null items, so might as well fail?
-                    // It would be better to fail as it signals that somewhere higher
-                    // in the gode is a logic fail trying to build something on top of
-                    // empty values.
-                    if (array_key_exists(0, $root->items)) {
-                        $root = $root->items[0];
-                    } else {
-                        return '';
-                    }
-                }
-                if ($root instanceof MP_Statement) {
-                    $root = $root->statement;
-                }
-
-                if ($root instanceof MP_Operation && $root->op === ':' &&
-                        $root->lhs instanceof MP_Identifier) {
-                            return $root->rhs->toString($params);
-                }
-            }
-            return $this->ast->toString($params);
+        if (!($nounify === null || is_int($nounify))) {
+            throw new stack_exception('stack_ast_container: nounify must be null or an integer.');
         }
-        return '';
+        $params = array('inputform' => true,
+                'qmchar' => true,
+                'pmchar' => 0,
+                'nosemicolon' => true,
+                'keyless' => $keyless,
+                'dealias' => false, // This is needed to stop pi->%pi etc.
+                'nounify' => $nounify
+                );
+        return $this->ast_to_string($this->ast, $params);
     }
 
     /*
-     * Avoid duplicate code with stack_ast_container::get_value.
+     * Top-level function for turning AST into a string representation.
      */
-    protected function ast_to_casstring($root) : string {
+    public function ast_to_string($root = null, $parameters = array()) : string {
+
+        if ($root === null) {
+            $root = $this->ast;
+        }
+        if (!$root) {
+            return '';
+        }
+
         if ($root instanceof MP_Root) {
             // Edge case in which we have created an ast from the '' input.
             if (array_key_exists(0, $root->items)) {
@@ -342,18 +321,58 @@ class stack_ast_container_silent implements cas_evaluatable {
                 return '';
             }
         }
-        if ($this->source === 's') {
-            $casstring = $root->toString(array('keyless' => $this->keyless, 'nounify' => true, 'dealias' => true));
-        } else {
-            $casstring = $root->toString(array('keyless' => $this->keyless, 'nounify' => $this->nounify, 'dealias' => true));
-            if ($root instanceof MP_Statement &&
-                    $root->flags !== null && count($root->flags) > 0) {
-                        // This makes it possible to write, when authoring, evaluation flags
-                        // like in maxima without wrapping in ev() yourself.
-                        $casstring = 'ev(' . $casstring . ')';
+
+        // @codingStandardsIgnoreStart
+        // TODO: should we check parameters are legitimate and if not?
+        // Currently MP_classes just does an isset(?) to check if the parameter exists.
+        // There is no check on the legitimacy of those paraeters anywhere.  Should we
+        // throw new stack_exception('stack_ast_container::ast_to_string tried to set illegal parameter ' . $key);
+        // We should document available parameters: 'pretty', 'nosemicolon', 'keyless', 'qmchar'.
+        // @codingStandardsIgnoreEnd
+        $params = array('nounify' => $this->nounify,
+                        'dealias' => true,
+                        'inputform' => false);
+        foreach ($parameters as $key => $val) {
+            $params[$key] = $val;
+        }
+
+        if ($params['nounify'] === null) {
+            unset($params['nounify']);
+        }
+
+        $keyless = false;
+        if (array_key_exists('keyless', $parameters)) {
+            $keyless = $parameters['keyless'];
+            unset($params['keyless']);
+        }
+        if ($keyless === true && $this->get_key() !== '') {
+            if ($root instanceof MP_Statement) {
+                $root = $root->statement;
+            }
+            if ($root instanceof MP_Operation && $root->op === ':' &&
+                $root->lhs instanceof MP_Identifier) {
+                    return $root->rhs->toString($params);
             }
         }
+
+        $casstring = $root->toString($params);
+
+        if ($root instanceof MP_Statement &&
+            $root->flags !== null && count($root->flags) > 0) {
+                // This makes it possible to write, when authoring, evaluation flags
+                // like in maxima without wrapping in ev() yourself.
+                $casstring = 'ev(' . $casstring . ')';
+        }
+
         return $casstring;
+    }
+
+    /**
+     * Allow unit testing of ast internals..
+     */
+    public function get_debug_print() {
+        $ast = $this->ast;
+        return $ast->debugPrint($ast->toString(array('nosemicolon' => true)));
     }
 
     public function set_cas_status(array $errors, array $answernotes, array $feedback) {
@@ -465,6 +484,9 @@ class stack_ast_container_silent implements cas_evaluatable {
         }
         if (!array_key_exists('write', $updatearray)) {
             $updatearray['write'] = array();
+        }
+        if (!array_key_exists('calls', $updatearray)) {
+            $updatearray['calls'] = array();
         }
         // Find out which identifiers are being written to and which are being red from.
         // Simply go through the AST if it exists.
@@ -751,8 +773,12 @@ class stack_ast_container_silent implements cas_evaluatable {
 
     /**
      * Establish bounds on the number of significant decimal digits in a number.
+     *
+     * @param bool $evaluated whether to use the evaluated form. False by default.
+     *      Warning! using the evaluated form will lose trailing 0s.
+     * @return array with four elements. See definition at the top of the function.
      */
-    public function get_decimal_digits() {
+    public function get_decimal_digits(bool $evaluated = false) {
 
         $ret = array('lowerbound' => 0, 'upperbound' => 0, 'decimalplaces' => 0, 'fltfmt' => '"~a"');
 
@@ -764,15 +790,59 @@ class stack_ast_container_silent implements cas_evaluatable {
         $infrontofdecimaldeparator = true;
         $scientificnotation = false;
 
-        // TODO: this should be a more sophisticated traverse of the tree to get the top numerical part.
-        $string = $this->get_inputform(true, true);
-
-        // Sometimes strings from Maxima have parentheses around them.
-        // This is hard to predict and is breaking things.  Strip them off here.
-        if (substr($string, 0, 1) == '(') {
-            $dels = stack_utils::substring_between($string, '(', ')');
-            $string = substr($dels[0], 1, -1);
+        // Get a string reprsentation of the first numerical part.
+        $root = clone $this->ast;
+        if ($evaluated) {
+            $root = clone $this->get_evaluated();
         }
+
+        if ($root instanceof MP_Root) {
+            if (array_key_exists(0, $root->items)) {
+                $root = $root->items[0];
+            }
+        }
+        if ($root instanceof MP_Statement) {
+            $root = $root->statement;
+        }
+
+        $continue = true;
+        while ($continue) {
+            // Prevent infinite loops with a guard clause.
+            $continue = false;
+
+            if ($root instanceof MP_PrefixOp && ($root->op === '-' || $root->op === '+')) {
+                $root = $root->rhs;
+                $continue = true;
+            }
+
+            if ($root instanceof MP_Group) {
+                $root = array_pop($root->items);
+                $continue = true;
+            }
+
+            // When we have units, just take the first element in the product.
+            if ($root instanceof MP_Operation && $root->op === '*') {
+                $root = $root->lhs;
+                $continue = true;
+            }
+            // Take the numerator of any fraction.  TODO: What should we do about rational numbers?
+            if ($root instanceof MP_Operation && $root->op === '/') {
+                $root = $root->lhs;
+                $continue = true;
+            }
+
+            if ($root instanceof MP_Operation && $root->op === ':') {
+                $root = $root->rhs;
+                $continue = true;
+            }
+
+            if ($root instanceof MP_FunctionCall && $root->name->value === 'stackunits') {
+                $root = $root->arguments[0];
+                $continue = true;
+            }
+        }
+
+        $string = $this->ast_to_string($root);
         $string = str_split($string);
 
         foreach ($string as $i => $c) {

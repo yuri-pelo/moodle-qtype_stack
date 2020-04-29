@@ -62,6 +62,7 @@ Hence, we need quite a number of different answer tests to establish equality in
 | CasEqual                                          | Are the parse trees of the two expressions equal?  
 | [EqualComAss](Answer_tests.md#EqualComAss)        | Are they equal up to commutativity and associativity of addition and multiplication, together with their inverses minus and division? 
 | [AlgEquiv](Answer_tests.md#AlgEquiv)              | Are they _algebraically equivalent_?
+| AlgEquivNouns                                     | Are they _algebraically equivalent_, preserving noun forms of operators, e.g. `diff`?
 | SubstEquiv                                        | Can we find a substitution of the variables of \(ex_2\) into \(ex_1\) which renders \(ex_1\) algebraically equivalent to \(ex_2\)?
 | SameType                                          | Are the two expressions of the same [types_of_object](../CAS/Maxima.md#Types_of_object)?  Note that this test works recursively over the entire expression.
 | SysEquiv                                          | Do two systems of polynomial equations have the same solutions? 
@@ -86,6 +87,8 @@ Note: exactly what it does depends on what objects are given to it.  In particul
 
 For sets, the CAS tries to write the expression in a canonical form.  It then compares the string representations these forms to remove duplicate elements and compare sets.  This is subtly different from trying to simplify the difference of two expressions to zero.  For example, imagine we have \(\{(x-a)^{6000}\}\) and \(\{(a-x)^{6000}\}\).  One canonical form is to expand out both sides.  While this work in principal, in practice this is much too slow for assessment. 
 
+Currently we do check multiplicity of roots, so that \( (x-2)^2=0\) and \( x=2\) are not considered to be equivalent.  Similarly \(a^3b^3=0\) is not \(a=0 \mbox{ or } b=0\).  This is a long-standing issue and we would need a separate test to ignore multiplicity of roots.
+
 Currently, \(\{-\frac{\sqrt{2}}{\sqrt{3}}\}\) and \(\{-\frac{2}{\sqrt{6}}\}\) are considered to be different.  If you want these to be considered the same, you need to write them in a canonical form.   Instead of passing in just the sets, use the answer test to compare the following.
 
     ev(radcan({-sqrt(2)/sqrt(3)}),simp);
@@ -98,6 +101,12 @@ There are also some cases which Maxima can't establish as being equivalent.  For
     (sqrt(108)+10)^(1/3)-(sqrt(108)-10)^(1/3)
 
 This is Cardano's example from Ars Magna, but currently the AlgEquiv test cannot establish these are equivalent.  There are some other examples in the test suite which fail for mathematical reasons.  In cases like this, where you know you have a number, you may need to supplement the AlgEquiv test with another numerical test.
+
+### AlgEquivNouns ###
+
+Algebraic equivalence evaluates as much as possible, to try to establish equivalence.  This means, e.g. that `diff(y,x)` is always evaluated to \(0\).  If you use AlgEquivNouns then noun forms of operators are not evaluated, so `diff(y,x)` will be evaluated but `'diff(y,x)` and `noundiff(y,x)` will not.
+
+Note, however that logic nouns such as `nounand` are still evaluated by this test!  Sorry, but logical noun functions are dealt with internally in a very different way than Maxima noun functions such as `'diff(y,x)` and the parallel `noundiff`.  Use a different test, such as `EqualComAss`.
 
 ### EqualComAss: Equality up to Associativity and Commutativity ### {#EqualComAss}
 
@@ -150,6 +159,15 @@ The test simplifies both sets, and does a comparison based on the simplified ver
 ### Equiv and EquivFirstLast ###
 
 These answer tests are used with [equivalence reasoning](../CAS/Equivalence_reasoning.md).  See the separate documentation.
+
+### SRegExp ###
+
+This test uses Maxima's `regex_match` function.
+
+* Both arguments to the test must be Maxima strings.  If you have a general expression, turn it into a string in the feedback variables with Maxima's `string` function.
+* The first argument should be the string, and the second argument should be the pattern to match.
+* Don't forget to escape within the pattern strings as needed. Note that there is a function `string_to_regex()` that will handle escaping of characters that would otherwise have meaning in the pattern. Also remember that you need to escape the backslashes like normal in Maxima-strings.
+* One can read more about the patterns posible from [here](http://ds26gte.github.io/pregexp/index.html). Case-insensitivity may be something worth noting there.
 
 # Form {#Form}
 

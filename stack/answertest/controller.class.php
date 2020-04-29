@@ -30,6 +30,7 @@ require_once(__DIR__ . '/../cas/ast.container.class.php');
 class stack_ans_test_controller {
     protected static $types = array(
               'AlgEquiv'             => 'stackOptions_AnsTest_values_AlgEquiv',
+              'AlgEquivNouns'        => 'stackOptions_AnsTest_values_AlgEquivNouns',
               'EqualComAss'          => 'stackOptions_AnsTest_values_EqualComAss',
               'CasEqual'             => 'stackOptions_AnsTest_values_CasEqual',
               'SameType'             => 'stackOptions_AnsTest_values_SameType',
@@ -62,14 +63,18 @@ class stack_ans_test_controller {
               'Int'                  => 'stackOptions_AnsTest_values_Int',
               'String'               => 'stackOptions_AnsTest_values_String',
               'StringSloppy'         => 'stackOptions_AnsTest_values_StringSloppy',
-              );
+              'SRegExp'              => 'stackOptions_AnsTest_values_SRegExp',
+    );
 
     /*
      * Does this test require options [0] and are these evaluated by the CAS [1] ?
      * In [2] we have the value of simp in the CAS session.
+     *
+     * Note, the options are currently always simplified in the node class.
      */
     protected static $pops = array(
-        'AlgEquiv'             => array(false, false, false),
+        'AlgEquiv'             => array(false, false, true),
+        'AlgEquivNouns'        => array(false, false, false),
         'EqualComAss'          => array(false, false, false),
         'CasEqual'             => array(false, false, false),
         'SameType'             => array(false, false, true),
@@ -88,7 +93,7 @@ class stack_ans_test_controller {
         'SigFigsStrict'        => array(true, true, true),
         'NumAbsolute'          => array(true, true, true),
         'NumRelative'          => array(true, true, true),
-        'NumSigFigs'           => array(true, true, true),
+        'NumSigFigs'           => array(true, true, false),
         'NumDecPlaces'         => array(true, true, null),
         'NumDecPlacesWrong'    => array(true, true, null),
         'Units'                => array(true, true, false),
@@ -102,6 +107,7 @@ class stack_ans_test_controller {
         'Int'                  => array(true, true, false),
         'String'               => array(false, false, null),
         'StringSloppy'         => array(false, false, null),
+        'SRegExp'              => array(false, false, true),
     );
 
     /**
@@ -126,6 +132,7 @@ class stack_ans_test_controller {
 
         switch($anstest) {
             case 'AlgEquiv':
+            case 'AlgEquivNouns':
             case 'EqualComAss':
             case 'CasEqual':
             case 'SameType':
@@ -146,11 +153,12 @@ class stack_ans_test_controller {
             case 'UnitsStrictRelative':
             case 'LowestTerms':
             case 'SysEquiv':
+            case 'SRegExp':
                 $this->at = new stack_answertest_general_cas($sans, $tans, $anstest, $casoption, $options);
                 break;
 
             case 'Equiv':
-                if ($casoption === null || '' == $casoption->get_evaluationform()) {
+                if ($casoption === null || '' == $casoption->ast_to_string()) {
                     $opts = stack_ast_container::make_from_teacher_source('null', '', new stack_cas_security());
                     // Note the *string* 'null' here is not mistake: this is passed to Maxima.
                     $this->at = new stack_answertest_general_cas($sans, $tans, $anstest, $opts, $options);
@@ -160,7 +168,7 @@ class stack_ans_test_controller {
                 break;
 
             case 'EquivFirst':
-                if ($casoption === null || '' == $casoption->get_evaluationform()) {
+                if ($casoption === null || '' == $casoption->ast_to_string()) {
                     $opts = stack_ast_container::make_from_teacher_source('null', '', new stack_cas_security());
                     $this->at = new stack_answertest_general_cas($sans, $tans, $anstest, $opts, $options);
                 } else {
@@ -169,14 +177,14 @@ class stack_ans_test_controller {
                 break;
 
             case 'NumAbsolute':
-                if ($casoption === null || !$casoption->get_valid() || '' == $casoption->get_evaluationform()) {
+                if ($casoption === null || !$casoption->get_valid() || '' == $casoption->ast_to_string()) {
                     $casoption = stack_ast_container::make_from_teacher_source('0.05', '', new stack_cas_security());
                 }
                 $this->at = new stack_answertest_general_cas($sans, $tans, $anstest, $casoption, $options);
                 break;
 
             case 'NumRelative':
-                if ($casoption === null || !$casoption->get_valid() || '' == $casoption->get_evaluationform()) {
+                if ($casoption === null || !$casoption->get_valid() || '' == $casoption->ast_to_string()) {
                     $casoption = stack_ast_container::make_from_teacher_source('0.05', '', new stack_cas_security());
                 }
                 $this->at = new stack_answertest_general_cas($sans, $tans, $anstest, $casoption, $options);
@@ -313,7 +321,7 @@ class stack_ans_test_controller {
     }
 
     /**
-     * Returns whether the session needs simplification
+     * Returns whether the session needs simplification.
      *
      * @return bool
      * @access public

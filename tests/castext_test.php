@@ -87,10 +87,12 @@ class stack_cas_text_test extends qtype_stack_testcase {
                 . '[[ else ]]Delta[[/ if]]';
 
         $cases = array(
-                array('[[ if test="a" ]]ok1[[/ if ]]', $a1, true, "ok1"),
+                array('[[if test="a"]]ok1[[/ if]]', $a1, true, "ok1"),
+                array('[[ if test="a" ]]ok1s[[/ if ]]', $a1, true, "ok1s"),
                 array('[[ if test="b" ]]ok2[[/ if ]]', $a1, true, ""),
                 array('[[ if test="b" ]]ok3[[else]]OK3[[/ if ]]', $a1, true, "OK3"),
                 array('[[ if test="b" ]]ok4[[elif test="c"]]Ok4[[ else ]]OK4[[/ if ]]', $a1, true, "OK4"),
+                array('[[ if test="b" ]]ok4s[[ elif test="c" ]]Ok4s[[ else ]]OK4S[[/ if ]]', $a1, true, "OK4S"),
                 array('[[ if test="b" ]]ok5[[elif test="false"]]oK5[[elif test="a"]]Ok5[[else]]OK5[[/ if ]]', $a1, true, "Ok5"),
                 array('[[ if test="a" ]][[ if test="a" ]]ok6[[/ if ]][[/ if ]]', $a1, true, "ok6"),
                 array('[[ if test="a" ]][[ if test="b" ]]ok7[[/ if ]][[/ if ]]', $a1, true, ""),
@@ -382,8 +384,16 @@ class stack_cas_text_test extends qtype_stack_testcase {
         $this->assertTrue($at1->get_valid());
         $at1->get_display_castext();
 
-        $session = $at1->get_session();
         $this->assertTrue(is_int(strpos($at1->get_display_castext(), ".svg' alt='Hello World!'")));
+    }
+
+    public function test_plot_alttext_html() {
+        $s2 = array();
+        $cs2 = new stack_cas_session2($s2, null, 0);
+
+        $at1 = new stack_cas_text('This {@plot(x^2, [x,-2,3], [alt,"Hello < World!"])@} has < in the alt text.', $cs2, 0);
+        $at1->get_display_castext();
+        $this->assertTrue(is_int(strpos($at1->get_display_castext(), ".svg' alt='Hello &lt; World!'")));
     }
 
     public function test_plot_alttext_error() {
@@ -889,7 +899,7 @@ class stack_cas_text_test extends qtype_stack_testcase {
         $at1->get_display_castext();
 
         $expected = '\({{v}_{2\cdot \alpha}}\), \({{v}_{{m}_{n}}}\), '.
-            '\({{\it beta_{47}}}\), \({{\beta}_{47}}\)';
+            '\({\beta_{47}}\), \({{\beta}_{47}}\)';
         $this->assertEquals($expected, $at1->get_display_castext());
     }
 
@@ -979,13 +989,12 @@ class stack_cas_text_test extends qtype_stack_testcase {
                 'Scientific notation: \({1.234E+3}\). With commas: \({1,234}\). ' .
                 'Ordinal rethoric: \({\mbox{one thousand two hundred thirty-fourth}}\). ' .
                 'Roman numerals: \({MCCXXXIV}\).';
-        if ($this->adapt_to_new_maxima('5.38.2')) {
-            $expected = 'Standard: \({1234}\). ' .
-                'Scientific notation: \({1.234E+3}\). With commas: \({1,234}\). ' .
-                'Ordinal rethoric: \({\mbox{one thousand, two hundred thirty-fourth}}\). ' .
-                'Roman numerals: \({MCCXXXIV}\).';
-        }
-        $this->assertEqualsIgnoreSpacesAndE($expected, $at1->get_display_castext());
+        $actual = $at1->get_display_castext();
+        // Some Maxima/Lisp combos output a comma. Other's don't.
+        // So, normalise before we compare.
+        $actual = str_replace('one thousand, two hundred',
+            'one thousand two hundred', $actual);
+        $this->assertEqualsIgnoreSpacesAndE($expected, $actual);
     }
 
     public function test_stack_disp_comma_separate() {
@@ -1031,8 +1040,150 @@ class stack_cas_text_test extends qtype_stack_testcase {
         $this->assertTrue($at1->get_valid());
         $at1->get_display_castext();
 
-        $this->assertEquals('\({\left[ {\it k_0} , {\it k_1} , {\it k_2} , {\it k_3} , {\it k_4} , {\it k_5} \right]}\) ' .
+        $this->assertEquals('\({\left[ k_{0} , k_{1} , k_{2} , k_{3} , k_{4} , k_{5} \right]}\) ' .
                 'and [k1,k2,k3,k4,k5,k6]',
             $at1->get_display_castext());
+    }
+
+    public function test_stack_simp_false_true() {
+        $a2 = array('simp:false',
+            'p1:1+1',
+            'simp:true',
+            'p2:1+1');
+        $s2 = array();
+        foreach ($a2 as $s) {
+            $cs = stack_ast_container::make_from_teacher_source($s, '', new stack_cas_security(), array());
+            $this->assertTrue($cs->get_valid());
+            $s2[] = $cs;
+        }
+        $cs2 = new stack_cas_session2($s2, null, 0);
+
+        // Simp:true at the end so subsequent expressions are simplified.
+        $at1 = new stack_cas_text('{@p1@}, {@p2@}.', $cs2, 0, 't');
+        $this->assertTrue($at1->get_valid());
+        $at1->get_display_castext();
+
+        $this->assertEquals('\({2}\), \({2}\).',
+            $at1->get_display_castext());
+    }
+
+    public function test_stack_simp_false_true_false() {
+        // In STACK v<4.3 authors often control simp within a session.
+        $a2 = array('simp:false',
+                'p1:1+1',
+                'simp:true',
+                'p2:1+1',
+                'simp:false',
+                'p3:1+1');
+        $s2 = array();
+        foreach ($a2 as $s) {
+            $cs = stack_ast_container::make_from_teacher_source($s, '', new stack_cas_security(), array());
+            $this->assertTrue($cs->get_valid());
+            $s2[] = $cs;
+        }
+        $cs2 = new stack_cas_session2($s2, null, 0);
+
+        $at1 = new stack_cas_text('{@p1@}, {@p2@}, {@p3@}.', $cs2, 0, 't');
+        $this->assertTrue($at1->get_valid());
+        $at1->get_display_castext();
+
+        $this->assertEquals('\({1+1}\), \({2}\), \({1+1}\).',
+            $at1->get_display_castext());
+    }
+
+    public function test_stack_beta_function_arg() {
+        $a2 = array('n:1932;',
+                'f(alfa):=block(x:ifactors(alfa), y:makelist(0,length(x)), ' .
+                'for i from 1 thru length(x) do (y[i] : first(x[i])), return(y));',
+                'g(alfa,beta):=block(x:alfa*(1-1/beta[1]), ' .
+                'for i from 2 thru length(beta) do (x:x*(1-1/beta[i])), return(x));'
+            );
+        $s2 = array();
+        foreach ($a2 as $s) {
+            $cs = stack_ast_container::make_from_teacher_source($s, '', new stack_cas_security(), array());
+            $this->assertTrue($cs->get_valid());
+            $s2[] = $cs;
+        }
+        $cs2 = new stack_cas_session2($s2, null, 0);
+
+        $at1 = new stack_cas_text('{@f(n)@}, {@g(n,f(n))@}', $cs2, 0, 't');
+        $this->assertTrue($at1->get_valid());
+        $at1->get_display_castext();
+
+        $this->assertEquals('\({\left[ 2 , 3 , 7 , 23 \right]}\), \({528}\)',
+            $at1->get_display_castext());
+    }
+
+
+    public function test_orderless() {
+        // The unorder() function is not supported due to the way STACK interacts with Maxima.
+        $vars = "orderless(b);\np1:a+b+c;";
+        $at1 = new stack_cas_keyval($vars, null, 123);
+        $this->assertTrue($at1->get_valid());
+
+        $at2 = new stack_cas_text('\[{@p1@}\]', $at1->get_session(), 0);
+        $this->assertTrue($at2->get_valid());
+        $at2->get_display_castext();
+        $this->assertEquals('\[{c+a+b}\]', $at2->get_display_castext());
+
+        // Simplification is needed to reorder expressions.
+        $vars = "simp:false;\norderless(b);\np1:a+b+c;";
+        $at1 = new stack_cas_keyval($vars, null, 123);
+        $this->assertTrue($at1->get_valid());
+
+        $at2 = new stack_cas_text('\[{@p1@}\]', $at1->get_session(), 0);
+        $this->assertTrue($at2->get_valid());
+        $at2->get_display_castext();
+
+        $this->assertEquals('\[{a+b+c}\]', $at2->get_display_castext());
+    }
+
+    public function test_display_complex_numbers() {
+        // Typically with simp:true this does not display as a+bi.
+        $vars = "p1:a+b*%i;";
+        $at1 = new stack_cas_keyval($vars, null, 123);
+        $this->assertTrue($at1->get_valid());
+
+        $at2 = new stack_cas_text('\[{@p1@}\]', $at1->get_session(), 0);
+        $this->assertTrue($at2->get_valid());
+        $at2->get_display_castext();
+        $this->assertEquals('\[{\mathrm{i}\cdot b+a}\]', $at2->get_display_castext());
+    }
+
+    public function test_display_logic() {
+        $vars = 'make_logic("lang");';
+        $at1 = new stack_cas_keyval($vars, null, 123);
+        $this->assertTrue($at1->get_valid());
+
+        $at2 = new stack_cas_text('{@A and B@}, {@A nounand B@}. ' .
+                '{@A or B@}, {@A nounor B@}. ' .
+                '{@(A or B) and C@}; {@(A and B) or C@}. ' .
+                '{@(A nounor B) nounand C@}; {@(A nounand B) nounor C@}. {@not A@}.',
+                $at1->get_session(), 0);
+        $this->assertTrue($at2->get_valid());
+        $at2->get_display_castext();
+        $this->assertEquals('\({A\,{\mbox{ and }}\, B}\), \({A\,{\mbox{ and }}\, B}\). ' .
+                '\({A\,{\mbox{ or }}\, B}\), \({A\,{\mbox{ or }}\, B}\). ' .
+                '\({\left(A\,{\mbox{ or }}\, B\right)\,{\mbox{ and }}\, C}\); ' .
+                '\({A\,{\mbox{ and }}\, B\,{\mbox{ or }}\, C}\). ' .
+                '\({\left(A\,{\mbox{ or }}\, B\right)\,{\mbox{ and }}\, C}\); ' .
+                '\({A\,{\mbox{ and }}\, B\,{\mbox{ or }}\, C}\). ' .
+                '\({{\rm not}\left( A \right)}\).', $at2->get_display_castext());
+
+        $vars = 'make_logic("symbol");';
+        $at1 = new stack_cas_keyval($vars, null, 123);
+        $this->assertTrue($at1->get_valid());
+
+        $at2 = new stack_cas_text('{@A and B@}, {@A nounand B@}. ' .
+                '{@A or B@}, {@A nounor B@}. ' .
+                '{@(A or B) and C@}; {@(A and B) or C@}. ' .
+                '{@(A nounor B) nounand C@}; {@(A nounand B) nounor C@}. {@not A@}.',
+                $at1->get_session(), 0);
+        $this->assertTrue($at2->get_valid());
+        $at2->get_display_castext();
+        $this->assertEquals('\({A\land B}\), \({A\land B}\). \({A\lor B}\), \({A\lor B}\). ' .
+                '\({\left(A\lor B\right)\land C}\); \({A\land B\lor C}\). ' .
+                '\({\left(A\lor B\right)\land C}\); \({A\land B\lor C}\). \({\neg \left( A \right)}\).',
+                $at2->get_display_castext());
     }
 }

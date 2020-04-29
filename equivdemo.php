@@ -29,6 +29,7 @@ require_once(__DIR__ . '/stack/cas/castext.class.php');
 require_once(__DIR__ . '/stack/cas/keyval.class.php');
 require_once(__DIR__ . '/stack/cas/installhelper.class.php');
 require_once(__DIR__ . '/stack/input/inputbase.class.php');
+require_once(__DIR__ . '/stack/input/factory.class.php');
 require_once(__DIR__ . '/stack/input/equiv/equiv.class.php');
 require_once(__DIR__ . '/tests/fixtures/equivfixtures.class.php');
 
@@ -134,7 +135,7 @@ foreach ($samplearguments as $argument) {
             $cs1 = stack_ast_container::make_from_student_source($cskey . ':' . $argument['casstring'],
                     '', new stack_cas_security());
 
-            $casstrings[$cskey] = $cs1->get_inputform(false, true);
+            $casstrings[$cskey] = $cs1->get_inputform(false, 1);
             $casstrings['D'.$i] = $argument['debuglist'];
             if (array_key_exists('debuglist', $argument)) {
                 $val = "DL:" . $argument['debuglist'];
@@ -231,7 +232,8 @@ foreach ($samplearguments as $argument) {
                 $teacheranswer = $cs1->get_inputform();
                 $input = new stack_equiv_input('ans1', $teacheranswer, $options, array('options' => 'comments'));
                 $response = $input->get_correct_response($teacheranswer);
-                $state = $input->validate_student_response($response, $options, $teacheranswer, null);
+                $security = new stack_cas_security();
+                $state = $input->validate_student_response($response, $options, $teacheranswer, $security);
                 echo $input->render($state, 'ans1', false, $teacheranswer);
             }
         }

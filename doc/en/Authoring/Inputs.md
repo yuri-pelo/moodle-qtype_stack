@@ -8,6 +8,7 @@ The default (and prototype) is an HTML input box into which a student is expecte
 * A question may have as many inputs as needed.
 * Inputs can be positioned anywhere within the [question text](CASText.md#question_text). MathJax does not currently support the inclusion of inputs within equations.
 * All inputs return a Maxima expression.  This might be just the student's answer (in the case of an algebraic input).  MCQ inputs also return a valid Maxima expression.
+* In a multi-part question avoid having inputs which differ only by case sensitivity.  E.g. do not have `[[input:a]]` and `[[input:A]]` in the same question.  (Some database defaults have case insensitive unique keys (!) and in that case this will cause a database error.  See the [installation instructions](../Installation/index.md)).
 
 The position of an input in the [question text](CASText.md#question_text) is denoted by
 
@@ -192,14 +193,9 @@ The ? may also be used to give partial credit. Of course it could also be used f
 
 ### Forbidden words ### {#Forbidden_Words}
 
-This is a comma-separated list of text strings which are forbidden in a student's answer.  If one of these strings is present then the student's attempt will be considered invalid, and no penalties will be given.  
-This is an unsophisticated string match.
+This is a comma-separated list of text strings which are forbidden in a student's answer.  If one of these strings is present then the student's attempt will be considered invalid, and no penalties will be given. This is an unsophisticated string match.
 
-Note, any variable names longer than one letter in length used in the question variables are automatically forbidden (otherwise the student could potentially use the variable name you have defined, which might be the correct answer).
-If the teacher uses a variable name which is two characters or longer, then students will not be able to use this variable name in their input.  
-Input from students with two-character variable names which appear in the question variables will be rejected as invalid.  
-Students can always use single letter variable names.  
-Teachers are therefore advised to avoid single letter variable names.
+Note, any question variable names used in the question variables are automatically forbidden (otherwise the student could potentially use the variable name you have defined, which might be the correct answer).  If you want to allow question variables, you must explicitly use the allowed words field, see below.
 
 Note that the string `*` is literally taken as `*` and is not a wild card.  Teachers may ask a student to calculate `2*3` and hence need to forbid multiplication in an answer.
 
@@ -266,10 +262,9 @@ Feedback to students is in two forms.
 * feedback tied to inputs, in particular if the answer is invalid.
 * feedback tied to each potential response tree.
 
-Setting this option displays any feedback from this input, including echoing back their expression in traditional two-dimensional notation.  
-Generally, feedback and verification are used in conjunction.  Errors will always be displayed.  
-In addition to simply displaying the student's expression, the teacher can display the list of variables which occurs in the expression.  
-From experience, this is helpful in letting students understand the idea of variable and to spot case insensitivity or wrong variable problems.
+Setting this option displays any feedback from this input, including echoing back their expression in traditional two-dimensional notation.  Generally, feedback and verification are used in conjunction.  Errors will always be displayed.  In addition to simply displaying the student's expression, the teacher can display the list of variables which occurs in the expression.  From experience, this is helpful in letting students understand the idea of variable and to spot case insensitivity or wrong variable problems.
+
+The "compact" version removes most of the styling.  This is needed when the answer is part of a table.
 
 ### Extra option: hideanswer ###
 
@@ -320,6 +315,10 @@ It makes no sense to simplify the equivalence reasoning input type, so this has 
 ### Extra option: align ###
 
 Controls if the student's answer is aligned 'left' or 'right' within the input box.
+
+### Extra option: nounits ###
+
+As of STACK 4.3, if units are declared in a question then the whole question will use a units context for parsing inputs.  For example, in a multi-part question you may use a matrix input.  If you do so, and use variable names, then these will be parsed expecting them to be usits.  To prevent this in a particular input, use the `nounits` option
 
 ## Extra options ##
 
@@ -373,6 +372,7 @@ min/max sf/dp     |  .  |  Y  |  Y    |   .    |   .   |   .   |   .  |  .  |   
 `hideanswer`      |  .  |  .  |  .    |   .    |   .   |   .   |   .  |  .  |    .     |   .   |   Y    |   .   |  .
 `simp`            |  Y  |  Y  |  Y    |   Y    |   .   |   .   |   .  |  .  |    Y     |   .   |   .    |   .   |  Y
 `align`           |  Y  |  Y  |  Y    |   .    |   .   |   .   |   .  |  .  |    .     |   .   |   .    |   .   |  Y
+`nounits`      |  Y  |  Y  |  Y    |   Y    |   Y   |   Y   |   Y  |  .  |    .     |   Y   |   .    |   .   | Y
 
 For documentation about the various options not documented on this page look at the pages for the specific inputs in which each option is used.
 
