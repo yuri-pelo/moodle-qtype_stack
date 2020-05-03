@@ -8,6 +8,7 @@ The default (and prototype) is an HTML input box into which a student is expecte
 * A question may have as many inputs as needed.
 * Inputs can be positioned anywhere within the [question text](CASText.md#question_text). MathJax does not currently support the inclusion of inputs within equations.
 * All inputs return a Maxima expression.  This might be just the student's answer (in the case of an algebraic input).  MCQ inputs also return a valid Maxima expression.
+* In a multi-part question avoid having inputs which differ only by case sensitivity.  E.g. do not have `[[input:a]]` and `[[input:A]]` in the same question.  (Some database defaults have case insensitive unique keys (!) and in that case this will cause a database error.  See the [installation instructions](../Installation/index.md)).
 
 The position of an input in the [question text](CASText.md#question_text) is denoted by
 
@@ -180,14 +181,9 @@ The ? may also be used to give partial credit. Of course it could also be used f
 
 ### Forbidden words ### {#Forbidden_Words}
 
-This is a comma-separated list of text strings which are forbidden in a student's answer.  If one of these strings is present then the student's attempt will be considered invalid, and no penalties will be given.  
-This is an unsophisticated string match.
+This is a comma-separated list of text strings which are forbidden in a student's answer.  If one of these strings is present then the student's attempt will be considered invalid, and no penalties will be given. This is an unsophisticated string match.
 
-Note, any variable names longer than one letter in length used in the question variables are automatically forbidden (otherwise the student could potentially use the variable name you have defined, which might be the correct answer).
-If the teacher uses a variable name which is two characters or longer, then students will not be able to use this variable name in their input.  
-Input from students with two-character variable names which appear in the question variables will be rejected as invalid.  
-Students can always use single letter variable names.  
-Teachers are therefore advised to avoid single letter variable names.
+Note, any question variable names used in the question variables are automatically forbidden (otherwise the student could potentially use the variable name you have defined, which might be the correct answer).  If you want to allow question variables, you must explicitly use the allowed words field, see below.
 
 Note that the string `*` is literally taken as `*` and is not a wild card.  Teachers may ask a student to calculate `2*3` and hence need to forbid multiplication in an answer.
 

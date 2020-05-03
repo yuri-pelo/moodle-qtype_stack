@@ -779,8 +779,12 @@ abstract class stack_input {
                 && (array_key_exists($this->name, $response) || array_key_exists($this->name.'_sub_0_0', $response))) {
                     return new stack_input_state(self::SCORE, $contents, $interpretedanswer, '', '', '', '');
         }
+        $simp = false;
+        if ($this->get_extra_option('simp', false) === true) {
+            $simp = true;
+        }
 
-        return new stack_input_state($status, $contents, $interpretedanswer, $display, $errors, $note, $lvarsdisp);
+        return new stack_input_state($status, $contents, $interpretedanswer, $display, $errors, $note, $lvarsdisp, $simp);
     }
 
     /* Allow different input types to change the CAS method used.
@@ -810,6 +814,10 @@ abstract class stack_input {
 
         if ($this->get_parameter('forbidFloats', false)) {
             $filterstoapply[] = '101_no_floats';
+        }
+
+        if (get_class($this) === 'stack_units_input' || get_class($this) === 'stack_numerical_input') {
+            $filterstoapply[] = '210_x_used_as_multiplication';
         }
 
         // The common insert stars rules, that will be forced
@@ -1192,7 +1200,7 @@ abstract class stack_input {
      * Used by the units input type.
      */
     protected function tag_listofvariables($vars) {
-        return html_writer::tag('p', stack_string('studentValidation_listofvariables', $vars));
+        return stack_string('studentValidation_listofvariables', $vars);
     }
 
     /**

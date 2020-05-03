@@ -25,6 +25,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 require_once('equivfixtures.class.php');
 
 class stack_answertest_test_data {
@@ -147,6 +149,7 @@ class stack_answertest_test_data {
             '-(sin(4*t)^2-2*sin(4*t)+cos(4*t)^2-1)*(sin(4*t)^2+2*sin(4*t)+cos(4*t)^2-1)/(sin(4*t)^2+cos(4*t)^2+2*cos(4*t)+1)^2',
             1, '', ''),
         array('AlgEquiv', '', '1+cosec(3*x)', '1+csc(3*x)', 1, '', ''),
+        array('AlgEquiv', '', '1/(1+exp(-2*x))', 'tanh(x)/2+1/2', 1, '', ''),
         array('AlgEquiv', '', '1+cosech(3*x)', '1+csch(3*x)', 1, '', ''),
         array('AlgEquiv', '', '-4*sec(4*z)^2*sin(6*z)-6*tan(4*z)*cos(6*z)',
             '-4*sec(4*z)^2*sin(6*z)-6*tan(4*z)*cos(6*z)', 1, '', ''),
@@ -209,7 +212,8 @@ class stack_answertest_test_data {
         array('AlgEquiv', '', '{[-sqrt(2)/sqrt(3),0],[2/sqrt(6),0]}', '{[2/sqrt(6),0],[-2/sqrt(6),0]}', -3,
             'ATSet_wrongentries.', ''),
         array('AlgEquiv', '', 'ev(radcan({-sqrt(2)/sqrt(3)}),simp)', 'ev(radcan({-2/sqrt(6)}),simp)', 1, '', ''),
-        array('AlgEquiv', '', 'ev(radcan(ratsimp({(-sqrt(10)/2)-2,sqrt(10)/2-2},algebraic:true)),simp)', 'ev(radcan(ratsimp({(-sqrt(5)/sqrt(2))-2,sqrt(5)/sqrt(2)-2},algebraic:true)),simp)', 1, '', ''),
+        array('AlgEquiv', '', 'ev(radcan(ratsimp({(-sqrt(10)/2)-2,sqrt(10)/2-2},algebraic:true)),simp)',
+            'ev(radcan(ratsimp({(-sqrt(5)/sqrt(2))-2,sqrt(5)/sqrt(2)-2},algebraic:true)),simp)', 1, '', ''),
         array('AlgEquiv', '', '{(2-2^(5/2))/2,(2^(5/2)+2)/2}', '{1-2^(3/2),2^(3/2)+1}', 0, 'ATSet_wrongentries.', ''),
         array('AlgEquiv', '', 'ev(radcan({(2-2^(5/2))/2,(2^(5/2)+2)/2}),simp)', '{1-2^(3/2),2^(3/2)+1}', 1, '', ''),
         array('AlgEquiv', '', '{(x-a)^6000}', '{(a-x)^6000}', -3, 'ATSet_wrongentries.', ''),
@@ -264,7 +268,7 @@ class stack_answertest_test_data {
 
         array('AlgEquiv', '', 'x=y', 'x^2=y^2', 0, 'ATEquation_default',
             'Equations: Loose/gain roots with nth powers of each side.'),
-        // Note that algebraic equivalence does check multiplicity of roots so that:
+        // Note that algebraic equivalence does check multiplicity of roots.
         array('AlgEquiv', '', '(x-2)^2=0', 'x=2', 0, 'ATEquation_default', ''),
         array('AlgEquiv', '', 'a^3*b^3=0', 'a=0 or b=0', 0, 'ATEquation_default', ''),
         array('AlgEquiv', '', 'a^3*b^3=0', 'a*b=0', 0, 'ATEquation_default', ''),
@@ -428,6 +432,9 @@ class stack_answertest_test_data {
         // An example due to Gauss.  Just for fun!
         array('AlgEquiv', '', 'cos(2*%pi/17)', '(-1+sqrt(17)+sqrt(34-2*sqrt(17)))/16+' .
             '(2*sqrt(17+3*sqrt(17)-sqrt(34-2*sqrt(17))-2*sqrt(34+2*sqrt(17))))/16', -3, '', '', ''),
+        // According to Twitter!  Not sure this is even true, but just for fun!
+        array('AlgEquiv', '', 'cot(%pi/20)+cot(%pi/24)-cot(%pi/10)', 'sqrt(1)+sqrt(2)+sqrt(3)+sqrt(4)+sqrt(5)+sqrt(6)',
+            -3, '', '', ''),
 
         array('AlgEquiv', '', 'true and false', 'false', 1, 'ATLogic_True.', 'Logical expressions'),
         array('AlgEquiv', '', 'true or false', 'false', 0, '', ''),
@@ -440,6 +447,38 @@ class stack_answertest_test_data {
         array('AlgEquiv', '', 'x=-b#pm#c^2', 'x=c^2-b or x=-c^2-b', 1, 'ATLogic_True.', ''),
         array('AlgEquiv', '', 'not(A) and not(B)', 'not(A or B)', 1, 'ATLogic_True.', ''),
         array('AlgEquiv', '', 'not(A) and not(B)', 'not(A and B)', 0, '', ''),
+
+        // Algebraic equivalence evaluates nouns.
+        array('AlgEquiv', '', 'diff(x^2,x)', '2*x', 1, '', 'Differential equations'),
+        array('AlgEquiv', '', 'diff(x^2,x)', '\'diff(x^2,x)', 1, '', ''),
+        array('AlgEquiv', '', 'noundiff(x^2,x)', '2*x', 1, '', ''),
+        array('AlgEquiv', '', 'diff(y,x)', '0', 1, '', ''),
+        array('AlgEquiv', '', 'noundiff(y,x)', '0', 1, '', ''),
+        // Note evaluated functions.
+        array('AlgEquiv', '', 'diff(y(x),x)', '0', 0, '', ''),
+
+        array('AlgEquivNouns', '', '1/0', '1', -1, 'ATAlgEquivNouns_STACKERROR_SAns.', ''),
+        array('AlgEquivNouns', '', '1', '1/0', -1, 'ATAlgEquivNouns_STACKERROR_TAns.', ''),
+        array('AlgEquivNouns', '', '', '(x-1)^2', -1, 'ATAlgEquivNounsTEST_FAILED-Empty SA.', ''),
+        array('AlgEquivNouns', '', 'x^2', '', -1, 'ATAlgEquivNounsTEST_FAILED-Empty TA.', ''),
+        array('AlgEquivNouns', '', 'x-1)^2', '(x-1)^2', -1, 'ATAlgEquivNounsTEST_FAILED-Empty SA.', ''),
+
+        array('AlgEquivNouns', '', 'diff(x^2,x)', '2*x', 1, '', ''),
+        array('AlgEquivNouns', '', 'diff(x^2,x)', '\'diff(x^2,x)', 0, '', ''),
+        array('AlgEquivNouns', '', 'diff(x^2,x)', '\'diff(x^2,x)', 0, '', ''),
+        array('AlgEquivNouns', '', '\'diff(y,x)', 'noundiff(y,x)', 1, '', ''),
+        array('AlgEquivNouns', '', 'diff(y,x)', '0', 1, '', ''),
+        array('AlgEquivNouns', '', '\'diff(y,x)', '0', 0, '', ''),
+        array('AlgEquivNouns', '', 'noundiff(y,x)', '0', 0, '', ''),
+        array('AlgEquivNouns', '', 'diff(y(x),x)', '0', 0, '', ''),
+        array('AlgEquivNouns', '', 'noundiff(H,x,2) = -R/T', 'noundiff(H,x,2) + R/T = 0', 1, 'ATEquation_ratio',
+                'Differential equations'),
+        array('AlgEquivNouns', '', '\'diff(H,x,2) = -R/T', 'noundiff(H,x,2) + R/T = 0', 1, 'ATEquation_ratio', ''),
+        array('AlgEquivNouns', '', 'y(t)=int(s^2,s,0,t)', 'y(t)=t^3/3', 1, 'ATEquation_sides', ''),
+        array('AlgEquivNouns', '', 'y(t)=\'int(s^2,s,0,t)', 'y(t)=t^3/3', 0, 'ATEquation_lhs_notrhs', ''),
+        array('AlgEquivNouns', '', 'y(t)=\'int(s^2,s,0,t)', 'y(t)=nounint(s^2,s,0,t)', 1, 'ATEquation_sides', ''),
+        array('AlgEquivNouns', '', 'true nounand false', 'false', 1, 'ATLogic_True.',
+                'Logic nouns are still evaluated'),
 
         array('AlgEquiv', '', '"Hello"', '"Hello"', 1, 'ATAlgEquiv_String', 'Basic support for strings'),
         array('AlgEquiv', '', '"hello"', '"Hello"', 0, 'ATAlgEquiv_String', ''),
@@ -541,10 +580,10 @@ class stack_answertest_test_data {
         array('EqualComAss', '', 'x+0', 'x', 0, 'ATEqualComAss (AlgEquiv-true).', ''),
         array('EqualComAss', '', 'x^1', 'x', 0, 'ATEqualComAss (AlgEquiv-true).', ''),
         array('EqualComAss', '', '(1/2)*(a+b)', '(a+b)/2', 0, 'ATEqualComAss (AlgEquiv-true).', ''),
-        array('EqualComAss', '', '1/3*logbase(27,6)' ,'logbase(27,6)/3', 0, 'ATEqualComAss (AlgEquiv-true).', ''),
-        array('EqualComAss', '', '1/3*lg(27,6)' ,'lg(27,6)/3', 0, 'ATEqualComAss (AlgEquiv-true).', ''),
-        array('EqualComAss', '', 'lg(root(x,n))', 'lg(x,10)/n', 0, 'ATEqualComAss (AlgEquiv-true).', ''),
-        array('EqualComAss', '', '1/3*i' ,'i/3', 0, 'ATEqualComAss (AlgEquiv-true).', ''),
+        array('EqualComAss', '', '1/3*logbase(27,6)', 'logbase(27,6)/3', 0, 'ATEqualComAss (AlgEquiv-true).', ''),
+        array('EqualComAss', '', '1/3*lg(27,6)', 'lg(27,6)/3', 0, 'ATEqualComAss (AlgEquiv-true).', ''),
+        array('EqualComAss', '', 'lg(root(x, n))', 'lg(x, 10)/n', 0, 'ATEqualComAss (AlgEquiv-true).', ''),
+        array('EqualComAss', '', '1/3*i', 'i/3', 0, 'ATEqualComAss (AlgEquiv-true).', ''),
         array('EqualComAss', '', '%i', 'e^(i*pi/2)', 0, 'ATEqualComAss (AlgEquiv-true).', 'Complex numbers'),
         array('EqualComAss', '', '(4*sqrt(3)*%i+4)^(1/5)', 'rectform((4*sqrt(3)*%i+4)^(1/5))', 0,
             'ATEqualComAss (AlgEquiv-true).', ''),
@@ -608,6 +647,18 @@ class stack_answertest_test_data {
         array('EqualComAss', '', 'rationalized(1/sqrt(2)+1/sqrt(3))', '[sqrt(2),sqrt(3)]', 1, '', ''),
         array('EqualComAss', '', 'rationalized(1/(1+i))', '[i]', 1, '', ''),
         array('EqualComAss', '', 'rationalized(1/(1+1/root(3,2)))', '[root(3,2)]', 1, '', ''),
+
+        // Differential equations.
+        // Functions are evaluated with simp:false.
+        array('EqualComAss', '', 'diff(y,x)', '0', 1, '', 'Differential Equations'),
+        array('EqualComAss', '', 'diff(x^2,x)', '2*x', 1, '', ''),
+        array('EqualComAss', '', 'noundiff(x^2,x)', '2*x', 0, 'ATEqualComAss (AlgEquiv-true).', ''),
+        array('EqualComAss', '', 'diff(y,x)', '\'diff(y,x)', 0, 'ATEqualComAss (AlgEquiv-true).', ''),
+        array('EqualComAss', '', 'noundiff(y,x)', '\'diff(y,x)', 1, '', ''),
+        array('EqualComAss', '', '\'diff(y(x),x)', '\'diff(y(x),x,1)', 1, '', ''),
+        // Test case to illustrate why we need a new answer test.
+        // These equations are not the same up to commutativity and associativity, because the algebra needed.
+        array('EqualComAss', '', 'noundiff(y(x),x)=-x/4', '4*noundiff(y(x),x)+x=0', 0, 'ATEqualComAss (AlgEquiv-true).', ''),
 
         array('CasEqual', '', '1/0', 'x^2-2*x+1', -1, 'ATCASEqual_STACKERROR_SAns.', ''),
         array('CasEqual', '', 'x', '1/0', -1, 'ATCASEqual_STACKERROR_TAns.', ''),
@@ -1264,6 +1315,10 @@ class stack_answertest_test_data {
         array('NumSigFigs', '4', '3141', '3.1415927', 0, 'ATNumSigFigs_VeryInaccurate.', ''),
         array('NumSigFigs', '3', '0.00123', '0.001234567', 1, '', ''),
         array('NumSigFigs', '3', '1.23e-3', '0.001234567', 1, '', ''),
+        array('NumSigFigs', '3', '138*10^-3', '138*10^-3', 1, '', ''),
+        array('NumSigFigs', '3', '-138*10^-3', '-138*10^-3', 1, '', ''),
+        array('NumSigFigs', '3', '138*10^-3', '-138*10^-3', 0, 'ATNumSigFigs_WrongSign.', ''),
+        array('NumSigFigs', '3', '1.38*10^-1', '138*10^-3', 1, '', ''),
         array('NumSigFigs', '3', '1.24e-3', '0.001234567', 0, 'ATNumSigFigs_Inaccurate.', ''),
         array('NumSigFigs', '4', '1.235e-3', '0.001234567', 1, '', ''),
         array('NumSigFigs', '2', '1000', '999', 1, 'ATNumSigFigs_WithinRange.', ''),
@@ -1316,7 +1371,8 @@ class stack_answertest_test_data {
         // In this test case there are 5 sig figs, which is the wrong number.
         array('NumSigFigs', '[4,3]', '3.1416', '3.1415927', 0, 'ATNumSigFigs_WrongDigits.', ''),
         array('NumSigFigs', '[4,3]', '0.1666', '0.1667', 1, '', ''),
-        array('NumSigFigs', '[3,1]', '180', '178.35', 1, 'ATNumSigFigs_WithinRange.', ''), // Range of sigfigs of 180 contains 3, accurate to 1!
+        // Range of sigfigs of 180 contains 3, accurate to 1!
+        array('NumSigFigs', '[3,1]', '180', '178.35', 1, 'ATNumSigFigs_WithinRange.', ''),
         array('NumSigFigs', '[3,1]', '33', '33.1558', 0, 'ATNumSigFigs_WrongDigits.', ''), // Too few sigfigs.
         array('NumSigFigs', '[3,1]', '1.500', '1.5', 0, 'ATNumSigFigs_WrongDigits.', ''), // Too many sigfigs.
         array('NumSigFigs', '[3,1]', '245.0', '245', 0, 'ATNumSigFigs_WrongDigits.', ''), // Too many sigfigs.
@@ -1361,40 +1417,41 @@ class stack_answertest_test_data {
         array('NumSigFigs', '[3,0]', '0.00', '0', 0, 'ATNumSigFigs_WrongDigits.', ''),
         array('NumSigFigs', '[4,0]', '0.00', '0', 0, 'ATNumSigFigs_WrongDigits.', ''),
         // Condone too many significant figures.
-        array('NumSigFigs', '[4,-1]', '8.250' ,'8.250', 1, '', 'Condone too many sfs.'),
-        array('NumSigFigs', '[4,-1]', '8.25' ,'8.250', 0, 'ATNumSigFigs_WrongDigits.', ''),
-        array('NumSigFigs', '[4,-1]', '8.250000' ,'8.250', 1, '', ''),
-        array('NumSigFigs', '[4,-1]', '8.250434' ,'8.250', 1, '', ''),
-        array('NumSigFigs', '[2,-1]', '82.4' ,'82', 1, '', ''),
-        array('NumSigFigs', '[2,-1]', '82.5' ,'82', 0, 'ATNumSigFigs_Inaccurate.', ''),
-        array('NumSigFigs', '[2,-1]', '83' ,'82', 0, 'ATNumSigFigs_Inaccurate.', ''),
+        array('NumSigFigs', '[4,-1]', '8.250', '8.250', 1, '', 'Condone too many sfs.'),
+        array('NumSigFigs', '[4,-1]', '8.25', '8.250', 0, 'ATNumSigFigs_WrongDigits.', ''),
+        array('NumSigFigs', '[4,-1]', '8.250000', '8.250', 1, '', ''),
+        array('NumSigFigs', '[4,-1]', '8.250434', '8.250', 1, '', ''),
+        array('NumSigFigs', '[2,-1]', '82.4', '82', 1, '', ''),
+        array('NumSigFigs', '[2,-1]', '82.5', '82', 0, 'ATNumSigFigs_Inaccurate.', ''),
+        array('NumSigFigs', '[2,-1]', '83', '82', 0, 'ATNumSigFigs_Inaccurate.', ''),
         // 1/7 = 0.142857142857...
-        array('NumSigFigs', '[4,-1]', '0.1430' ,'1/7', 0, 'ATNumSigFigs_Inaccurate.', '1/7 = 0.142857142857...'),
-        array('NumSigFigs', '[4,-1]', '0.1429' ,'1/7', 1, '', ''),
-        array('NumSigFigs', '[4,-1]', '0.1428' ,'1/7', 0, 'ATNumSigFigs_Inaccurate.', ''),
-        array('NumSigFigs', '[4,-1]', '0.143' ,'1/7', 0, 'ATNumSigFigs_WrongDigits. ATNumSigFigs_Inaccurate.', ''),
+        array('NumSigFigs', '[4,-1]', '0.1430', '1/7', 0, 'ATNumSigFigs_Inaccurate.', '1/7 = 0.142857142857...'),
+        array('NumSigFigs', '[4,-1]', '0.1429', '1/7', 1, '', ''),
+        array('NumSigFigs', '[4,-1]', '0.1428', '1/7', 0, 'ATNumSigFigs_Inaccurate.', ''),
+        array('NumSigFigs', '[4,-1]', '0.143', '1/7', 0, 'ATNumSigFigs_WrongDigits. ATNumSigFigs_Inaccurate.', ''),
         // Too many sig figs, which is condoned.
-        array('NumSigFigs', '[4,-1]', '0.14284' ,'1/7', 0, 'ATNumSigFigs_Inaccurate.', ''),
-        array('NumSigFigs', '[4,-1]', '0.14285' ,'1/7', 1, '', ''),
-        array('NumSigFigs', '[4,-1]', '0.14286' ,'1/7', 1, '', ''),
-        array('NumSigFigs', '[4,-1]', '0.14291' ,'1/7', 1, '', ''),
-        array('NumSigFigs', '[4,-1]', '0.14294' ,'1/7', 1, '', ''),
+        array('NumSigFigs', '[4,-1]', '0.14284', '1/7', 0, 'ATNumSigFigs_Inaccurate.', ''),
+        array('NumSigFigs', '[4,-1]', '0.14285', '1/7', 1, '', ''),
+        array('NumSigFigs', '[4,-1]', '0.14286', '1/7', 1, '', ''),
+        array('NumSigFigs', '[4,-1]', '0.14291', '1/7', 1, '', ''),
+        array('NumSigFigs', '[4,-1]', '0.14294', '1/7', 1, '', ''),
         // Incorrectly rounded means to 4 s.f. this is too large.
-        array('NumSigFigs', '[4,-1]', '0.14295' ,'1/7', 0, 'ATNumSigFigs_Inaccurate.', ''),
-        array('NumSigFigs', '[2,-1]', '0.142' ,'1/7', 1, '', ''),
-        array('NumSigFigs', '[2,-1]', '0.14290907676' ,'1/7', 1, '', ''),
-        array('NumSigFigs', '[2,-1]', '0.143' ,'1/7', 1, '', ''),
-        array('NumSigFigs', '[2,-1]', '0.1433333' ,'1/7', 1, '', ''),
-        array('NumSigFigs', '[2,-1]', '0.144' ,'1/7', 1, '', ''),
-        array('NumSigFigs', '[2,-1]', '0.145' ,'1/7', 1, '', ''),
-        array('NumSigFigs', '[2,-1]', '0.146' ,'1/7', 0, 'ATNumSigFigs_Inaccurate.', ''),
+        array('NumSigFigs', '[4,-1]', '0.14295', '1/7', 0, 'ATNumSigFigs_Inaccurate.', ''),
+        array('NumSigFigs', '[2,-1]', '0.142', '1/7', 1, '', ''),
+        array('NumSigFigs', '[2,-1]', '0.14290907676', '1/7', 1, '', ''),
+        array('NumSigFigs', '[2,-1]', '0.143', '1/7', 1, '', ''),
+        array('NumSigFigs', '[2,-1]', '0.1433333', '1/7', 1, '', ''),
+        array('NumSigFigs', '[2,-1]', '0.144', '1/7', 1, '', ''),
+        array('NumSigFigs', '[2,-1]', '0.145', '1/7', 1, '', ''),
+        array('NumSigFigs', '[2,-1]', '0.146', '1/7', 0, 'ATNumSigFigs_Inaccurate.', ''),
         // Teacher does not give a float.
         array('NumSigFigs', '4', '1.279', 'ev(lg(19),lg=logbasesimp)', 1, '', 'Logarithms, numbers and surds'),
         array('NumSigFigs', '3', '3.14', 'pi', 1, '', ''),
         array('NumSigFigs', '3', '3.15', 'pi', 0, 'ATNumSigFigs_Inaccurate.', ''),
         array('NumSigFigs', '6', '1.73205', 'sqrt(3)', 1, '', ''),
-        array('NumSigFigs', '2', 'matrix([0.33,1],[1,1])', 'matrix([0.333,1],[1,1])', 0, 'ATNumSigFigs_NotDecimal.',
+        array('NumSigFigs', '2', 'matrix([0.33,1],[1,1])', 'matrix([0.333,1],[1,1])', -1, 'ATNumSigFigs_NotDecimal.',
                 'No support for matrices!'),
+        array('NumSigFigs', '2', '3.1415', 'matrix([0.333,1],[1,1])', -1, '', ''),
         array('NumSigFigs', '3', '1.50', 'dispsf(1.500,3)', 1, '', 'Teacher uses dispsf'),
 
         array('NumDecPlaces', '2', '1/0', '3', -1, 'ATNumDecPlaces_SA_Not_num.', 'Basic tests'),
@@ -1500,10 +1557,10 @@ class stack_answertest_test_data {
         // 0.0 has exactly 1 significant digits.
         array('SigFigsStrict', '1', '0.0', 'null', 1, '', ''),
         array('SigFigsStrict', '2', '0.0', 'null', 0, '', ''),
-        // .0 has exactly 1 significant digits.
+        // Accept that .0 has exactly 1 significant digits.
         array('SigFigsStrict', '1', '.0', 'null', 1, '', ''),
         array('SigFigsStrict', '2', '.0', 'null', 0, '', ''),
-        // .001030 has exactly 4 significant digits.
+        // Accept that .001030 has exactly 4 significant digits.
         array('SigFigsStrict', '4', '.001030', 'null', 1, '', ''),
         // 0.00 has exactly 2 significant digits.
         array('SigFigsStrict', '1', '0.00', 'null', 0, '', ''),
@@ -1543,9 +1600,12 @@ class stack_answertest_test_data {
         array('Units', '[3,2]', '12.45*m/s', '12.3*m/s', 0, 'ATUnits_WrongDigits. ATUnits_units_match.', ''),
         array('Units', '[3,2]', '13.45*m/s', '12.3*m/s', 0,
             'ATUnits_WrongDigits. ATNumSigFigs_Inaccurate. ATUnits_units_match.', ''),
-        array('Units', '[3,2]', '7.54E-5*(s*M)^-1', '5.625E-5*s^-1', 0, 'ATNumSigFigs_VeryInaccurate. ATUnits_incompatible_units.', ''),
-        array('Units', '[3,2]', '7.54E-5*(s*M)^-1', 'stackunits(5.625E-5,1/s)', 0, 'ATNumSigFigs_VeryInaccurate. ATUnits_incompatible_units.', ''),
-        array('Units', '3', '12*m/s', '12.3*m/s', 0, 'ATUnits_WrongDigits. ATNumSigFigs_Inaccurate. ATUnits_units_match.', ''),
+        array('Units', '[3,2]', '7.54E-5*(s*M)^-1', '5.625E-5*s^-1', 0,
+            'ATNumSigFigs_VeryInaccurate. ATUnits_incompatible_units.', ''),
+        array('Units', '[3,2]', '7.54E-5*(s*M)^-1', 'stackunits(5.625E-5,1/s)', 0,
+            'ATNumSigFigs_VeryInaccurate. ATUnits_incompatible_units.', ''),
+        array('Units', '3', '12*m/s', '12.3*m/s', 0,
+            'ATUnits_WrongDigits. ATNumSigFigs_Inaccurate. ATUnits_units_match.', ''),
         array('Units', '3', '-9.81*m/s^2', '-9.81*m/s^2', 1, 'ATUnits_units_match.', ''),
         array('Units', '3', '-9.82*m/s^2', '-9.815*m/s^2', 1, 'ATUnits_units_match.', ''),
         array('Units', '3', '-9.81*m/s^2', '-9.815*m/s^2', 0, 'ATNumSigFigs_Inaccurate. ATUnits_units_match.', ''),
@@ -1674,12 +1734,18 @@ class stack_answertest_test_data {
         array('UnitsStrictRelative', '0.01', '0.0', '0.0*m/s', 0, 'ATUnits_SA_no_units.', ''),
         array('UnitsStrictRelative', '0.01', '0*J', '0.0*J', 1, 'ATUnits_units_match.', ''),
 
+        array('UnitsAbsolute', '5*J', '-123000*J', '-123*kJ', 0, 'ATUnits_SO_wrong_units.', ''),
         array('UnitsAbsolute', '0.01', '12.3*m/s', '12.3*m/s', 1, 'ATUnits_units_match.', ''),
         array('UnitsAbsolute', '0.01', '12*m/s', '12.3*m/s', 0, 'ATUnits_units_match.', ''),
         array('UnitsAbsolute', '0.15', '1.1*Mg/10^6', '1.2*kN*ns/(mm*Hz)', 1, 'ATUnits_compatible_units kg.', ''),
-        array('UnitsAbsolute', '0.05', '1.1*Mg/10^6', '1.2*kN*ns/(mm*Hz)', 1, 'ATUnits_compatible_units kg.',
+        array('UnitsAbsolute', '0.1', '1.1*Mg/10^6', '1.2*kN*ns/(mm*Hz)', 1, 'ATUnits_compatible_units kg.',
                 'The following illustrates that we convert to base units to compare.'),
-        array('UnitsAbsolute', '0.00001', '1.1*Mg/10^6', '1.2*kN*ns/(mm*Hz)', 0, 'ATUnits_compatible_units kg.', ''),
+        array('UnitsAbsolute', '0.09', '1.1*Mg/10^6', '1.2*kN*ns/(mm*Hz)', 0, 'ATUnits_compatible_units kg.', ''),
+        array('UnitsAbsolute', '5*kJ', '-123000*J', '-123*kJ', 1, 'ATUnits_compatible_units (kg*m^2)/s^2.', 'Units in the options'),
+        array('UnitsAbsolute', '5*kJ', '-123006*J', '-123*kJ', 1, 'ATUnits_compatible_units (kg*m^2)/s^2.', ''),
+        array('UnitsAbsolute', '5*kJ', '-129006*J', '-123*kJ', 0, 'ATUnits_compatible_units (kg*m^2)/s^2.', ''),
+        array('UnitsAbsolute', '0.1*kN*ns/(mm*Hz)', '1.1*Mg/10^6', '1.2*kN*ns/(mm*Hz)', 1, 'ATUnits_compatible_units kg.', ''),
+        array('UnitsAbsolute', '0.09*kN*ns/(mm*Hz)', '1.1*Mg/10^6', '1.2*kN*ns/(mm*Hz)', 0, 'ATUnits_compatible_units kg.', ''),
         array('UnitsAbsolute', '0.01', '0*m/s', '0*m/s', 1, 'ATUnits_units_match.', 'Edge case'),
         array('UnitsAbsolute', '0.01', '0.0*m/s', '0*m/s', 1, 'ATUnits_units_match.', ''),
         array('UnitsAbsolute', '0.01', '0*m/s', '0.0*m/s', 1, 'ATUnits_units_match.', ''),
@@ -1705,16 +1771,21 @@ class stack_answertest_test_data {
         array('SRegExp', '', '"aaaaabbb"', '"(aaa)*b"', 1, 'ATSRegExp: ["aaab","aaa"].', ''),
         array('SRegExp', '', '"aab"', '"(aaa)*b"', 1, 'ATSRegExp: ["b",false].', ''),
         array('SRegExp', '', '"aaac"', '"(aaa)*b"', 0, '', ''),
-        array('SRegExp', '', '"aab"', '"^[aA]*b$"', 1, 'ATSRegExp: ["aab"].', 'Anchor pattern to the start and the end of the string'),
+        array('SRegExp', '', '"aab"', '"^[aA]*b$"', 1, 'ATSRegExp: ["aab"].',
+            'Anchor pattern to the start and the end of the string'),
         array('SRegExp', '', '"aab"', '"^(aaa)*b$"', 0, '', ''),
         array('SRegExp', '', '"aAb"', '"^[aA]*b$"', 1, 'ATSRegExp: ["aAb"].', ''),
         array('SRegExp', '', '" aAb"', '"^[aA]*b$"', 0, '', ''),
         array('SRegExp', '', '"caAb"', '"(?i:a*b)"', 1, 'ATSRegExp: ["aAb"].', 'Case insensitive'),
-        array('SRegExp', '', '"Alice went to the market"', '"(Alice|Bob) went to the (bank|market)"', 1, 'ATSRegExp: ["Alice went to the market","Alice","market"].', 'Options'),
+        array('SRegExp', '', '"Alice went to the market"', '"(Alice|Bob) went to the (bank|market)"', 1,
+            'ATSRegExp: ["Alice went to the market","Alice","market"].', 'Options'),
         array('SRegExp', '', '"Malice went to the shop"', '"(Alice|Bob) went to the (bank|market)"', 0, '', ''),
-        array('SRegExp', '', '"Alice   went  to      the market"', '"(Alice|Bob)\\\\s+went\\\\s+to\\\\s+the\\\\s+(bank|market)"', 1, 'ATSRegExp: ["Alice   went  to      the market","Alice","market"].', 'Whitespace, note test rendering issue, the test string has additional spaces and tabs as does the result'),
+        array('SRegExp', '', '"Alice   went  to      the market"', '"(Alice|Bob)\\\\s+went\\\\s+to\\\\s+the\\\\s+(bank|market)"',
+            1, 'ATSRegExp: ["Alice   went  to      the market","Alice","market"].', 'Whitespace, ' .
+            'note test rendering issue, the test string has additional spaces and tabs as does the result'),
         array('SRegExp', '', '"Alice   went  to      themarket"', '"(Alice|Bob)\\\\s+went\\\\s+to\\\\s+the\\\\s+(bank|market)"', 0, '', ''),
-        array('SRegExp', '', '"x^2.2"', '"x\\\\^2\\\\.2"', 1, 'ATSRegExp: ["x^2.2"].', 'Escaping patterns, note the function that does it'),
+        array('SRegExp', '', '"x^2.2"', '"x\\\\^2\\\\.2"', 1, 'ATSRegExp: ["x^2.2"].',
+            'Escaping patterns, note the function that does it'),
         array('SRegExp', '', '"x^2+sin(x)"', 'sconcat(string_to_regex("sin(x)"),"$")', 1, 'ATSRegExp: ["sin(x)"].', ''),
         array('SRegExp', '', '"sin(x)+x^2"', 'sconcat(string_to_regex("sin(x)"),"$")', 0, '', ''),
 
@@ -1862,7 +1933,7 @@ class stack_answertest_test_data {
                 default:
                     $passed = false;
                     $anomalynote[] = '[General failure.]';
-                }
+            }
         }
 
         if (!($ansnote === $test->ansnote)) {

@@ -171,7 +171,11 @@ class stack_cas_security {
                 foreach (self::$keywordlists[strtolower($key)] as $k => $v) {
                     $real[$k] = $v;
                 }
-            } else if (core_text::strlen($key) > 1) {
+            } else {
+                // In v4.3 we checked here whether the string length was greater than 1 before adding the key.
+                // If the teacher has defined single letter variable names in the question then we should forbid them.
+                // There is too much pre-existing STACK material where teachers have used single letter varibles.
+                // If we decide to change this, we need an auto-upgrade for questions.
                 $real[$key] = true;
             }
         }
@@ -240,7 +244,7 @@ class stack_cas_security {
         }
 
         // If the identifer is less than three char then students have permissions.
-        if ($security === 's' && core_text::strlen($identifier) <= 2) {
+        if ($security === 's' && mb_strlen($identifier) <= 2) {
             return true;
         }
 
@@ -274,6 +278,22 @@ class stack_cas_security {
             return false;
         }
 
+        // We check for "allowed words" before forbidden words to enable a teacher to allow
+        // question variables, which are automatically forbidden by default.
+        // Try promoting to security 's'.
+        if ($this->allowedwordsasmap == null) {
+            $this->allowedwordsasmap = self::list_to_map($this->allowedwords);
+        }
+        if (isset($this->allowedwordsasmap[$identifier])) {
+            // Allow words might be typed.
+            if (is_array($this->allowedwordsasmap[$identifier])) {
+                return isset($this->allowedwordsasmap[$identifier]['variable']) ||
+                    isset($this->allowedwordsasmap[$identifier]['constant']);
+            } else {
+                return true;
+            }
+        }
+
         // Check for forbidden words.
         if ($this->forbiddenwordsasmap == null) {
             $this->forbiddenwordsasmap = self::list_to_map($this->forbiddenwords);
@@ -301,28 +321,14 @@ class stack_cas_security {
             return false;
         }
 
-        // Try promoting to security 's'.
-        if ($this->allowedwordsasmap == null) {
-            $this->allowedwordsasmap = self::list_to_map($this->allowedwords);
-        }
-        if (isset($this->allowedwordsasmap[$identifier])) {
-            // Allow words might be typed.
-            if (is_array($this->allowedwordsasmap[$identifier])) {
-                return isset($this->allowedwordsasmap[$identifier]['variable']) ||
-                    isset($this->allowedwordsasmap[$identifier]['constant']);
-            } else {
-                return true;
-            }
-        }
-
         // If the identifer is less than three char then students have permissions.
-        if ($security === 's' && core_text::strlen($identifier) <= 2) {
+        if ($security === 's' && mb_strlen($identifier) <= 2) {
             return true;
         }
 
         // The special case is identifiers that end with numbers...
         // The block system uses this hole extensively.
-        if ($security === 's' && ctype_digit(core_text::substr($identifier, -1))) {
+        if ($security === 's' && ctype_digit(mb_substr($identifier, -1))) {
             return true;
         }
 
@@ -494,7 +500,7 @@ class stack_cas_security {
         if ($this->units && ($type === 'variable' || $type === 'constant')) {
             // This has a separate implementation in caastring_units but Lets
             // do things just a bit differently.
-            $units = stack_cas_casstring_units::get_permitted_units(core_text::strlen($identifier));
+            $units = stack_cas_casstring_units::get_permitted_units(mb_strlen($identifier));
             foreach ($units as $key) {
                 if (strtolower($key) === $l) {
                     $r[] = $key;
