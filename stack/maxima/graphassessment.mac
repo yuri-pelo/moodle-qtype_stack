@@ -92,23 +92,40 @@ accurate_sketch_p(ansx, ansy, fofx, ia, ib, ri, tacc) := block([md, k, x, i, sac
 
 /* Node 6 - Does the sketch contain the function's x-intercepts and/or extrema? */
 
-/* Extrema: Are all extrema (and saddle points) of the function fofx (f of x) within the sketch. */
-/* Considering possible inaccuracies, the following block looks for points within a <dr radius around the extrema (and saddle points). */
+/* Extrema: Are all extrema of the function fofx (f of x) within the sketch. */
+/* Considering possible inaccuracies, the following block looks for points within a <dr radius around the extrema. */
 
-extrema_sketched_p(ansx, ansy, fofx, dr):= block([i, k, extr, retall],
+extrema_sketched_p(ansx, ansy, fofx, dr):= block([i, j, k, extr, second_derivative, without_saddle_points, unsketched_extrema, retall],
     
 	/* extr is a variable to identify the x-values of extrema (and saddle points). */
-	extr: solve(diff(fofx,x)=0,x),
+    extr: solve(diff(fofx,x)=0,x),
+    second_derivative: diff(fofx, x, 2),
+    /* empty list that is going to be filled with the entries from extr but without out the saddle points */
+    without_saddle_points:[],
     
-	/* retall is a variable to hold the answer. */
-	retall:true,
-    if length(extr)=0 
+    /*Loop for sorting out the saddle points*/
+    for j:1 thru length(extr) do
+    if
+    ev(second_derivative, extr[j])#0
     then
-    retall:true
+    without_saddle_points: endcons(extr[j], without_saddle_points)
     else
-    for i:1 thru length(extr) do
-    retall: retall and is(length(sublist_indices(makelist((sqrt((ansx[k]-ev(x, extr[i]))^2+(ansy[k]-ev(fofx, extr[i]))^2)),k,1,length(ansx)), lambda([ex], ex<=dr)))>0),
-    return(retall)
+    without_saddle_points: without_saddle_points,
+    
+    
+    unsketched_extrema: [],
+    /* retall is a variable to hold the answer. */
+    retall:true,
+    
+    for i:1 thru length(without_saddle_points) do
+    if
+    length(sublist_indices(makelist((sqrt((ansx[k]-ev(x,  without_saddle_points[i]))^2+(ansy[k]-ev(fofx,  without_saddle_points[i]))^2)),k,1,length(ansx)), lambda([ex], ex<=dr)))=0
+    then
+    unsketched_extrema: endcons(without_saddle_points[i], unsketched_extrema)
+    else
+    unsketched_extrema: unsketched_extrema,
+
+   if unsketched_extrema=[] then return(retall) else return(unsketched_extrema)
 )$
 
 
