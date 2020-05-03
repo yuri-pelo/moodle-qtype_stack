@@ -115,20 +115,23 @@ extrema_sketched_p(ansx, ansy, fofx, dr):= block([i, k, extr, retall],
 /* x-intercepts: Are all x-intercepts of the function fofx (f of x) within the sketch. */
 /* Considering possible inaccuracies, the following block looks for points within a <dr radius around the x-intercepts. */
 
-x_intercepts_sketched_p(ansx, ansy, fofx, dr):= block([i, k, xint, retall],
+x_intercepts_sketched_p(ansx, ansy, fofx, dr):= block([i, k, xint, unsketched_intercepts,retall],
     
-	/* xint is a variable to identify the x-values of x-intercepts. */
-	xint: solve(fofx=0,x),
+    /* xint is a variable to identify the x-values of x-intercepts. */
+    xint: solve(fofx=0,x),
+    unsketched_intercepts: [],
+    /* retall is a variable to hold the answer. */
+    retall:true,
     
-	/* retall is a variable to hold the answer. */
-	retall:true,
-    if length(xint)=0 
-    then
-    retall:true
-    else
     for i:1 thru length(xint) do
-    retall: retall and is(length(sublist_indices(makelist((sqrt((ansx[k]-ev(x, xint[i]))^2+(ansy[k]-ev(fofx, xint[i]))^2)),k,1,length(ansx)), lambda([ex], ex<=dr)))>0),
-    return(retall)
+    if
+    length(sublist_indices(makelist((sqrt((ansx[k]-ev(x,  xint[i]))^2+(ansy[k]-ev(fofx,  xint[i]))^2)),k,1,length(ansx)), lambda([ex], ex<=dr)))=0
+    then
+    unsketched_intercepts: endcons( xint[i], unsketched_intercepts)
+    else
+    unsketched_intercepts: unsketched_intercepts,
+    
+    if unsketched_intercepts=[] then return(retall) else return(unsketched_intercepts)
 )$
 
 
