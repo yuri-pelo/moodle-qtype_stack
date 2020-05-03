@@ -12,6 +12,38 @@
    ans1:[pt(0,0), pt(0.5,0.25), pt(1,2), pt(2,4)];
 */
 
+/*
+To Do-list for future features
+
+- saussage-idea
+- find bounding box values
+- define if it will be a single testing-functions or several
+- documentation of functions with exapmles (what could happen in the classroom?)
+
+Useful Questions:
+
+You need the points!
+And you need a true/false!
+x_intercepts_skeched(....) -> [points]
+x_intercepts_skeched_p(ex) := emptyp(x_intercepts_skeched(ex));
+Always return the same data type!
+
+
+____________________________________________
+
+Alex, is youcode going to beon one answer test or used in PRTs?
+Sausage idea
+
+(1) Maxima functions to check
+Check?
+Is f1 inside the epilson saussage of f2?
+(2) Using JSXGraph to plot an epsilong saussage aropunf f2.  Docs/examples!
+(3) Feedback, with student's function, real function and saussage!
+*/
+
+
+
+
 pttex(ex) := sconcat("\\left(", simplode(maplist(lambda([ex1], stack_disp_strip_dollars(tex(ex1, false))), args(ex)), ", "), "\\right)");
 texput(pt, pttex);
 
