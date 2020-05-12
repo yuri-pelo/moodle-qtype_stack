@@ -771,6 +771,7 @@ $string['stackOptions_AnsTest_values_FacForm']             = "FacForm";
 $string['stackOptions_AnsTest_values_SingleFrac']          = "SingleFrac";
 $string['stackOptions_AnsTest_values_PartFrac']            = "PartFrac";
 $string['stackOptions_AnsTest_values_CompSquare']          = "CompletedSquare";
+$string['stackOptions_AnsTest_values_PropLogic']           = "PropositionalLogic";
 $string['stackOptions_AnsTest_values_Equiv']               = "EquivReasoning";
 $string['stackOptions_AnsTest_values_EquivFirst']          = "EquivFirst";
 $string['stackOptions_AnsTest_values_SigFigsStrict']       = "SigFigsStrict";
@@ -807,6 +808,7 @@ $string['ATAlgEquiv_SA_not_expression'] = 'Your answer should be an expression, 
 $string['ATAlgEquiv_SA_not_matrix']     = 'Your answer should be a matrix, but is not. ';
 $string['ATAlgEquiv_SA_not_list']       = 'Your answer should be a list, but is not.  Note that the syntax to enter a list is to enclose the comma separated values with square brackets. ';
 $string['ATAlgEquiv_SA_not_set']        = 'Your answer should be a set, but is not.  Note that the syntax to enter a set is to enclose the comma separated values with curly brackets. ';
+$string['ATAlgEquiv_SA_not_realset']    = 'Your answer should be a subset of the real numbers.  This could be a set of numbers, or a collection of intervals.';
 $string['ATAlgEquiv_SA_not_equation']   = 'Your answer should be an equation, but is not. ';
 $string['ATAlgEquiv_SA_not_logic']      = 'Your answer should be an equation, inequality or a logical combination of many of these, but is not. ';
 $string['ATAlgEquiv_TA_not_equation']   = 'You have entered an equation, but an equation is not expected here. You may have typed something like "y=2*x+1" when you only needed to type "2*x+1". ';
@@ -952,6 +954,11 @@ $string['equiv_LET']                     = 'Let';
 $string['equiv_AND']                     = 'and';
 $string['equiv_OR']                      = 'or';
 $string['equiv_NOT']                     = 'not';
+$string['equiv_NAND']                    = 'nand';
+$string['equiv_NOR']                     = 'nor';
+$string['equiv_XOR']                     = 'xor';
+$string['equiv_XNOR']                    = 'xnor';
+$string['equiv_IMPLIES']                 = 'implies';
 
 $string['studentValidation_yourLastAnswer']     = 'Your last answer was interpreted as follows: {$a}';
 $string['studentValidation_listofvariables']    = 'The variables found in your answer were: {$a}';
@@ -959,6 +966,11 @@ $string['studentValidation_listofunits']        = 'The units found in your answe
 $string['studentValidation_invalidAnswer']      = 'This answer is invalid. ';
 $string['studentValidation_notes']              = 'This input is not assessed automatically by STACK.  You can use it to record working, or comments for the teacher.';
 $string['stackQuestion_noQuestionParts']        = 'This item has no question parts for you to answer.';
+
+$string['Interval_notinterval']                 = 'An interval was expected, but instead we have {$a->m0}.';
+$string['Interval_wrongnumargs']                = 'Interval construction must have exactly two arguments, so this must be an error: {$a->m0}.';
+$string['Interval_backwards']                   = 'When constructing a real interval the end points must be ordered. {$a->m0} should be {$a->m1}.';
+$string['Interval_illegal_entries']             = 'The following should not appear during construction of real sets: {$a->m0}';
 
 // Documentation strings.
 $string['stackDoc_404']                 = 'Error 404';

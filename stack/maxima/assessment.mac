@@ -196,7 +196,7 @@ is_simp(ex) := ev(is(ex), simp)$
 /* An expression sequence is displayed without square brackets. */
 texsequence (e) := simplode(maplist(tex1,args(e)), ", ")$
 texput(sequence, texsequence)$
- 
+
 /* Convenience functions creating sequences. */
 sequenceify(ex):= apply(sequence, args(ex))$
 sequencep(ex):= if safe_op(ex)="sequence" then true else false$
@@ -204,7 +204,7 @@ sequencep(ex):= if safe_op(ex)="sequence" then true else false$
 /* An "ntuple" is displayed with round brackets. */
 texntuple(e) := concat("\\left(", simplode(maplist(tex1,args(e)), ", "), "\\right)")$
 texput(ntuple, texntuple)$
- 
+
 ntupleify(ex):= apply(ntuple, args(ex))$
 ntuplep(ex):= if safe_op(ex)="ntuple" then true else false$
 
@@ -391,7 +391,7 @@ scientific_notationp(ex) := block([tn],
   if not(safe_op(ex)="*") then return(false),
   if not(length(args(ex))=2) then return(false),
   tn:first(args(ex)),
-  if safe_op(tn)="-" then tn:first(args(tn)), 
+  if safe_op(tn)="-" then tn:first(args(tn)),
   if not(integerp(tn) or floatnump(tn)) then return(false),
   tn:second(args(ex)),
   /* Special edge case: 3*10 = 3*10^1. */
@@ -400,7 +400,7 @@ scientific_notationp(ex) := block([tn],
   if not(first(args(tn))=10) then return(false),
   /* Of course, unary minus bites us here. */
   tn:second(args(tn)),
-  if safe_op(tn)="-" then tn:first(args(tn)), 
+  if safe_op(tn)="-" then tn:first(args(tn)),
   if integerp(tn) then return(true),
   return(false)
 )$
@@ -736,7 +736,7 @@ algebraic_equivalence(SA, SB) :=
     /* Try to return a negative result without expanding anything! */
     if safe_op(ex)="-" then
        ex:first(args(ex)),
-    if (safe_op(ex)="*" or safe_op(ex)="^") then 
+    if (safe_op(ex)="*" or safe_op(ex)="^") then
        if not(any_listp(algebraic_equivalence_zero, args(ex))) then return(false),
     ex:errcatch(ratsimp(ex)),
     if ex=[] then error("algebraic_equivalence: evaluating the difference of two expressions threw an error."),
@@ -908,6 +908,20 @@ declare("noun=", commutative);
 declare("noun=", lassociative);
 declare("noun=", rassociative);
 
+noun_logic_remove(ex) := block([rex],
+    rex:opsubst("and", "nounand", ex),
+    rex:opsubst("or", "nounor", rex),
+    rex:opsubst("not", "nounnot", rex),
+    return(rex)
+)$
+
+noun_logic(ex) := block([rex],
+    rex:subst("nounand", "and", ex),
+    rex:subst("nounor", "or", rex),
+    rex:subst("nounnot", "not", rex),
+    rex
+)$
+
 verb_arith(ex) := block([a],
     ex:subst("=", "noun=", ex),
     ex:subst("+", "noun+", ex),
@@ -963,7 +977,7 @@ flatten_recurse_nouns(ex) := block(
 sort_nouns(ex) := block([exl],
     if atom(ex) then return(ex),
     exl:maplist(sort_nouns, args(ex)),
-    if safe_op(ex)="noun=" or safe_op(ex)="nounand" or safe_op(ex)="nounor" or safe_op(ex)="nounset" or op(ex)="noun+" or op(ex)="noun*" then
+    if safe_op(ex)="noun=" or safe_op(ex)="nounand" or safe_op(ex)="nounor" or safe_op(ex)="nounnot" or safe_op(ex)="nounset" or op(ex)="noun+" or op(ex)="noun*" then
         exl:sort(exl),
     apply(op(ex), exl)
 )$
@@ -1041,6 +1055,7 @@ alias(ATEqual_com_ass, ATEqualComAss)$
 
 nary("nounand", 65)$
 nary("nounor", 61)$
+prefix("nounnot", 70)$
 
 declare("nounand", commutative)$
 declare("nounand", lassociative)$
@@ -1063,16 +1078,22 @@ logicp(ex) := block(
   if logic_edgep(ex) then return(true),
   if safe_op(ex) = "nounand" then return(true),
   if safe_op(ex) = "nounor" then return(true),
+  if safe_op(ex) = "nounnot" then return(true),
   if safe_op(ex) = "and" then return(true),
   if safe_op(ex) = "or" then return(true),
   if safe_op(ex) = "not" then return(true),
+  if safe_op(ex) = "nor" then return(true),
+  if safe_op(ex) = "nand" then return(true),
+  if safe_op(ex) = "xor" then return(true),
+  if safe_op(ex) = "xnor" then return(true),
+  if safe_op(ex) = "implies" then return(true),
   if op_usedp(ex, STACKpmOPT) then return(true),
   return(false)
 )$
 
 free_of_logicp(ex) := block([logicops, logiconsts, res, k],
    if is(ex=all) or is(ex=none) then return(false),
-   logicops:["nounand", "nounor", "and", "or", "%and", "%or", "not", "%not", STACKpmOPT, "<", ">", "<=", ">=", "=", "[", "{"],
+   logicops:["nounand", "nounor", "nounnot", "and", "or", "%and", "%or", "not", "%not", STACKpmOPT, "<", ">", "<=", ">=", "=", "[", "{"],
    res:true,
    for k: 1 thru length(logicops) do
        if ev(not(is(count_op(ex, logicops[k])=0)),simp) then res:false,
@@ -1111,10 +1132,12 @@ distrib_and(ex):=block([orlisti, orlist1, orlist2],
 logical_normal(ex):=block(
     /* Change the noun logical operators into associative indenpotent ones. */
     ex:abs_replace_eq(ex),
+    ex:boolean_form(ex),
     ex:subst("%and", "nounand", ex),
     ex:subst("%or", "nounor", ex),
     /* %not is not an infix operator... */
     ex:subst(%not, "not", ex),
+    ex:subst(%not, "nounnot", ex),
     ex:subst("%and", "and", ex),
     ex:subst("%or", "or", ex),
     ex:de_morgan(ex),
@@ -1181,12 +1204,6 @@ logic_to_poly_helper(ex, v) := block(
     if not(listp(ex)) then return(false),
     if ex=[] or length(ex)=1 then return(ex),
     logic_to_poly_helper(append([poly_gcd(first(ex), second(ex), v)], rest(rest(ex))), v)
-)$
-
-noun_logic_remove(ex) := block([rex],
-    rex:opsubst("and", "nounand", ex),
-    rex:opsubst("or", "nounor", rex),
-    return(rex)
 )$
 
 /****************************************************************/
@@ -1292,7 +1309,7 @@ expandp(expandparg):= block([simp:true], if expandparg=ev(expand(expandparg),exp
 
 /* factorp(p) is true if p equals its factored form */
 factorp(argfac) := block([a],
-    if safe_op(argfac)="-" then 
+    if safe_op(argfac)="-" then
        argfac:part(argfac,1),
     if ev(argfac=factor(argfac), simp) then
         return(true),
@@ -2135,7 +2152,7 @@ stack_eval_arg_solver(ex) := block([ex2, ex3, errc],
 
       if ev(is(equal(length(listofvars(ex)), 1)), simp) then
           return(ev(single_variable_solver_real(ex), simp)),
-      
+
       if safe_op(ex) = "%or" or safe_op(ex) = "nounor" or safe_op(ex) = "or" then
           return(ev(logical_normal(apply("%or", maplist(stack_eval_arg_solver, ex))), simp)),
 

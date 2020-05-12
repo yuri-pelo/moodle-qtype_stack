@@ -36,8 +36,9 @@ class maxima_corrective_parser {
     // Returns an AST if possible.
     public static function parse(string $string, array &$errors, array &$answernote, array $parseroptions) {
         static $safespacepatterns = array(
-         ' or ' => 'STACKOR', ' and ' => 'STACKAND', 'not ' => 'STACKNOT',
-         ' nounor ' => 'STACKNOUNOR', ' nounand ' => 'STACKNOUNAND',
+         ' or ' => 'STACKOR', ' and ' => 'STACKAND', 'not ' => 'STACKNOT', 'nounnot ' => 'STACKNOUNNOT',
+         ' nor ' => 'STACKNOR', ' nand ' => 'STACKNAND', ' xor ' => 'STACKXOR', ' xnor ' => 'STACKXNOR',
+         ' implies ' => 'STACKIMPLIES', ' nounor ' => 'STACKNOUNOR', ' nounand ' => 'STACKNOUNAND',
          // TODO: we really need to think about keywords and whether we allow
          // them for students in the first case. Of course none of these requires
          // spaces you can easily write 'if(foo)then(blaah)else(if(bar)then(zoo))'.
