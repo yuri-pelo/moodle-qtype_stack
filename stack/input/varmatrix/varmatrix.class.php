@@ -76,7 +76,7 @@ class stack_varmatrix_input extends stack_input {
             'type'  => 'hidden',
             'name'  => $fieldname,
             'id'    => $fieldname,
-            'class' => 'varmatrixinput',
+            'class' => '',
             'size'  => $this->parameters['boxWidth'] * 1.1,
             'style' => 'width: '.$size.'em',
             'autocapitalize' => 'none',
@@ -100,17 +100,24 @@ class stack_varmatrix_input extends stack_input {
         if ($readonly) {
             $attributes['readonly'] = 'readonly';
         }
+        
         // Put in the Javascript magic!
         $PAGE->requires->js_call_amd('qtype_stack/inputvarmatrix', 'setupVarmatrix', [$attributes['id']]);
 
-        $xhtml = '    <div class="varmatrixinputdiv">
-        <div class="varmatrixBorderTopLeft"></div>
-        <div class="varmatrixBorderTopRight"></div>
-        <span id="varmatrixinput'.$attributes['id'].'" class="varmatrixinputspan" contenteditable="true">&ensp;</span>
-        <div class="varmatrixBorderBottomLeft"></div>
-        <div class="varmatrixBorderBottomRight"></div>
-    </div>';
-        //$attributes['data-options'] = '["'.implode($this->completeoptions, '","').'"]';
+        // Read matrix bracket style from options
+        $matrixparens = $this->options->get_option('matrixparens');
+        if ($matrixparens == '['){
+            $matrixbrackets = 'matrixsquarebrackets';
+        } elseif ($matrixparens == '|'){
+            $matrixbrackets = 'matrixbarbrackets';
+        } elseif ($matrixparens == ''){
+            $matrixbrackets = 'matrixnobrackets';
+        } else {
+            $matrixbrackets = 'matrixroundbrackets';
+        }
+        $xhtml = '<div class="' . $matrixbrackets . '">';
+        $xhtml .= '<textarea id="matrixinput' . $fieldname . '" class="varmatrixinput"></textarea>';
+        $xhtml .= '</div><br>';
         $xhtml .= html_writer::empty_tag('input', $attributes);
         return $xhtml;
     }

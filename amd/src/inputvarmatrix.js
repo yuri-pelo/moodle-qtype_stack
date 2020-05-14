@@ -26,15 +26,20 @@ define(['jquery', 'core/ajax', 'core/event'], function($, jqueryui, ajax, coreev
 
      var t = {
         setupVarmatrix: function(name) {
-          $('[id="varmatrixinput'+name+'"]').keyup(function() {
-              var lines=$('[id="varmatrixinput'+name+'"]').html().trim().replace(/&nbsp;/g, ' ').split('<br>').filter(Boolean);
+          $('[id="matrixinput'+name+'"]').keyup(function() {
+              var lines=$('[id="matrixinput'+name+'"]').val().trim().replace(/&nbsp;/g, ' ').split(/\n/).filter(Boolean);
               lines=lines.map(line=>line.split(/[\t\ ,;]/).filter(Boolean));
               var maxlength=Math.max.apply(null, lines.map(e=>e.length));
               lines=lines.map(line=>line.concat(Array(maxlength-line.length).fill(0)));
               lines=lines.map(line=>"["+line.join(",")+"]");
               lines="matrix("+lines.join(",")+")";
               $('[id="'+name+'"]').val(lines);
-              $('[id="'+name+'"]').trigger("input");
+          });
+          $('[id="matrixinput'+name+'"]').on('input', function(){
+              $('[id="matrixinput'+name+'"]').css('width',  1);
+              $('[id="matrixinput'+name+'"]').css('height',  1);
+              $('[id="matrixinput'+name+'"]').css('width',  10+$('[id="matrixinput'+name+'"]').prop('scrollWidth'));
+              $('[id="matrixinput'+name+'"]').css('height', $('[id="matrixinput'+name+'"]').prop('scrollHeight'));
           });
         }
     };
