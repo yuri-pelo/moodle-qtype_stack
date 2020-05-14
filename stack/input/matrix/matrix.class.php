@@ -250,8 +250,19 @@ class stack_matrix_input extends stack_input {
             $attr .= ' readonly="readonly"';
         }
 
+        // Read matrix bracket style from options
+        $matrixparens = $this->options->get_option('matrixparens');
+        if ($matrixparens == '['){
+            $matrixbrackets = 'matrixsquarebrackets';
+        } elseif ($matrixparens == '|'){
+            $matrixbrackets = 'matrixbarbrackets';
+        } elseif ($matrixparens == ''){
+            $matrixbrackets = 'matrixnobrackets';
+        } else {
+            $matrixbrackets = 'matrixroundbrackets';
+        }
         // Build the html table to contain these values.
-        $xhtml = '<div class="matrixroundbrackets"><table class="matrixtable" id="' . $fieldname . '_container" style="display:inline; vertical-align: middle;" ' .
+        $xhtml = '<div class="' . $matrixbrackets . '"><table class="matrixtable" id="' . $fieldname . '_container" style="display:inline; vertical-align: middle;" ' .
                 'cellpadding="1" cellspacing="0"><tbody >';
         for ($i = 0; $i < $this->height; $i++) {
             $xhtml .= '<tr>';

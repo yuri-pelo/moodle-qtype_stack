@@ -90,9 +90,7 @@ body.pagelayout-embedded .que.stack .formulation .questiontestslink {
 }
 
 .que.stack .matrixtable{
-
     border-collapse: collapse;
-
 }
 
 .que.stack div.matrixroundbrackets{
@@ -104,6 +102,20 @@ body.pagelayout-embedded .que.stack .formulation .questiontestslink {
     border-top-right-radius: 1em;
     border-bottom-left-radius: 1em;
     border-bottom-right-radius: 1em;
+    padding:0.5em;
+}
+
+.que.stack div.matrixnobrackets{
+    display:inline-block;
+    border:0px;
+    padding:0.5em;
+}
+
+.que.stack div.matrixbarbrackets{
+    display:inline-block;
+    border:0px;
+    border-left: 2px solid #000;
+    border-right: 2px solid #000;
     padding:0.5em;
 }
 
