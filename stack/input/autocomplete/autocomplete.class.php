@@ -24,7 +24,6 @@ defined('MOODLE_INTERNAL') || die();
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class stack_autocomplete_input extends stack_input {
-    
 
     /*
      * completeoptions is an array of the possible values the teacher suggests.
@@ -104,9 +103,9 @@ class stack_autocomplete_input extends stack_input {
             $attributes['readonly'] = 'readonly';
         }
         // Put in the Javascript magic!
-        $PAGE->requires->js_call_amd('qtype_stack/inputautocomplete','setAutocomplete',[$attributes['id']]);
+        $PAGE->requires->js_call_amd('qtype_stack/inputautocomplete', 'setAutocomplete', [$attributes['id']]);
 
-        $attributes['data-options'] = '["'.implode($this->completeoptions, '","').'"]';
+        $attributes['data-options'] = '["'.implode('","', $this->completeoptions).'"]';
         return html_writer::empty_tag('input', $attributes);
     }
 
