@@ -18,11 +18,21 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * An input which provides a matrix input of variable size.
+ * Lots in common with the textarea class.
  *
  * @copyright  2019 Ruhr University Bochum
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class stack_varmatrix_input extends stack_input {
+
+    private static $tostringparams = array('inputform' => true,
+        'qmchar' => true,
+        'pmchar' => 0,
+        'nosemicolon' => true,
+        'dealias' => false, // This is needed to stop pi->%pi etc.
+        'nounify' => true,
+        'varmatrix' => true,
+    );
 
     protected $extraoptions = array(
         'simp' => false,
@@ -31,47 +41,50 @@ class stack_varmatrix_input extends stack_input {
     );
 
     public function render(stack_input_state $state, $fieldname, $readonly, $tavalue) {
-        global $PAGE;
+        // Note that at the moment, $this->boxHeight and $this->boxWidth are only
+        // used as minimums. If the current input is bigger, the box is expanded.
 
         if ($this->errors) {
             return $this->render_error($this->errors);
         }
 
-        $value = $state->contentsmodified;
-        if (trim($value) != '') {
-            $cs = stack_ast_container::make_from_teacher_source($value, '', new stack_cas_security());
-            $value = $cs->ast_to_string(null, array('varmatrix' => true));
-        }
-
         $size = $this->parameters['boxWidth'] * 0.9 + 0.1;
         $attributes = array(
-            'type'  => 'hidden',
-            'name'  => $fieldname,
-            'id'    => $fieldname,
-            'class' => '',
-            'size'  => $this->parameters['boxWidth'] * 1.1,
-            'style' => 'width: '.$size.'em',
+            'name'           => $fieldname,
+            'id'             => $fieldname,
             'autocapitalize' => 'none',
             'spellcheck'     => 'false',
+            'class'          => 'varmatrixinput',
+            'size'           => $this->parameters['boxWidth'] * 1.1,
+            'style'          => 'width: '.$size.'em',
         );
 
-        if ($value == 'EMPTYANSWER') {
-            // Active empty choices don't result in a syntax hint again (with that option set).
-            $attributes['value'] = '';
-        } else if ($this->is_blank_response($state->contents)) {
-            $field = 'value';
-            if ($this->parameters['syntaxAttribute'] == '1') {
-                $field = 'placeholder';
+        if ($this->is_blank_response($state->contents)) {
+            $current = $this->maxima_to_raw_input($this->parameters['syntaxHint']);
+        } else {
+            $current = array();
+            foreach ($state->contents as $row) {
+                $cs = stack_ast_container::make_from_teacher_source($row);
+                if ($cs->get_valid()) {
+                    $current[] = $cs->ast_to_string(null, self::$tostringparams);
+                }
             }
-            $attributes[$field] = $this->parameters['syntaxHint'];
+            $current = implode("\n", $current);
         }
+
+        // Sort out size of text area.
+        $rows = stack_utils::list_to_array($current, false);
+        $attributes['rows'] = max(5, count($rows) + 1);
+
+        $boxwidth = $this->parameters['boxWidth'];
+        foreach ($rows as $row) {
+            $boxwidth = max($boxwidth, strlen($row) + 5);
+        }
+        $attributes['cols'] = $boxwidth;
 
         if ($readonly) {
             $attributes['readonly'] = 'readonly';
         }
-
-        // Put in the Javascript magic!
-        $PAGE->requires->js_call_amd('qtype_stack/inputvarmatrix', 'setupVarmatrix', [$attributes['id']]);
 
         // Read matrix bracket style from options.
         $matrixparens = $this->options->get_option('matrixparens');
@@ -84,17 +97,110 @@ class stack_varmatrix_input extends stack_input {
         } else {
             $matrixbrackets = 'matrixroundbrackets';
         }
-        $xhtml = '<div class="' . $matrixbrackets . '">';
-        $xhtml .= '<textarea id="matrixinput' . $fieldname . '" class="varmatrixinput">' . $value . '</textarea>';
-        $xhtml .= '</div><br>';
-        $xhtml .= html_writer::empty_tag('input', $attributes);
-        return $xhtml;
+
+        $xhtml =  html_writer::tag('textarea', htmlspecialchars($current), $attributes);
+        return html_writer::tag('div', $xhtml, array('class' => $matrixbrackets));
     }
 
     public function add_to_moodleform_testinput(MoodleQuickForm $mform) {
         $mform->addElement('text', $this->name, $this->name, array('size' => $this->parameters['boxWidth']));
         $mform->setDefault($this->name, $this->parameters['syntaxHint']);
         $mform->setType($this->name, PARAM_RAW);
+    }
+
+    /**
+     * Transforms the student's response input into an array.
+     * Most return the same as went in.
+     *
+     * @param array|string $in
+     * @return string
+     */
+    protected function response_to_contents($response) {
+        $contents = array();
+        if (array_key_exists($this->name, $response)) {
+            $sans = $response[$this->name];
+            $rowsin = explode("\n", $sans);
+            foreach ($rowsin as $key => $row) {
+                $cleanrow = trim($row);
+                if ($cleanrow) {
+                    $contents[] = $cleanrow;
+                }
+            }
+        }
+        // Transform into lists.
+        $maxlen = 0;
+        foreach ($contents as $key => $row) {
+            $entries = preg_split('/\s+/', $row);
+            $maxlen = max(count($entries), $maxlen);
+            $contents[$key] = $entries;
+        }
+
+        foreach ($contents as $key => $row) {
+            // Pad out short rows.
+            for ($i = 0; $i < ($maxlen - count($row)); $i++) {
+                $row[] = '?';
+            }
+            $maxlen = max(count($entries), $maxlen);
+            $contents[$key] = '[' . implode(',', $row) . ']';
+        }
+        // TODO: pad short rows.
+        return $contents;
+    }
+
+    protected function caslines_to_answer($caslines) {
+        $vals = array();
+        foreach ($caslines as $line) {
+            if ($line->get_valid()) {
+                $vals[] = $line->get_evaluationform();
+            } else {
+                // This is an empty place holder for an invalid expression.
+                $vals[] = 'EMPTYCHAR';
+            }
+        }
+        $s = 'matrix('.implode(',', $vals).')';
+        return stack_ast_container::make_from_student_source($s, '', $caslines[0]->get_securitymodel());
+    }
+
+    /**
+     * Transforms the contents array into a maxima expression.
+     *
+     * @param array|string $in
+     * @return string
+     */
+    public function contents_to_maxima($contents) {
+        return 'matrix('.implode(',', $contents).')';
+    }
+
+    /**
+     * Transforms a Maxima list into raw input.
+     *
+     * @param string $in
+     * @return string
+     */
+    private function maxima_to_raw_input($in) {
+        $cs = stack_ast_container::make_from_teacher_source($in);
+        return $cs->ast_to_string(null, self::$tostringparams);
+    }
+
+    protected function ajax_to_response_array($in) {
+        $in = explode('<br>', $in);
+        $in = implode("\n", $in);
+        return array($this->name => $in);
+    }
+
+    /**
+     * Transforms a Maxima expression into an array of raw inputs which are part of a response.
+     * Most inputs are very simple, but textarea and matrix need more here.
+     *
+     * @param string $in
+     * @return string
+     */
+    public function maxima_to_response_array($in) {
+        $response[$this->name] = $this->maxima_to_raw_input($in);
+        if ($this->requires_validation()) {
+            $response[$this->name . '_val'] = $in;
+        }
+        return $response;
     }
 
     /**
@@ -106,7 +212,7 @@ class stack_varmatrix_input extends stack_input {
         return array(
             'mustVerify'         => true,
             'showValidation'     => 1,
-            'boxWidth'           => 15,
+            'boxWidth'           => 5,
             'strictSyntax'       => false,
             'insertStars'        => 0,
             'syntaxHint'         => '',

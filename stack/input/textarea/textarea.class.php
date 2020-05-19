@@ -131,7 +131,7 @@ class stack_textarea_input extends stack_input {
      * @param string $in
      * @return string
      */
-    private function maxima_to_raw_input($in) {
+    protected function maxima_to_raw_input($in) {
         $values = stack_utils::list_to_array($in, false);
         foreach ($values as $key => $val) {
             if (trim($val) != '') {
