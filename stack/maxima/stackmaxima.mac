@@ -113,6 +113,8 @@ cte(var, ex) := block([str],
 /* This function strips out functions to leave only things in the value which might be typed in. */
 stack_dispvalue(ex) := block(
   if not(stack_disp_control_structurep(ex)) then block(
+      if safe_op(ex)="%union" and is(length(args(ex))=1) then
+         ex: first(args(ex)),
       ex: make_displaydpvalue(ex),
       ex: make_displayscivalue(ex),
       ex: subst("*", stackunits, ex),
@@ -127,6 +129,10 @@ stack_dispvalue(ex) := block(
 
 load("functs");
 /* Not yet testsed: load("vect"); */
+
+/* Load the logic package, but remove the "eq" infix operator which conflicts with too many existing things. */
+/* We've edited the logic package which over writes the eq operator as xnor.                                 */
+load("stack_logic.lisp");
 
 /* We don't want to allow people to put boxes round things. */
 box(ex) := ex;
@@ -200,14 +206,26 @@ make_logic(OPT_LOGIC) := block(
         texput("nounand", "\\,{\\mbox{ !AND! }}\\, ", nary),
         texput("or", "\\,{\\mbox{ !OR! }}\\, ", nary),
         texput("nounor", "\\,{\\mbox{ !OR! }}\\, ", nary),
-        texput("not", "{\\rm !NOT!}", prefix)
+        texput("nand", "\\,{\\mbox{ !NAND! }}\\, ", nary),
+        texput("nor", "\\,{\\mbox{ !NOR! }}\\, ", nary),
+        texput("xor", "\\,{\\mbox{ !XOR! }}\\, ", nary),
+        texput("xnor", "\\,{\\mbox{ !XNOR! }}\\, ", nary),
+        texput("implies", "\\,{\\mbox{ !IMPLIES! }}\\, ", nary),
+        texput("not", "{\\rm !NOT!}", prefix),
+        texput("nounnot", "{\\rm !NOT!}", prefix)
     ),
     if OPT_LOGIC = "symbol" then block(
         texput("and", "\\land ", nary),
         texput("nounand", "\\land ", nary),
         texput("or", "\\lor ", nary),
         texput("nounor", "\\lor ", nary),
-        texput("not", "\\neg ", prefix)
+        texput("nand", "\\overline{\\land}", nary),
+        texput("nor", "\\underline{\\lor}", nary),
+        texput("xor", "\\oplus ", nary),
+        texput("xnor", "\\leftrightarrow ", nary),
+        texput("implies", "\\rightarrow ", nary),
+        texput("not", "\\neg ", prefix),
+        texput("nounnot", "\\neg ", prefix)
     ),
     return(true)
 )$
@@ -415,7 +433,8 @@ multiselqnalpha([exs]):=block([corbase, numcor, wrongbase, numwrong, dispflag, t
   ta3: random_permutation(append(ta1, ta2)),
   /* Add in a slightly different display here. */
   talab: ev(makelist(sconcat("(",ascii(96+i),")"), i, 1, length(ta3)), simp),
-  ta:zip_with(lambda([ex1, ex2], [ex1, ex2[2], sconcat("<b>", ex1, "</b> ", stack_disp(ex2[1], dispflag))]), talab, ta3),
+  ta:zip_with(lambda([ex1, ex2], [ex1, ex2[2], sconcat("<b>", ex1, "</b> ",
+    if stringp(ex2[1]) then ex2[1] else stack_disp(ex2[1], dispflag))]), talab, ta3),
   version: map(first, ta3),
   return([ta, version])
 )$
@@ -506,10 +525,10 @@ _EC(errcatched, reference) := if errcatched = []
 
 /* Shorthand for allowing even more to fit into the buffer. */
 /* Note that stackmap_set is not very performance optimised and
-   as the CS2 context newer redefines values we can just append. 
-   If we were to use the set functionality we meet trouble at around 
+   as the CS2 context newer redefines values we can just append.
+   If we were to use the set functionality we meet trouble at around
    250 keys. */
-/* Catch to %_tmp before placement to list to check if the value is 
+/* Catch to %_tmp before placement to list to check if the value is
    a list just in case there is an error of some sort, if it is not
    a list then that append would do bad things. */
 _CS2v(_k,_v) := block([%_tmp],
@@ -811,6 +830,11 @@ stack_validate(expr, LowestTerms, TAns) := block([simp:false, exs, SameType, fvs
   SameType:ATSameTypefun(expr, TAns),
   if ev(is(SameType[2]=false),simp) then print(SameType[4])
     else (_RESET_NOTES(),_RESET_FEEDBACK()),
+  /* Check for malformed real sets. */
+  if realset_surface_p(expr) then block([ret],
+    ret:interval_validate_realset(expr),
+    if not(is(ret="")) then print(ret)
+  ),
   /* Check to see if a variable is also a function name. */
   fvs1: setify(listofvars(expr)),
   fvs2: get_ops(expr),
@@ -843,6 +867,11 @@ stack_validate_typeless(expr, LowestTerms, Equiv, fltfmt) := block([simp:false, 
   ),
   if length(expr)#1 then print(StackAddFeedback("", "CommaError", string(expr), string(setify(expr)))),
   expr: first(expr),
+  /* Check for malformed real sets. */
+  if realset_surface_p(expr) then block([ret],
+    ret:interval_validate_realset(expr),
+    if not(is(ret="")) then print(ret)
+  ),
   /* Check to see if a variable is also a function name. */
   fvs1: setify(listofvars(expr)),
   fvs2: get_ops(expr),
@@ -1346,6 +1375,11 @@ ATAlgEquivfun(SA, SB) :=  block([SApoly, SBpoly, keepfloat, RawMark, FeedBack, A
         return(StackBasicReturn(false, false, "ATAlgEquiv_SA_not_set"))
       else
         return(ATSet(SA, SB)),
+    /* Are we dealing with non-trivial sets? */
+    if realset_soft_p(SB) and not(trivialintervalp(SB)) then
+      if not(realset_soft_p(SA)) then
+        return(StackBasicReturn(false, false, "ATAlgEquiv_SA_not_realset")),
+        /* No specific function here, as "all" and "none" can show up with equations. */
     /* Are we dealing with a function? */
     if functionp(SB) then
       if functionp(SA)#true then
@@ -1377,6 +1411,8 @@ ATAlgEquivfun(SA, SB) :=  block([SApoly, SBpoly, keepfloat, RawMark, FeedBack, A
         return(StackBasicReturn(false, false, "ATAlgEquiv_SA_not_logic"))
       else
         return(ATLogic(SA, SB)),
+    if realset_soft_p(SA) and realset_soft_p(SB) then
+       return(ATRealSet(SA, SB)),
     /* Has the student typed in the wrong type?*/
     if expressionp(SA)=false then
         return(StackBasicReturn(false, false, "ATAlgEquiv_SA_not_expression")),
@@ -1425,6 +1461,17 @@ ATList(SA,SB) := block([AddFeedBack, SAN, SAl, SBl, ret, retnew, kloop, AnsNotes
         ret[4]:concat(StackAddFeedback("", "ATList_wrongentries", stack_disp(SAN, "d")), ret[4])
     ),
     return(ret)
+)$
+
+/* An answer test based on two sets of real numbers */
+ATRealSet(SA, SB) := block(
+    /* Tidy up intervals as much as possible. Some tidying might be possible even with realset_soft_p rather than realsets.*/
+    SA:interval_tidy(SA),
+    SB:interval_tidy(SB),
+
+    if is(SA=SB) then
+        return([true, true, StackAddNote("", "ATRealSet_true"), ""]),
+    return([true, false, StackAddNote("", "ATRealSet_false"), ""])
 )$
 
 /* Equations */
@@ -1673,7 +1720,7 @@ ATMatrix(SA, SB) := block([RawMark, FeedBack, AnswerNote, str, ret, SAr, SAc, SB
     )$
 
 /* An answer test based on two sets for SA and SB. */
-ATSet(SA, SB) := block([RawMark, FeedBack, AnswerNote, str, SAl, SBl, ZM],
+ATSet(SA, SB) := block([RawMark, FeedBack, AnswerNote, SAl, SBl, ZM],
     RawMark:true, FeedBack:"", AnswerNote:"",
     /* Get sizes of sets. */
     SAl:ev(cardinality(SA), simp),
@@ -1681,12 +1728,16 @@ ATSet(SA, SB) := block([RawMark, FeedBack, AnswerNote, str, SAl, SBl, ZM],
     if (SAl#SBl) then
         return([true, false, StackAddNote("", "ATSet_wrongsz"), StackAddFeedback("", "ATSet_wrongsz", stack_disp(SBl, "i"), stack_disp(SAl, "i"))]),
     /* Check they are equal */
-    SA:map(ineqprepare, map(trigreduce, SA)),
-    SB:map(ineqprepare, map(trigreduce, SB)),
+
+    SA:ATSets_prepare(SA),
+    SB:ATSets_prepare(SB),
+
     if (subsetp(SA, SB) and subsetp(SB, SA)) then
         return([true, true, AnswerNote, FeedBack]),
     /* Can we give feedback on which are wrong ? */
-    FeedBack:StackAddFeedback("", "ATSet_wrongentries", stack_disp(setdifference(SA, SB), "d")),
+    ZM:setdifference(SA, SB),
+    if not(emptyp(ZM)) then
+      FeedBack:StackAddFeedback("", "ATSet_wrongentries", stack_disp(ZM, "d")),
     return([true, false, StackAddNote("","ATSet_wrongentries"), FeedBack])
 )$
 
@@ -1704,6 +1755,9 @@ ATSets(SA, SB) := block([RawMark, FeedBack, AnswerNote, SAsimp, SBsimp],
         return(StackBasicReturn(false, false, "ATSets_SB_not_set")),
     if not(safe_setp(SA)) then
         return(StackBasicReturn(false, false, "ATSets_SA_not_set")),
+
+    SAsimp:ATSets_prepare(SAsimp),
+    SBsimp:ATSets_prepare(SBsimp),
 
     /* Look for duplicate entries. */
     if is(length(SAsimp)<length(SA)) then block(
@@ -1727,6 +1781,10 @@ ATSets(SA, SB) := block([RawMark, FeedBack, AnswerNote, SAsimp, SBsimp],
 
     return([true, false, AnswerNote, FeedBack])
 )$
+
+/* We don't put in boolean_form, or noun_logic_remove here because that breaks (pre-existing) inequalities and equations. */
+ATSets_prepare(S) := ev(map(lambda([ex], ineqprepare(trigreduce(ex)) ), S), simp)$
+
 
 /* Maxima regular expressions. */
 ATSRegExp(SA, SB) := block([RawMark, FeedBack, AnswerNote, SAsimp, SBsimp, patmatched],
@@ -1868,6 +1926,24 @@ ATLogic(SA, SB) := block([SAL, SBL, res],
     return(res)
 )$
 
+ATPropLogic(SA,SB) := block([simp:true, ret, SAc, SBc],
+    /* Turn on simplification and error catch */
+    SA:errcatch(ev(SA, simp, nouns)),
+    if is(SA=[STACKERROR]) then return([false, false, StackAddNote("", "ATPropLogic_STACKERROR_SAns"), ""]),
+    SA:SA[1],
+    SB:errcatch(ev(SB, simp, nouns)),
+    if is(SB=[STACKERROR]) then return([false, false, StackAddNote("", "ATPropLogic_STACKERROR_TAns"), ""]),
+    SB:SB[1],
+    /* We don't want noun forms getting in the way here. */
+    SA:noun_logic_remove(SA),
+    SB:noun_logic_remove(SB),
+    /* Can we find a permutation of the variables? */
+    if logic_equiv(SA, SB) then
+        return([true, true, "", ""]
+    ),
+    /* Send back result */
+    return([true, false, "", ""])
+)$
 
 /**********************************************/
 /*                                            */
@@ -3051,6 +3127,55 @@ assess(ex1,ex2):=block([ret],
 
     return("")
 )$
+
+/* ****************************************************** */
+/*                                                        */
+/*  Tables                                                */
+/*                                                        */
+/* ****************************************************** */
+
+/* A function to create a truth table of an expression ex. */
+truth_table(ex) := block([exs, vars, tab, tt],
+    vars: ev(sort(listofvars(ex)),simp),
+    if length(vars) > 5 then error("truth_table will only print with fewer than 6 variables."),
+    /* Store this variable to prevent 2^n re-evaluations of this function. */
+    exs: noun_logic_remove(ex),
+    tab: maplist(lambda([ex2], zip_with("=", vars, ex2)), truth_table_allvars(vars)),
+    tab: maplist(lambda([ex2], append(maplist(rhs, ex2), [ev(logic_simp(exs), ex2)])), tab),
+    tab: append([append(vars, [ex])], tab),
+    apply(table, tab)
+)$
+
+truth_table_allvars(l) := block(
+   if emptyp(l) then return([[]]),
+   return(append( maplist(lambda([ex], append([false], ex)), truth_table_allvars(rest(l))),
+           maplist(lambda([ex], append([true], ex)), truth_table_allvars(rest(l)))))
+)$
+
+/* This variable controls whether boolean true/false are abbreviated to T/F respectivley when printing tables. */
+table_bool_abbreviate:true$
+table_bool_abbreviate_fn(ex):= block(
+    if safe_op(ex) = "texcolor" then return(sconcat("\\color{", first(args(ex)), "}{\\underline{", table_bool_abbreviate_fn(second(args(ex))), "}}")),
+    if table_bool_abbreviate=true then 
+        return(if ex=true then "\\mathbf{T} " else if ex=false then "\\mathbf{F} " else stack_disp(ex, ""))
+    else stack_disp(ex, "")
+)$
+
+table_tex(ex):= block([ret, astart],
+    /* Make a header. */
+    astart: ev(makelist("c", k, length(first(ex))), simp),
+    astart: sconcat("\\begin{array}{", simplode(astart, "|"), "} "),
+    ret: matrixmap(table_bool_abbreviate_fn, apply(matrix, args(ex))),
+    ret: maplist(lambda([ex2], simplode(ex2, " & ")), args(ret)),
+    rest:sconcat(astart, first(ret), "\\\\ \\hline ", simplode(rest(ret), " \\\\ "), "\\end{array} ")
+)$
+texput(table, table_tex)$
+
+table_zip_with(fn, T1, T2) := block(
+  apply(table, zip_with(lambda([ex1,ex2], zip_with(fn,ex1,ex2)), args(T1), args(T2)))
+)$
+
+table_difference(T1, T2) := table_zip_with(lambda([ex1,ex2], if ex1=ex2 then ex1 else texcolor("red", ex1)), T1, T2)$
 
 /* Slight hack to compile these functions and hence suppress warnings. */
 load(linearalgebra);

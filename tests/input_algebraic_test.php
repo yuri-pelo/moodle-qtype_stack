@@ -254,6 +254,18 @@ class stack_algebra_input_test extends qtype_stack_testcase {
             . '<code>1 < x and x < 8</code>', $el->get_teacher_answer_display('1<x nounand x<8', '1<x \,{\mbox{and}}\,x<8'));
     }
 
+    public function test_validate_student_response_10() {
+        $options = new stack_options();
+        $el = stack_input_factory::make('algebraic', 'sans1', 'not false xor not(false)');
+        $state = $el->validate_student_response(array('sans1' => 'not false xor not(false)'), $options,
+                'not false xor not(false)',
+                new stack_cas_security(false, '', '', array('tans')));
+        $this->assertEquals(stack_input::VALID, $state->status);
+        $this->assertEquals('nounnot false xor nounnot(false)', $state->contentsmodified);
+        $this->assertEquals('\[ {\rm not}\left( \mathbf{false} \right)\,{\mbox{ xor }}\, ' .
+                '{\rm not}\left( \mathbf{false} \right) \]', $state->contentsdisplayed);
+    }
+
     public function test_validate_student_lowest_terms_1() {
         $options = new stack_options();
         $el = stack_input_factory::make('algebraic', 'sans1', '12/4');
@@ -1074,5 +1086,146 @@ class stack_algebra_input_test extends qtype_stack_testcase {
         $this->assertEquals('\[ a\cdot x+a\cdot y+\left(-b\right)\cdot x+\left(-b\right)\cdot y \]',
                 $state->contentsdisplayed);
         $this->assertEquals('', $state->note);
+    }
+
+    public function test_validate_student_response_realsets_sametype_1() {
+        $options = new stack_options();
+        $el = stack_input_factory::make('algebraic', 'sans1', '%union(oo(1,2),(3,4))');
+        $el->set_parameter('sameType', true);
+        $state = $el->validate_student_response(array('sans1' => 'oo(1,2)'), $options, '%union(oo(1,2),oo(3,4))',
+                new stack_cas_security(false, '', '', array('ta')));
+        $this->assertEquals($state->status, stack_input::VALID);
+        $this->assertEquals($state->contentsmodified, 'oo(1,2)');
+        $this->assertEquals($state->contentsdisplayed,
+                '\[ \left( 1,\, 2\right) \]');
+        $this->assertEquals('', $state->note);
+
+        $state = $el->validate_student_response(array('sans1' => '{1,2,3}'), $options, '%union(oo(1,2),oo(3,4))',
+                new stack_cas_security(false, '', '', array('ta')));
+        $this->assertEquals($state->status, stack_input::VALID);
+        $this->assertEquals('', $state->note);
+    }
+
+    public function test_validate_student_response_realsets_sametype_2() {
+        $options = new stack_options();
+        $el = stack_input_factory::make('algebraic', 'sans1', '{3,4,5}');
+        $el->set_parameter('sameType', true);
+        // In this case the student's answer is not a set.
+        $state = $el->validate_student_response(array('sans1' => 'oc(-1,2)'), $options, '{3,4,5}',
+                new stack_cas_security(false, '', '', array('ta')));
+        $this->assertEquals($state->status, stack_input::INVALID);
+        $this->assertEquals('SA_not_set', $state->note);
+        $this->assertEquals($state->contentsmodified, 'oc(-1,2)');
+        $this->assertEquals($state->contentsdisplayed,
+                '\[ \left( -1,\, 2\right] \]');
+
+        // Bump the status of the teacher's answer to a real set, not just a "set" set.
+        $state = $el->validate_student_response(array('sans1' => 'co(3,4)'), $options, '%union({3,4,5})',
+                new stack_cas_security(false, '', '', array('ta')));
+        $this->assertEquals($state->status, stack_input::VALID);
+        $this->assertEquals('', $state->note);
+        $this->assertEquals($state->contentsmodified, 'co(3,4)');
+        $this->assertEquals($state->contentsdisplayed,
+                '\[ \left[ 3,\, 4\right) \]');
+    }
+
+    public function test_validate_student_response_realsets_sametype_err() {
+        $options = new stack_options();
+        $el = stack_input_factory::make('algebraic', 'sans1', '%union({3,4,5})');
+        $el->set_parameter('sameType', true);
+
+        $state = $el->validate_student_response(array('sans1' => 'oc(1,2,3)'), $options, '%union({3,4,5})',
+                new stack_cas_security(false, '', '', array('ta')));
+        $this->assertEquals($state->status, stack_input::INVALID);
+        $this->assertEquals('', $state->note);
+        $this->assertEquals('Interval construction must have exactly two arguments, so this must be an error: ' .
+                '<span class="filter_mathjaxloader_equation"><span class="nolink">\(\mbox{oc(1,2,3)}\)</span></span>.',
+                $state->errors);
+        $this->assertEquals($state->contentsmodified, 'oc(1,2,3)');
+        // Note, the tex function only prints out two of the arguments!
+        $this->assertEquals($state->contentsdisplayed,
+                '\[ \left( 1,\, 2\right] \]');
+        $el->set_parameter('showValidation', 1);
+        $vr = '<div class="stackinputfeedback standard" id="sans1_val"><p>Your last answer was interpreted as follows: ' .
+              '<span class="filter_mathjaxloader_equation"><span class="nolink">\[ \left( 1,\, 2\right] \]</span></span>' .
+              '</p><input type="hidden" name="sans1_val" value="oc(1,2,3)" />' .
+              '<span class="alert alert-danger stackinputerror">This answer is invalid. Interval construction must have ' .
+              'exactly two arguments, so this must be an error: <span class="filter_mathjaxloader_equation">' .
+              '<span class="nolink">\(\mbox{oc(1,2,3)}\)</span></span>.</span></div>';
+        $this->assertEquals($vr, $el->replace_validation_tags($state, 'sans1', '[[validation:sans1]]'));
+
+        $state = $el->validate_student_response(array('sans1' => 'oc(3,2)'), $options, '%union({3,4,5})',
+                new stack_cas_security(false, '', '', array('ta')));
+        $this->assertEquals($state->status, stack_input::INVALID);
+        $this->assertEquals('', $state->note);
+        $this->assertEquals('When constructing a real interval the end points must be ordered. ' .
+                '<span class="filter_mathjaxloader_equation"><span class="nolink">\(\left( 3,\, 2\right]\)</span>' .
+                '</span> should be <span class="filter_mathjaxloader_equation"><span class="nolink">' .
+                '\(\left( 2,\, 3\right]\)</span></span>.',
+                $state->errors);
+        $this->assertEquals($state->contentsmodified, 'oc(3,2)');
+        // Note, the tex function only prints out two of the arguments!
+        $this->assertEquals($state->contentsdisplayed,
+                '\[ \left( 3,\, 2\right] \]');
+
+        $state = $el->validate_student_response(array('sans1' => 'union(oc(3,2),cc(-1,1))'), $options, '%union({3,4,5})',
+                new stack_cas_security(false, '', '', array('ta')));
+        $this->assertEquals($state->status, stack_input::INVALID);
+        $this->assertEquals('', $state->note);
+        $this->assertEquals('When constructing a real interval the end points must be ordered. ' .
+                '<span class="filter_mathjaxloader_equation"><span class="nolink">\(\left( 3,\, 2\right]\)</span>' .
+                '</span> should be <span class="filter_mathjaxloader_equation"><span class="nolink">' .
+                '\(\left( 2,\, 3\right]\)</span></span>.',
+                $state->errors);
+        $this->assertEquals($state->contentsmodified, '%union(oc(3,2),cc(-1,1))');
+        // Note, the tex function only prints out two of the arguments!
+        $this->assertEquals($state->contentsdisplayed,
+                '\[ \left( 3,\, 2\right] \cup \left[ -1,\, 1\right] \]');
+
+        $state = $el->validate_student_response(array('sans1' => 'union(oo(minf,-4),x^2)'), $options, '%union({3,4,5})',
+                new stack_cas_security(false, '', '', array('ta')));
+        $this->assertEquals($state->status, stack_input::INVALID);
+        $this->assertEquals('ATAlgEquiv_SA_not_realset', $state->note);
+        $this->assertEquals('Your answer should be a subset of the real numbers. ' .
+                'This could be a set of numbers, or a collection of intervals. ' .
+                'The following should not appear during construction of real sets: ' .
+                '<span class="filter_mathjaxloader_equation"><span class="nolink">\(x^2\)</span></span>',
+                $state->errors);
+        $this->assertEquals($state->contentsmodified, '%union(oo(minf,-4),x^2)');
+        // Note, the tex function only prints out two of the arguments!
+        $this->assertEquals($state->contentsdisplayed,
+                '\[ \left( -\infty ,\, -4\right) \cup x^2 \]');
+
+        $options = new stack_options();
+        $el = stack_input_factory::make('algebraic', 'sans1', '%union({3,4,5})');
+        $el->set_parameter('sameType', false);
+
+        $state = $el->validate_student_response(array('sans1' => 'union(oo(minf,-4),x^2)'), $options, '%union({3,4,5})',
+                new stack_cas_security(false, '', '', array('ta')));
+        $this->assertEquals($state->status, stack_input::INVALID);
+        $this->assertEquals('', $state->note);
+        $this->assertEquals('The following should not appear during construction of real sets: ' .
+                '<span class="filter_mathjaxloader_equation"><span class="nolink">\(x^2\)</span></span>',
+                $state->errors);
+        $this->assertEquals($state->contentsmodified, '%union(oo(minf,-4),x^2)');
+        // Note, the tex function only prints out two of the arguments!
+        $this->assertEquals($state->contentsdisplayed,
+                '\[ \left( -\infty ,\, -4\right) \cup x^2 \]');
+    }
+
+    public function test_validate_student_response_realsets_sametype_ok() {
+        $options = new stack_options();
+        $el = stack_input_factory::make('algebraic', 'sans1', '%union({3,4,5})');
+        $el->set_parameter('sameType', true);
+
+        // We don't require intervals to have real numbers in them.
+        $state = $el->validate_student_response(array('sans1' => 'oc(a,b)'), $options, '%union({3,4,5})',
+                new stack_cas_security(false, '', '', array('ta')));
+        $this->assertEquals($state->status, stack_input::VALID);
+        $this->assertEquals('', $state->note);
+        $this->assertEquals('', $state->errors);
+        $this->assertEquals($state->contentsmodified, 'oc(a,b)');
+        $this->assertEquals($state->contentsdisplayed,
+                '\[ \left( a,\, b\right] \]');
     }
 }

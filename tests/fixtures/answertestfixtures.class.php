@@ -198,6 +198,7 @@ class stack_answertest_test_data {
         array('AlgEquiv', '', '[3,3.1,3.14,3.142,3.1416,3.14159,3.141593,3.1415927]',
             'makelist(significantfigures(%pi,i),i,8)', 1, '', ''),
         array('AlgEquiv', '', 'x', '{1,2,3}', 0, 'ATAlgEquiv_SA_not_set.', 'Sets'),
+        array('AlgEquiv', '', 'co(1,2)', '{1,2,3}', 0, 'ATAlgEquiv_SA_not_set.', ''),
         array('AlgEquiv', '', '{1,2}', '{1,2,3}', 0, 'ATSet_wrongsz.', ''),
         array('AlgEquiv', '', '{2/4, 1/3}', '{1/2, 1/3}', 1, '', ''),
         array('AlgEquiv', '', '{A[1],A[2],A[4]}', '{A[1],A[2],A[3]}', 0, 'ATSet_wrongentries.', ''),
@@ -214,9 +215,10 @@ class stack_answertest_test_data {
         array('AlgEquiv', '', 'ev(radcan({-sqrt(2)/sqrt(3)}),simp)', 'ev(radcan({-2/sqrt(6)}),simp)', 1, '', ''),
         array('AlgEquiv', '', 'ev(radcan(ratsimp({(-sqrt(10)/2)-2,sqrt(10)/2-2},algebraic:true)),simp)',
             'ev(radcan(ratsimp({(-sqrt(5)/sqrt(2))-2,sqrt(5)/sqrt(2)-2},algebraic:true)),simp)', 1, '', ''),
+        // We don't simplify here.
         array('AlgEquiv', '', '{(2-2^(5/2))/2,(2^(5/2)+2)/2}', '{1-2^(3/2),2^(3/2)+1}', 0, 'ATSet_wrongentries.', ''),
         array('AlgEquiv', '', 'ev(radcan({(2-2^(5/2))/2,(2^(5/2)+2)/2}),simp)', '{1-2^(3/2),2^(3/2)+1}', 1, '', ''),
-        array('AlgEquiv', '', '{(x-a)^6000}', '{(a-x)^6000}', -3, 'ATSet_wrongentries.', ''),
+        array('AlgEquiv', '', '{(x-a)^6000}', '{(a-x)^6000}', 0, 'ATSet_wrongentries.', ''),
         array('AlgEquiv', '', '{(k+8)/(k^2+4*k-12),-(2*k+6)/(k^2+4*k-12)}', '{(k+8)/(k^2+4*k-12),-(2*k+6)/(k^2+4*k-12)}',
             1, '', ''),
 
@@ -307,6 +309,15 @@ class stack_answertest_test_data {
         array('AlgEquiv', '', '{}', '1=2', 0, 'ATAlgEquiv_SA_not_equation.', ''),
         array('AlgEquiv', '', '[]', '1=2', 0, 'ATAlgEquiv_SA_not_equation.', ''),
         array('AlgEquiv', '', '{}', 'none', 0, 'ATAlgEquiv_SA_not_logic.', ''),
+
+        array('AlgEquiv', '', 'x^2', 'cc(1,3)', 0, 'ATAlgEquiv_SA_not_realset.', 'Sets of real numbers'),
+        array('AlgEquiv', '', '%union(oo(1,2),oo(3,4))', '%union(oo(1,2),oo(3,4))', 1, 'ATRealSet_true.', ''),
+        array('AlgEquiv', '', '%union(oc(1,2),co(2,3))', 'oo(1,3)', 1, 'ATRealSet_true.', ''),
+        array('AlgEquiv', '', '%union(oc(1,2),co(2,3))', 'cc(1,3)', 0, 'ATRealSet_false.', ''),
+        // Because we have bumped the "type" of the teacher's answer to realset, this test goes to ATRealSet, not sets.
+        array('AlgEquiv', '', '{-1,1}', '%union({-1,1})', 1, 'ATRealSet_true.', ''),
+        array('AlgEquiv', '', '{1,3}', 'cc(1,3)', 0, 'ATRealSet_false.', ''),
+        array('AlgEquiv', '', '%intersection(oc(-1,1),co(1,2))', '%union({1})', 1, 'ATRealSet_true.', ''),
 
         array('AlgEquiv', '', 'a=b/%i', '%i*a=b', 1, 'ATEquation_num_i', 'Complex numbers'),
         array('AlgEquiv', '', 'b/%i=a', '%i*a=b', 1, 'ATEquation_num_i', ''),
@@ -447,6 +458,14 @@ class stack_answertest_test_data {
         array('AlgEquiv', '', 'x=-b#pm#c^2', 'x=c^2-b or x=-c^2-b', 1, 'ATLogic_True.', ''),
         array('AlgEquiv', '', 'not(A) and not(B)', 'not(A or B)', 1, 'ATLogic_True.', ''),
         array('AlgEquiv', '', 'not(A) and not(B)', 'not(A and B)', 0, '', ''),
+        array('AlgEquiv', '', 'not(A) or B', 'boolean_form(A implies B)', 1, '', ''),
+        array('AlgEquiv', '', 'not(A) or B', 'A implies B', 1, 'ATLogic_True.', ''),
+        array('AlgEquiv', '', 'not(A) and B', 'A implies B', 0, '', ''),
+        array('AlgEquiv', '', '(not A and B) or (not B and A)', 'A xor B', 1, 'ATLogic_True.', ''),
+        array('AlgEquiv', '', '(A and B) or (not A and not B)', 'A xnor B', 1, 'ATLogic_True.', ''),
+        // We can't apply this simplification to sets, as it breaks sets of inequalities.
+        array('AlgEquiv', '', '{not(A) or B,A and B}', '{A implies B,A and B}', 0, 'ATSet_wrongentries.', ''),
+        array('AlgEquiv', '', '{A implies B,A and B}', '{not(A) and B,A and B}', 0, 'ATSet_wrongentries.', ''),
 
         // Algebraic equivalence evaluates nouns.
         array('AlgEquiv', '', 'diff(x^2,x)', '2*x', 1, '', 'Differential equations'),
@@ -598,6 +617,7 @@ class stack_answertest_test_data {
         array('EqualComAss', '', 'A and B', 'B and A', 1, '', 'Logic'),
         array('EqualComAss', '', 'A or B', 'B or A', 1, '', ''),
         array('EqualComAss', '', 'A or B', 'B and A', 0, 'ATEqualComAss (AlgEquiv-false).', ''),
+        array('EqualComAss', '', 'not(true)', 'false', 0, 'ATEqualComAss (AlgEquiv-true).', ''),
         array('EqualComAss', '', '{2*x+1,2}', '{2, 1+x*2}', 1, '', 'Sets'),
         array('EqualComAss', '', '2', '{2}', 0, 'ATEqualComAss ATAlgEquiv_SA_not_set.', ''),
         array('EqualComAss', '', '{2*x+1, 1+1}', '{2, 1+x*2}', 0, 'ATEqualComAss (AlgEquiv-true).', ''),
@@ -783,6 +803,8 @@ class stack_answertest_test_data {
         array('Sets', '', '{1,2,1}', '{1,2}', 1, 'ATSets_duplicates.', 'Duplicate entries'),
         array('Sets', '', '{1,2,1+1}', '{1,2}', 1, 'ATSets_duplicates.', ''),
         array('Sets', '', '{1,2,1+1}', '{1,2,3}', 0, 'ATSets_duplicates. ATSets_missingentries.', ''),
+        // We accept these are "different" as we can't simplify this without expanding.
+        array('Sets', '', '{(x-a)^6000}', '{(a-x)^6000}', 0, 'ATSets_wrongentries. ATSets_missingentries.', ''),
 
         array('Expanded', '', '1/0', '0', -1, 'ATExpanded_STACKERROR_SAns.', ''),
         array('Expanded', '', 'x>2', 'x^2-2*x+1', 0, 'ATExpanded_SA_not_expression.', ''),
@@ -899,6 +921,13 @@ class stack_answertest_test_data {
         array('CompSquare', 'y', '(y-1)^2+1', '(y-1)^2+1', 1, 'ATCompSquare_true.', ''),
         array('CompSquare', 'y', '(y+1)^2+1', '(y-1)^2+1', 0, 'ATCompSquare_true_not_AlgEquiv.', ''),
         array('CompSquare', 'sin(x)', '(x-1)^2+1', '(sin(x)-1)^2+1', 0, 'ATCompSquare_SA_not_depend_var.', ''),
+
+        array('PropLogic', '', '1/0', '0', -1, 'ATPropLogic_STACKERROR_SAns.', ''),
+        array('PropLogic', '', '0', '1/0', -1, 'ATPropLogic_STACKERROR_TAns.', ''),
+        array('PropLogic', '', 'true', 'true', 1, '', ''),
+        array('PropLogic', '', 'true', 'false', 0, '', ''),
+        array('PropLogic', '', 'A implies B', 'not(A) or B', 1, '', ''),
+        array('PropLogic', '', '(a and b and c) xor (a and b) xor (a and c) xor a xor true', '(a implies b) or c', 1, '', ''),
 
         array('Equiv', '', 'x', '[x^2=4,x=2 or x=-2]', -1, 'ATEquiv_SA_not_list.', ''),
         array('Equiv', '', '[x^2=4,x=2 or x=-2]', 'x',  -1, 'ATEquiv_SB_not_list.', ''),

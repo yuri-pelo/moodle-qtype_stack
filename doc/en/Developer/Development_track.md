@@ -7,10 +7,13 @@ How to report bugs and make suggestions is described on the [community](../About
 
 ## Version 4.4
 
-TODO:
+Done
 
 * Add in the autocomplete input type.
 * Add in the resizable matrix input type (varmatrix).
+* Document and support for simple manipulation of [real intervals](../CAS/Real_Intervals.md) which Maxima does not have a library for.
+* Document and support for simple manipulation of [propositional logic](../CAS/Propositional_Logic.md) based on Maxima's logic package.
+* Document and support for simple manipulation of [tables](../Authoring/Tables.md) mainly to support easy display of truth tables in logic..
 
 ## Maxima side PRTs.
 

@@ -73,10 +73,19 @@
    case 'and':
    case 'nounand':
     return 65;
+   case 'nand':
+    return 62;
+   case 'nor':
+    return 61;
    case '%or':
    case 'or':
    case 'nounor':
     return 60;
+   case 'implies':
+    return 59;
+   case 'xor':
+   case 'xnor':
+    return 58;
   }
   return 0;
  }
@@ -112,6 +121,7 @@
    case '<=':
     return 80;
    case 'not ':
+   case 'nounnot ':
     return 70;
   }
   return 0;
@@ -569,6 +579,7 @@ PrefixOp
   / "''"
   / "'"
   / "not "
+  / "nounnot "
   / "%not "
   / "?? "
   / "? "
@@ -594,6 +605,11 @@ InfixOp
   / "or"
   / "nounand"
   / "nounor"
+  / "nand"
+  / "nor"
+  / "implies"
+  / "xor"
+  / "xnor"
   / "#"
   / "::="
   / ":="
@@ -631,6 +647,15 @@ UnaryOp
   return opBind($r);
   ?> **/
   var n = new MPPrefixOp(op, trg);
+  n.position = location();
+  return n;}
+  / "nounnot" trg:Group {
+  /** <?php
+  $r = new MP_PrefixOp("nounnot ", $trg);
+  $r->position = array('start'=>$this->peg_reportedPos, 'end'=>$this->peg_currPos);
+  return opBind($r);
+  ?> **/
+  var n = new MPPrefixOp("nounnot ", trg);
   n.position = location();
   return n;}
   / "not" trg:Group {

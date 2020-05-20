@@ -1158,7 +1158,8 @@ class stack_cas_text_test extends qtype_stack_testcase {
         $at2 = new stack_cas_text('{@A and B@}, {@A nounand B@}. ' .
                 '{@A or B@}, {@A nounor B@}. ' .
                 '{@(A or B) and C@}; {@(A and B) or C@}. ' .
-                '{@(A nounor B) nounand C@}; {@(A nounand B) nounor C@}. {@not A@}.',
+                '{@(A nounor B) nounand C@}; {@(A nounand B) nounor C@}. {@not A@}. ' .
+                '{@A nand B and C nor D xor E or F implies G xnor H@}.',
                 $at1->get_session(), 0);
         $this->assertTrue($at2->get_valid());
         $at2->get_display_castext();
@@ -1168,7 +1169,10 @@ class stack_cas_text_test extends qtype_stack_testcase {
                 '\({A\,{\mbox{ and }}\, B\,{\mbox{ or }}\, C}\). ' .
                 '\({\left(A\,{\mbox{ or }}\, B\right)\,{\mbox{ and }}\, C}\); ' .
                 '\({A\,{\mbox{ and }}\, B\,{\mbox{ or }}\, C}\). ' .
-                '\({{\rm not}\left( A \right)}\).', $at2->get_display_castext());
+                '\({{\rm not}\left( A \right)}\). ' .
+                '\({A\,{\mbox{ nand }}\, B\,{\mbox{ and }}\, C\,{\mbox{ nor }}\, ' .
+                'D\,{\mbox{ xor }}\, E\,{\mbox{ or }}\, F\,{\mbox{ implies }}\, G\,{\mbox{ xnor }}\, H}\).',
+                $at2->get_display_castext());
 
         $vars = 'make_logic("symbol");';
         $at1 = new stack_cas_keyval($vars, null, 123);
@@ -1177,13 +1181,71 @@ class stack_cas_text_test extends qtype_stack_testcase {
         $at2 = new stack_cas_text('{@A and B@}, {@A nounand B@}. ' .
                 '{@A or B@}, {@A nounor B@}. ' .
                 '{@(A or B) and C@}; {@(A and B) or C@}. ' .
-                '{@(A nounor B) nounand C@}; {@(A nounand B) nounor C@}. {@not A@}.',
-                $at1->get_session(), 0);
+                '{@(A nounor B) nounand C@}; {@(A nounand B) nounor C@}. {@not A@}. ' .
+                '{@A nand B and C nor D xor E or F implies G xnor H@}.',
+        $at1->get_session(), 0);
         $this->assertTrue($at2->get_valid());
         $at2->get_display_castext();
         $this->assertEquals('\({A\land B}\), \({A\land B}\). \({A\lor B}\), \({A\lor B}\). ' .
                 '\({\left(A\lor B\right)\land C}\); \({A\land B\lor C}\). ' .
-                '\({\left(A\lor B\right)\land C}\); \({A\land B\lor C}\). \({\neg \left( A \right)}\).',
+                '\({\left(A\lor B\right)\land C}\); \({A\land B\lor C}\). \({\neg \left( A \right)}\). ' .
+                '\({A\overline{\land}B\land C\underline{\lor}D\oplus E\lor F\rightarrow G\leftrightarrow H}\).',
                 $at2->get_display_castext());
     }
+
+    public function test_display_tables() {
+        $vars = 'T0:table([x,x^3],[-1,-1],[0,0],[1,1],[2,8],[3,27]);';
+        $at1 = new stack_cas_keyval($vars, null, 123);
+        $this->assertTrue($at1->get_valid());
+
+        $at2 = new stack_cas_text('{@T0@}',
+                $at1->get_session(), 0);
+        $this->assertTrue($at2->get_valid());
+        $at2->get_display_castext();
+        $this->assertEquals('\({\begin{array}{c|c} x & x^3\\\\ \hline -1 & -1 \\\\ ' .
+                '0 & 0 \\\\ 1 & 1 \\\\ 2 & 8 \\\\ 3 & 27\end{array}}\)',
+                $at2->get_display_castext());
+
+        $vars = '';
+        $at1 = new stack_cas_keyval($vars, null, 123);
+        $this->assertTrue($at1->get_valid());
+
+        $at2 = new stack_cas_text('{@truth_table(a implies b)@}',
+                $at1->get_session(), 0);
+        $this->assertTrue($at2->get_valid());
+        $at2->get_display_castext();
+        $this->assertEquals('\({\begin{array}{c|c|c} a & b & a\,{\mbox{ implies }}\, b\\\\ ' .
+                '\hline \mathbf{F} & \mathbf{F} & \mathbf{T} \\\\ \mathbf{F} & \mathbf{T} & ' .
+                '\mathbf{T} \\\\ \mathbf{T} & \mathbf{F} & \mathbf{F} \\\\ ' .
+                '\mathbf{T} & \mathbf{T} & \mathbf{T} \end{array}}\)',
+                $at2->get_display_castext());
+
+        $vars = 'table_bool_abbreviate:false;';
+        $at1 = new stack_cas_keyval($vars, null, 123);
+        $this->assertTrue($at1->get_valid());
+
+        $at2 = new stack_cas_text('{@truth_table(a xnor b)@}',
+                $at1->get_session(), 0);
+        $this->assertTrue($at2->get_valid());
+        $at2->get_display_castext();
+        $this->assertEquals('\({\begin{array}{c|c|c} a & b & a\,{\mbox{ xnor }}\, b\\\\ \hline \mathbf{false} ' .
+                '& \mathbf{false} & \mathbf{true} \\\\ \mathbf{false} & \mathbf{true} & \mathbf{false} \\\\ ' .
+                '\mathbf{true} & \mathbf{false} & \mathbf{false} \\\\ \mathbf{true} & \mathbf{true} & ' .
+                '\mathbf{true}\end{array}}\)', $at2->get_display_castext());
+
+        $vars = '';
+        $at1 = new stack_cas_keyval($vars, null, 123);
+        $this->assertTrue($at1->get_valid());
+
+        $at2 = new stack_cas_text('{@table_difference(truth_table(a xor b), truth_table(a implies b))@}',
+                $at1->get_session(), 0);
+        $this->assertTrue($at2->get_valid());
+        $at2->get_display_castext();
+        $this->assertEquals('\({\begin{array}{c|c|c} a & b & \color{red}{\underline{a\,{\mbox{ xor }}\, b}}\\\\ ' .
+                '\hline \mathbf{F} & \mathbf{F} & \color{red}{\underline{\mathbf{F} }} \\\\ \mathbf{F} & \mathbf{T} ' .
+                '& \mathbf{T} \\\\ \mathbf{T} & \mathbf{F} & \color{red}{\underline{\mathbf{T} }} \\\\ \mathbf{T} & ' .
+                '\mathbf{T} & \color{red}{\underline{\mathbf{F} }}\end{array}}\)',
+                $at2->get_display_castext());
+    }
+
 }

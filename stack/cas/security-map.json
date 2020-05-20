@@ -118,7 +118,8 @@
         "variable": "f"
     },
     "%union": {
-        "operator": "s"
+        "operator": "t",
+        "nounfunctionfor": "union"
     },
     "%unitexpand": {
         "variable": "f"
@@ -3266,6 +3267,10 @@
     "implicit_plot": {
         "function": "f"
     },
+    "implies": {
+        "operator": "s",
+        "spacesurroundedop": true
+    },
     "in": {
         "keyword": "?",
         "specialallowvariable": true
@@ -3386,10 +3391,16 @@
         "variable": "?"
     },
     "intersect": {
-        "function": "s"
+        "function": "s",
+        "nounfunction": "%intersection"
+    },
+    "%intersection": {
+        "function": "t",
+        "nounfunctionfor": "intersection"
     },
     "intersection": {
-        "function": "s"
+        "function": "s",
+        "nounfunction": "%intersection"
     },
     "intervalp": {
         "function": "f"
@@ -4607,6 +4618,10 @@
         "globalyforbiddenvariable": true,
         "variable": "f"
     },
+    "nand": {
+        "operator": "s",
+        "spacesurroundedop": true
+    },
     "nary": {
         "function": "?",
         "property": "?"
@@ -4739,9 +4754,23 @@
         "function": "f"
     },
     "not": {
-        "operator": "?"
+        "operator": "s",
+        "nounoperator": "nounnot",
+        "logicnoun": "nounnot"
+    },
+    "nounnot": {
+        "operator": "s",
+        "nounoperatorfor": "not",
+        "operator": "s"
     },
     "not ": {
+        "operator": "s",
+        "nounoperator": "nounnot ",
+        "logicnoun": "nounnot "
+    },
+    "nounnot ": {
+        "operator": "s",
+        "nounoperatorfor": "not ",
         "operator": "s"
     },
     "notequal": {
@@ -4775,6 +4804,10 @@
     },
     "nounor": {
         "nounoperatorfor": "or",
+        "operator": "s",
+        "spacesurroundedop": true
+    },
+    "nor": {
         "operator": "s",
         "spacesurroundedop": true
     },
@@ -7683,7 +7716,8 @@
         "function": "?"
     },
     "union": {
-        "function": "s"
+        "function": "s",
+        "nounfunction": "%union"
     },
     "unique": {
         "function": "s"
@@ -7999,6 +8033,14 @@
     },
     "xlabel": {
         "variable": "s"
+    },
+    "xor": {
+        "operator": "s",
+        "spacesurroundedop": true
+    },
+    "xnor": {
+        "operator": "s",
+        "spacesurroundedop": true
     },
     "xrange": {
         "variable": "f"

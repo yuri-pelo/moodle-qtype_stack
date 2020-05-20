@@ -340,11 +340,6 @@
 ;; Define an "arrayp" function to check if we have a Maxima array.
 (defmfun $arrayp (x) (and (not (atom x)) (cond ((member 'array (car x) :test #'eq) $true) (T $false))))
 
-;; Sort out binding power of %union to display correctly.
-;; tex-support is defined in to_poly_solve_extra.lisp.
-(defprop $%union 115. tex-rbp)
-
-
 ;; *************************************************************************************************
 ;; Added 19 Dec 2018.
 ;; Based src/mformat.lisp
@@ -421,3 +416,29 @@
   '$done
 )
 
+;; *************************************************************************************************
+;; Added 08 Jan 2020.
+;; Needed for %union, etc, where we don't display unions of just one item as unions.
+
+(defprop $%union tex-nary2 tex)
+(defprop $%union (" \\cup ") texsym)
+;; Sort out binding power of %union to display correctly.
+;; tex-support is defined in to_poly_solve_extra.lisp.
+(defprop $%union 114. tex-rbp)
+(defprop $%union 115. tex-lbp)
+
+(defprop $%intersection tex-nary2 tex)
+(defprop $%intersection (" \\cap ") texsym)
+(defprop $%intersection 114. tex-lbp)
+(defprop $%intersection 115. tex-rbp)
+
+
+(defun tex-nary2 (x l r)
+  (let* ((op (caar x)) (sym (texsym op)) (y (cdr x)) (ext-lop lop) (ext-rop rop))
+    (cond ((null y)       (tex-function x l r t)) ; this should not happen
+          ((null (cdr y)) (tex (car y) l r lop rop)) ; Single elements in the argument.
+          (t (do ((nl) (lop ext-lop op) (rop op (if (null (cdr y)) ext-rop op)))
+                 ((null (cdr y)) (setq nl (append nl (tex (car y)  l r lop rop))) nl)
+           (setq nl (append nl (tex (car y) l sym lop rop))
+             y (cdr y)
+             l nil))))))
