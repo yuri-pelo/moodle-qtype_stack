@@ -36,8 +36,9 @@ class stack_autocomplete_input_test extends qtype_stack_testcase {
         $ta = '[x^2,[]]';
         $el = stack_input_factory::make('autocomplete', 'ans1', $ta);
         $el->adapt_to_model_answer($ta);
-        $this->assertEquals('<input type="text" name="stack1__ans1" id="stack1__ans1" '
-                .'size="16.5" style="width: 13.6em" autocapitalize="none" spellcheck="false" value="" />',
+        $this->assertEquals('<input type="text" name="stack1__ans1" id="stack1__ans1" class="autocompleteinput" ' .
+                'size="16.5" style="width: 13.6em" autocapitalize="none" spellcheck="false" value="" ' .
+                'data-options="[&quot;&quot;]" />',
                 $el->render(new stack_input_state(stack_input::VALID, array(), '', '', '', '', ''),
                         'stack1__ans1', false, null));
     }
@@ -48,18 +49,10 @@ class stack_autocomplete_input_test extends qtype_stack_testcase {
         $el = stack_input_factory::make('autocomplete', 'ans1', $ta);
         $el->adapt_to_model_answer($ta);
         $el->set_parameter('options', 'allowempty');
-        $this->assertEquals('<input type="text" name="stack1__ans1" id="stack1__ans1" '
-                .'size="16.5" style="width: 13.6em" autocapitalize="none" spellcheck="false" value="" />',
+        $this->assertEquals('<input type="text" name="stack1__ans1" id="stack1__ans1" class="autocompleteinput" ' .
+                'size="16.5" style="width: 13.6em" autocapitalize="none" spellcheck="false" value="" ' .
+                'data-options="[&quot;&quot;]" />',
                 $el->render(new stack_input_state(stack_input::VALID, array(), '', '', '', '', ''),
-                        'stack1__ans1', false, null));
-    }
-
-    public function test_render_zero() {
-        $ta = '[x^2,[]]';
-        $el = stack_input_factory::make('autocomplete', 'ans1', $ta);
-        $this->assertEquals('<input type="text" name="stack1__ans1" id="stack1__ans1" '
-                .'size="16.5" style="width: 13.6em" autocapitalize="none" spellcheck="false" value="0" />',
-                $el->render(new stack_input_state(stack_input::VALID, array('0'), '', '', '', '', ''),
                         'stack1__ans1', false, null));
     }
 
@@ -71,9 +64,10 @@ class stack_autocomplete_input_test extends qtype_stack_testcase {
         $el->set_parameter('insertStars', 0);
         $el->set_parameter('strictSyntax', true);
 
-        $state = $el->validate_student_response(array('sans1' => '2x(1+x^2)+tans'), $options, 'x^2/(1+x^2)', array('tans'));
+        $state = $el->validate_student_response(array('sans1' => '2x(1+x^2)+tans'), $options, 'x^2/(1+x^2)',
+                new stack_cas_security());
         $this->assertEquals(stack_input::INVALID, $state->status);
-        $this->assertEquals('unknownFunction | missing_stars', $state->note);
+        $this->assertEquals('missing_stars | Variable_function | forbiddenVariable', $state->note);
     }
 
     public function test_validate_student_response_1() {
@@ -82,7 +76,8 @@ class stack_autocomplete_input_test extends qtype_stack_testcase {
         $el = stack_input_factory::make('autocomplete', 'sans1', $ta);
         $el->adapt_to_model_answer($ta);
 
-        $state = $el->validate_student_response(array('sans1' => 'a^2+2*a*b+b^2'), $options, 'a^2+2*a*b+b^2', array('tans'));
+        $state = $el->validate_student_response(array('sans1' => 'a^2+2*a*b+b^2'), $options, 'a^2+2*a*b+b^2',
+                new stack_cas_security());
         $this->assertEquals(stack_input::VALID, $state->status);
         $this->assertEquals(array('sans1' => 'a^2+2*a*b+b^2', 'sans1_val' => 'a^2+2*a*b+b^2'),
                 $el->get_correct_response($ta));
@@ -95,7 +90,7 @@ class stack_autocomplete_input_test extends qtype_stack_testcase {
         $el->adapt_to_model_answer($ta);
 
         $state = $el->validate_student_response(array('sans1' => 'a^2+2*a*b+b^2', 'sans1_val' => 'a^2+2*a*b+b^2'),
-                $options, 'a^2+2*a*b+b^2', array('tans'));
+                $options, 'a^2+2*a*b+b^2', new stack_cas_security());
         $this->assertEquals(stack_input::SCORE, $state->status);
     }
 }

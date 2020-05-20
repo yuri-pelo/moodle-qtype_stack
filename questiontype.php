@@ -1600,7 +1600,7 @@ class qtype_stack extends question_type {
             }
 
             $inputtype = $fromform[$inputname . 'type'];
-            $modelans = '' ;
+            $modelans = '';
             if (array_key_exists($inputname . 'modelans', $fromform)) {
                 $modelans = $fromform[$inputname . 'modelans'];
             }

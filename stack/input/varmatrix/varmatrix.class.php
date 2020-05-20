@@ -99,7 +99,7 @@ class stack_varmatrix_input extends stack_input {
             }
         }
 
-        $xhtml =  html_writer::tag('textarea', htmlspecialchars($current), $attributes);
+        $xhtml = html_writer::tag('textarea', htmlspecialchars($current), $attributes);
         return html_writer::tag('div', $xhtml, array('class' => $matrixbrackets));
     }
 
