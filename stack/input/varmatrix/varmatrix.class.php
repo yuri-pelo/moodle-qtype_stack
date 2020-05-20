@@ -87,15 +87,16 @@ class stack_varmatrix_input extends stack_input {
         }
 
         // Read matrix bracket style from options.
-        $matrixparens = $this->options->get_option('matrixparens');
-        if ($matrixparens == '[') {
-            $matrixbrackets = 'matrixsquarebrackets';
-        } else if ($matrixparens == '|') {
-            $matrixbrackets = 'matrixbarbrackets';
-        } else if ($matrixparens == '') {
-            $matrixbrackets = 'matrixnobrackets';
-        } else {
-            $matrixbrackets = 'matrixroundbrackets';
+        $matrixbrackets = 'matrixroundbrackets';
+        if ($this->options) {
+            $matrixparens = $this->options->get_option('matrixparens');
+            if ($matrixparens == '[') {
+                $matrixbrackets = 'matrixsquarebrackets';
+            } else if ($matrixparens == '|') {
+                $matrixbrackets = 'matrixbarbrackets';
+            } else if ($matrixparens == '') {
+                $matrixbrackets = 'matrixnobrackets';
+            }
         }
 
         $xhtml =  html_writer::tag('textarea', htmlspecialchars($current), $attributes);
@@ -122,7 +123,7 @@ class stack_varmatrix_input extends stack_input {
             $rowsin = explode("\n", $sans);
             foreach ($rowsin as $key => $row) {
                 $cleanrow = trim($row);
-                if ($cleanrow) {
+                if ($cleanrow !== '') {
                     $contents[] = $cleanrow;
                 }
             }
@@ -140,10 +141,11 @@ class stack_varmatrix_input extends stack_input {
             for ($i = 0; $i < ($maxlen - count($row)); $i++) {
                 $row[] = '?';
             }
-            $maxlen = max(count($entries), $maxlen);
             $contents[$key] = '[' . implode(',', $row) . ']';
         }
-        // TODO: pad short rows.
+        if ($contents == array() && $this->get_extra_option('allowempty')) {
+            $contents = array('EMPTYANSWER');
+        }
         return $contents;
     }
 

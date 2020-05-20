@@ -10,7 +10,7 @@ How to report bugs and make suggestions is described on the [community](../About
 TODO:
 
 * Add in the autocomplete input type.
-* Add in the resizable matrix input type.
+* Add in the resizable matrix input type (varmatrix).
 
 ## Maxima side PRTs.
 

@@ -93,7 +93,7 @@ class stack_textarea_input extends stack_input {
             $rowsout = array();
             foreach ($rowsin as $key => $row) {
                 $cleanrow = trim($row);
-                if ($cleanrow) {
+                if ($cleanrow !== '') {
                     $contents[] = $cleanrow;
                 }
             }
