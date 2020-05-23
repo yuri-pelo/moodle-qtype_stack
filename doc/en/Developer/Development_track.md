@@ -15,6 +15,7 @@ Done
 * Document and support for simple manipulation of [propositional logic](../CAS/Propositional_Logic.md) based on Maxima's logic package.
 * Document and support for simple manipulation of [tables](../Authoring/Tables.md) mainly to support easy display of truth tables in logic..
 * Better support for [semi-automatic marking](../Authoring/Semi-automatic_Marking.md).
+* Add in the resizable matrix input type (varmatrix).
 
 ## Maxima side PRTs.
 
