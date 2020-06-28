@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-require_once(__DIR__ . '/../locallib.php');
+require_once(__DIR__ . '/../moodlelib.php');
 require_once(__DIR__ . '/../stack/utils.class.php');
 require_once(__DIR__ . '/../stack/mathsoutput/fact_sheets.class.php');
 

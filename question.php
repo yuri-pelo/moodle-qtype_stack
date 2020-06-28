@@ -29,8 +29,13 @@ require_once(__DIR__ . '/stack/cas/keyval.class.php');
 require_once(__DIR__ . '/stack/cas/castext.class.php');
 require_once(__DIR__ . '/stack/cas/cassecurity.class.php');
 require_once(__DIR__ . '/stack/potentialresponsetree.class.php');
-require_once($CFG->dirroot . '/question/behaviour/adaptivemultipart/behaviour.php');
-require_once(__DIR__ . '/locallib.php');
+
+if (defined('MINIMAL_API')) {
+    require_once(__DIR__ . '/api/apilib.php');
+} else {
+    require_once($CFG->dirroot . '/question/behaviour/adaptivemultipart/behaviour.php');
+    require_once(__DIR__ . '/moodlelib.php');
+}
 
 /**
  * Represents a Stack question.
@@ -552,6 +557,16 @@ class qtype_stack_question extends question_graded_automatically_with_countback
         return implode('; ', $bits);
     }
 
+    public function summarise_response_json(array $response) {
+        $bits = array();
+        foreach ($this->inputs as $name => $input) {
+            $state = $this->get_input_state($name, $response);
+            $bits[$name]['status'] = $state->status;
+            $bits[$name]['value'] = $input->contents_to_maxima($state->contents);
+        }
+        return json_encode($bits);
+    }
+
     // Used in reporting - needs to return an array.
     public function summarise_response_data(array $response) {
         $bits = array();
@@ -1038,10 +1053,14 @@ class qtype_stack_question extends question_graded_automatically_with_countback
     }
 
     protected function has_question_capability($type) {
-        global $USER;
-        $context = $this->get_context();
-        return has_capability("moodle/question:{$type}all", $context) ||
+        if (!defined('MINIMAL_API')) {
+            // Then we are in Moodle.
+            global $USER;
+            $context = $this->get_context();
+            return has_capability("moodle/question:{$type}all", $context) ||
                 ($USER->id == $this->createdby && has_capability("moodle/question:{$type}mine", $context));
+        }
+        return true;
     }
 
     public function user_can_view() {

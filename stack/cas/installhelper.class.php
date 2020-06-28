@@ -18,7 +18,6 @@ defined('MOODLE_INTERNAL') || die();
 
 // This provides helper code for creating the files needed to connect to the CAS.
 
-require_once(__DIR__ . '/../../locallib.php');
 require_once(__DIR__ . '/../utils.class.php');
 require_once(__DIR__ . '/ast.container.class.php');
 require_once(__DIR__ . '/connectorhelper.class.php');

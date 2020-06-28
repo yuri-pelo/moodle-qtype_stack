@@ -16,11 +16,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once(__DIR__ . '/../locallib.php');
-require_once(__DIR__ . '/../stack/answertest/controller.class.php');
-require_once(__DIR__ . '/../stack/options.class.php');
 require_once(__DIR__ . '/fixtures/test_base.php');
 require_once(__DIR__ . '/fixtures/subscriptsfixtures.class.php');
+require_once(__DIR__ . '/../stack/answertest/controller.class.php');
+require_once(__DIR__ . '/../stack/options.class.php');
 
 // Add in all the tests from subscriptsfixtures.php into the unit testing framework.
 // These are exposed to users as documentation and the Travis integration should also run all the tests.

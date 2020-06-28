@@ -29,7 +29,7 @@
  */
 
 require_once(__DIR__ . '/../../../../config.php');
-require_once(__DIR__ . '/../locallib.php');
+require_once(__DIR__ . '/../moodlelib.php');
 require_once(__DIR__ . '/../stack/utils.class.php');
 require_once(__DIR__ . '/docslib.php');
 
