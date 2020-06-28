@@ -22,8 +22,6 @@ defined('MOODLE_INTERNAL') || die();
 */
 
 require_once(__DIR__ . '/autogen/parser.mbstring.php');
-// Also needs stack_string().
-require_once(__DIR__ . '/../../locallib.php');
 require_once(__DIR__ . '/../utils.class.php');
 
 class maxima_parser_utils {

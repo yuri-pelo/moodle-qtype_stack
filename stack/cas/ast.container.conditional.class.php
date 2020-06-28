@@ -25,7 +25,6 @@ require_once(__DIR__ . '/parsingrules/parsingrule.factory.php');
 require_once(__DIR__ . '/cassecurity.class.php');
 require_once(__DIR__ . '/ast.container.silent.class.php');
 require_once(__DIR__ . '/evaluatable_object.interfaces.php');
-require_once(__DIR__ . '/../../locallib.php');
 require_once(__DIR__ . '/../utils.class.php');
 require_once(__DIR__ . '/../maximaparser/utils.php');
 require_once(__DIR__ . '/../maximaparser/corrective_parser.php');

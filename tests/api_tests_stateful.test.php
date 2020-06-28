@@ -25,7 +25,6 @@ defined('MOODLE_INTERNAL') || die();
 // These are all the imports Stateful does, one test is to check that these exist.
 // Even the test_base is one of them.
 require_once(__DIR__ . '/fixtures/test_base.php');
-require_once(__DIR__ . '/../locallib.php');
 require_once(__DIR__ . '/../stack/options.class.php');
 require_once(__DIR__ . '/../stack/utils.class.php');
 require_once(__DIR__ . '/../stack/input/inputbase.class.php');

@@ -33,7 +33,7 @@ class stack_maths {
     /**
      * Do the necessary processing on equations in a language string, before it
      * is output. Rather than calling this method directly, you should probably
-     * use the stack_string method in locallib.php.
+     * use the stack_string method in moodlelib.php.
      * @param string $string the language string, as loaded by get_string.
      * @return string the string, with equations rendered to HTML.
      */

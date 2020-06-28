@@ -28,6 +28,12 @@ require_once(__DIR__ . '/settingslib.php');
 require_once(__DIR__ . '/stack/options.class.php');
 require_once(__DIR__ . '/stack/potentialresponsetree.class.php');
 
+if (defined('MINIMAL_API')) {
+    require_once(__DIR__ . '/apilib.php');
+} else {
+    require_once(__DIR__ . '/moodlelib.php');
+}
+
 // Useful links.
 $links = array(
     get_string('stackDoc_docs_desc', 'qtype_stack',

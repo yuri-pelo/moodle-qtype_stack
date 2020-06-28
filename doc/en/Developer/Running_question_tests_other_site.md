@@ -18,7 +18,7 @@ index 7974af2..a6614f2 100644
 --- a/bulktest.php
 +++ b/bulktest.php
 @@ -29,13 +29,14 @@ require_once($CFG->libdir . '/questionlib.php');
- require_once(__DIR__ . '/locallib.php');
+ require_once(__DIR__ . '/moodlelib.php');
  require_once(__DIR__ . '/stack/utils.class.php');
  require_once(__DIR__ . '/stack/bulktester.class.php');
 +require_once(__DIR__ . '/stack/cas/connectorhelper.class.php');

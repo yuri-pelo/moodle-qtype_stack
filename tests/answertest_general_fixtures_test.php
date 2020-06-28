@@ -22,11 +22,10 @@ defined('MOODLE_INTERNAL') || die();
 // @copyright  2016 The University of Edinburgh.
 // @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later.
 
-require_once(__DIR__ . '/../locallib.php');
-require_once(__DIR__ . '/../stack/answertest/controller.class.php');
-require_once(__DIR__ . '/../stack/options.class.php');
 require_once(__DIR__ . '/fixtures/test_base.php');
 require_once(__DIR__ . '/fixtures/answertestfixtures.class.php');
+require_once(__DIR__ . '/../stack/answertest/controller.class.php');
+require_once(__DIR__ . '/../stack/options.class.php');
 
 /**
  * @group qtype_stack
