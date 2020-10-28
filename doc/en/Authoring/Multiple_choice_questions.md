@@ -59,6 +59,20 @@ HTML dropdowns cannot display LaTeX within the options.  This is a restriction o
 
 Note here that an integer will returned internally.
 
+Similarly, you can include logical symbols.
+
+    ta1:[[0, false, "&#8658;"], [1, true, "&#8656;"], [2, false, "&#8660;"]];
+
+This will give a choice, e.g. a dropdown, from &#8658;, &#8656; and &#8660; and an integer will returned internally.
+
+    ta1:[[0, false, "&#8704;"], [1, true, "&#8707;"]];
+
+This will give a choice, e.g. a dropdown, from &#8704; and &#8707;.
+
+    ta1:[[0, true, "c &#8712;"], [1, false, "c &#8713;"]];
+
+This will give a choice, e.g. a dropdown, from "c &#8712;" and "c &#8713;".
+
 
 ## Internals ##
 
@@ -260,6 +274,12 @@ You must protect characters within strings.  E.g. in
     [A, true, "A. There exists \\(M\\) such that \\( |a_n| &lt; M \\)."]
 
 We have protected the backslash, and the inequality.
+
+The language strings are not CAStext, they are simply raw strings.  It is possible to construct strings which inlcude variable values using the `stack_disp` function.
+
+    [oc(-inf,a), false, sconcat("The half interval: ", stack_disp(oc(-inf,a),"i"))]
+
+The argument `"i"` here displays the expression "inline", other options are `""` (you are responsible for maths environments), `"d"` (displayed), and `"di"` (inline but using displaystyle).  If you construct strings in this way the display of any equations will not respect the display options in the particular input since variables are typically defined in the question variables and the input options are not available at that point in the code base.
 
 ## Dealing with plots in MCQ ##
 

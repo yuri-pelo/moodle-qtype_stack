@@ -407,7 +407,10 @@ class stack_cas_session2_test extends qtype_stack_testcase {
         $this->assertEquals('\sin^{-1}\left( x \right)', $s1[1]->get_display());
         $this->assertEquals('{\rm sinh}^{-1}\left( x \right)', $s1[2]->get_display());
         $this->assertEquals('\sin^{-1}^3x', $s1[3]->get_display());
+        // Note, the LaTeX below will break MathJax.
+        // But if you are willing to have inverses and powers with the same notation then you deserve to break things!
         $this->assertEquals('\sin^{-1}^{30}\left(x^2+1\right)', $s1[4]->get_display());
+        // Babbage comlained around 1820 about people using this notation and people still use this notation!
     }
 
     public function test_acos_option_acos() {
@@ -581,10 +584,10 @@ class stack_cas_session2_test extends qtype_stack_testcase {
         $this->assertEquals($s1[2]->get_display(), 'f(x):=x^3');
 
         $this->assertEquals($s1[3]->get_value(), 'gamma_7^3');
-        $this->assertEquals($s1[3]->get_display(), '{\gamma}_{7}^3');
+        $this->assertEquals($s1[3]->get_display(), '{{\gamma}_{7}}^3');
 
         $this->assertEquals($s1[4]->get_value(), 'pi_4^5');
-        $this->assertEquals($s1[4]->get_display(), '{\pi}_{4}^5');
+        $this->assertEquals($s1[4]->get_display(), '{{\pi}_{4}}^5');
     }
 
     public function test_matrix_eigenvalues() {
@@ -1482,7 +1485,7 @@ class stack_cas_session2_test extends qtype_stack_testcase {
         $this->assertEquals('b#pm#a^2', $s1[2]->get_value());
         $this->assertEquals('{b \pm a^2}', $s1[2]->get_display());
         $this->assertEquals('(b#pm#a)^2', $s1[3]->get_value());
-        $this->assertEquals('\left({b \pm a}\right)^2', $s1[3]->get_display());
+        $this->assertEquals('{\left({b \pm a}\right)}^2', $s1[3]->get_display());
         $this->assertEquals('"#pm#"(a)', $s1[4]->get_value());
         $this->assertEquals('\pm a', $s1[4]->get_display());
         $this->assertEquals('"#pm#"(a^2)', $s1[5]->get_value());
@@ -1490,7 +1493,7 @@ class stack_cas_session2_test extends qtype_stack_testcase {
         $this->assertEquals('"#pm#"(sqrt(1-x))', $s1[6]->get_value());
         $this->assertEquals('\pm \sqrt{1-x}', $s1[6]->get_display());
         $this->assertEquals('(a#pm#b)^2', $s1[7]->get_value());
-        $this->assertEquals('\left({a \pm b}\right)^2', $s1[7]->get_display());
+        $this->assertEquals('{\left({a \pm b}\right)}^2', $s1[7]->get_display());
         $this->assertEquals('x = "#pm#"(b)', $s1[8]->get_value());
         $this->assertEquals('x= \pm b', $s1[8]->get_display());
         $this->assertEquals('sin(x#pm#a)^2', $s1[9]->get_value());
@@ -1526,7 +1529,7 @@ class stack_cas_session2_test extends qtype_stack_testcase {
         $this->assertEquals('b#pm#a^2', $s1[2]->get_value());
         $this->assertEquals('{b \pm a^2}', $s1[2]->get_display());
         $this->assertEquals('(b#pm#a)^2', $s1[3]->get_value());
-        $this->assertEquals('\left({b \pm a}\right)^2', $s1[3]->get_display());
+        $this->assertEquals('{\left({b \pm a}\right)}^2', $s1[3]->get_display());
         $this->assertEquals('"#pm#"(a)', $s1[4]->get_value());
         $this->assertEquals('\pm a', $s1[4]->get_display());
         $this->assertEquals('"#pm#"(a^2)', $s1[5]->get_value());
@@ -1534,7 +1537,7 @@ class stack_cas_session2_test extends qtype_stack_testcase {
         $this->assertEquals('"#pm#"(sqrt(1-x))', $s1[6]->get_value());
         $this->assertEquals('\pm \sqrt{1-x}', $s1[6]->get_display());
         $this->assertEquals('(a#pm#b)^2', $s1[7]->get_value());
-        $this->assertEquals('\left({a \pm b}\right)^2', $s1[7]->get_display());
+        $this->assertEquals('{\left({a \pm b}\right)}^2', $s1[7]->get_display());
         $this->assertEquals('x = "#pm#"(b)', $s1[8]->get_value());
         $this->assertEquals('x= \pm b', $s1[8]->get_display());
         $this->assertEquals('sin(x#pm#a)^2', $s1[9]->get_value());
@@ -2010,6 +2013,68 @@ class stack_cas_session2_test extends qtype_stack_testcase {
 
         foreach ($s1 as $key => $test) {
             $this->assertEquals('false', $test->get_value());
+        }
+    }
+
+    public function test_stack_regex_match_exactp() {
+
+        $t1 = array();
+        $t1[] = array('regex_match_exactp("(aaa)*(b|d)c", "aaaaaabc")', 'true');
+        $t1[] = array('regex_match_exactp("(aaa)*(b|d)c", "dc")', 'true');
+        $t1[] = array('regex_match_exactp("(aaa)*(b|d)c", "aaaaaaabc")', 'false');
+        $t1[] = array('regex_match_exactp("(aaa)*(b|d)c", "aaaaaaabc")', 'false');
+
+        foreach ($t1 as $i => $case) {
+            $s = 'n' . $i . ':' . $case[0];
+            $s1[] = stack_ast_container::make_from_teacher_source($s, '', new stack_cas_security(), array());
+        }
+
+        $options = new stack_options();
+        $s = new stack_cas_session2($s1, $options, 0);
+        $s->instantiate();
+
+        foreach ($t1 as $i => $t) {
+            $this->assertEquals($t[1], $s1[$i]->get_value());
+        }
+    }
+
+    public function test_stack_at_units_sigfigs_wrapper() {
+
+        $t1 = array();
+        $t1[] = array('simp:false', 'false');
+        $t1[] = array('node_result:ATUnitsSigFigs_CASSigFigsWrapper(1*kg,1000*g,[1,3],"1 kg",false)',
+            '[true,true,"ATUnits_compatible_units kg. ",""]');
+
+        foreach ($t1 as $i => $case) {
+            $s1[] = stack_ast_container::make_from_teacher_source($case[0], '', new stack_cas_security(), array());
+        }
+
+        $options = new stack_options();
+        $s = new stack_cas_session2($s1, $options, 0);
+        $s->instantiate();
+
+        foreach ($t1 as $i => $t) {
+            $this->assertEquals($t[1], $s1[$i]->get_value());
+        }
+    }
+
+    public function test_stack_rational_numberp() {
+
+        $t1 = array();
+        $t1[] = array('simp:false', 'false');
+        $t1[] = array('l1:[1,-2,2/3,-4/3, 4/16, 9/3]', '[1,-2,2/3,(-4)/3,4/16,9/3]');
+        $t1[] = array('l2:map(rational_numberp, l1);', '[false,false,true,true,true,true]');
+
+        foreach ($t1 as $i => $case) {
+            $s1[] = stack_ast_container::make_from_teacher_source($case[0], '', new stack_cas_security(), array());
+        }
+
+        $options = new stack_options();
+        $s = new stack_cas_session2($s1, $options, 0);
+        $s->instantiate();
+
+        foreach ($t1 as $i => $t) {
+            $this->assertEquals($t[1], $s1[$i]->get_value());
         }
     }
 }

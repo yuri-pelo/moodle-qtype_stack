@@ -216,6 +216,9 @@ texput(dotdotdot, "\\ldots")$
 /* Type predicates                    */
 /* ********************************** */
 
+/* It is very useful to know if we have a "variable". */
+variablep(ex) := atom(ex) and not(real_numberp(ex)) and not(ex=%i) and not(stringp(ex))$
+
 /* Determines if we are using an equation. */
 equationp(ex) := block(
    if atom(ex) then return(false),
@@ -345,8 +348,7 @@ rational_numberp(ex) := block(
 
 /* Do we have a real number?  */
 /* Code taken from Stack_Test */
-real_numberp(ex):=
-    block([keepfloat, trigexpand, logexpand],
+real_numberp(ex):= block([keepfloat, trigexpand, logexpand],
     trigexpand:true,
     logexpand:super,
     keepfloat:true,
@@ -355,6 +357,12 @@ real_numberp(ex):=
     ex:ev(float(ex[1]),simp),
     if listofvars(ex)#[] then return(false),
     if floatnump(ex) then return(true) else return(false)
+)$
+
+/* Do we have a real number, inf or -inf?  */
+extended_real_numberp(ex) := block(
+    if ex=inf or ex=-inf then return(true),
+    return(real_numberp(ex))
 )$
 
 /* Decide if we have a purely imaginary number.  */
@@ -802,26 +810,37 @@ numerical_not_alg_equiv(p1, p2):= block([pvars, pval, lv, sz, stack_mtell_quiet]
    If it could not establish this, because there are too many combinations to reasonably consider,
    then the function returns false.
 */
-subst_equiv(ex1,ex2):=block([lv1, lv2, lvi, lvp, lvs, lve, il, perm_size, simp],
+subst_equiv([ex]):=block([ex1, ex2, l1, lv1, lv2, lvi, lvp, lvs, lve, lvpres, il, perm_size, simp],
+ /* Maintain back-compatibility. */
+ ex1: first(ex),
+ ex2: second(ex),
+ l1:[],
+ if length(ex)>2 then l1:third(ex),
+ 
  simp:true,
  perm_size:4, /* This algorithm is order factorial(perm_size) and so this needs to be small. */
  lv1:setify(listofvars(ex1)),
  lv2:setify(listofvars(ex2)),
  /* If any of the variables also appear as function names we should get rid of them.
     Otherwise we get an infinite loop.                                               */
- lv1:listify(setdifference(lv1, get_ops(ex1))),
- lv2:listify(setdifference(lv2, get_ops(ex2))),
+ lv1:setdifference(lv1, get_ops(ex1)),
+ lv2:setdifference(lv2, get_ops(ex2)),
  if length(lv1)#length(lv2) then return([]),
  /* If the lists are too long, try a weaker condition */
  /* We assume the variables which occur in both are correctly assigned. */
  /* Can we find a permutation of those left in each? */
  if length(lv1)>perm_size then (
-   lv1:setify(lv1),
-   lv2:setify(lv2),
    lvi:intersection(lv1, lv2),
-   lv1:listify(setdifference(lv1, lvi)),
-   lv2:listify(setdifference(lv2, lvi))
+   lv1:setdifference(lv1, lvi),
+   lv2:setdifference(lv2, lvi)
   ),
+ /* We don't include any variables which the teacher fixes. */
+ if not(emptyp(l1)) then (
+   l1:setify(l1),
+   lv2:setdifference(lv2, l1)
+ ),
+ lv1:listify(lv1),
+ lv2:listify(lv2),
  if length(lv1)>perm_size then return(false),
  /*                                  */
  lvp:listify(permutations(lv2)),
@@ -831,10 +850,9 @@ subst_equiv(ex1,ex2):=block([lv1, lv2, lvi, lvp, lvs, lve, il, perm_size, simp],
  lve:map(lambda([ex], ev(ex1, ex)), lvs),
  lve:map(lambda([ex], ATAlgEquivfun(ex, ex2)), lve),
  lve:map(second,lve),
- lve:map(lambda([ex], equal(ex, true)),lve),
+ lve:map(lambda([ex], equal(ex, true)), lve),
  if apply("or", lve) then (il:sublist_indices(lve, identity), lvs[il[1]]) else []
 )$
-
 
 /* ********************************** */
 /* Simplification control             */
@@ -1364,6 +1382,29 @@ factor_bag(ex) := block(
   return(ex)
 )$
 
+/* Terms of the form [a]*v_1, where we have exactly one substantive term which satisfies the predicate p, multiplied by numbers. 
+   Numbers on their own don't count here.
+*/
+linear_term_p(ex, p) := block([ex1],
+   if p(ex) then return(true),
+   if not(safe_op(ex)="*") then return(false),
+   ex1:args(ex),
+   if not(length(sublist(ex1, p))=1) then return(false),
+   ex1:sublist(ex1, lambda([ex2], not(p(ex2)))),
+   return(all_listp(real_numberp, ex1))
+)$
+
+/* Establishes if an expression is a linear combination of terms
+   for which the predicate p is true.
+*/
+linear_combination_p(ex, p) := block(
+   if linear_term_p(ex, p) then return(true),
+   if not(safe_op(ex)="+") then return(false),
+   ex:args(ex),
+   ex:map(lambda([ex1], linear_term_p(ex1, p)), ex),
+   return(apply("and", ex))  
+)$
+
 /****************************/
 /* Matrix/vector operations */
 /****************************/
@@ -1609,7 +1650,7 @@ texput(stacklet, stacklettex);
 /* Expr: expression, is the line of the argument.                                              */
 /* String: note is some deugging information.                                                  */
 stack_eval_arg(ex) := block([eqoutcome, eqoutsymb, eqoutnote, res, id, truthargument, tempnote, exmod, exmodpoly, exmodsolve, exnatdomain, SA, SAL, SB, SBL, malrulecont],
-  if not(listp(ex)) then error("stack_arg expects to receive a list."),
+  if not(listp(ex)) then error("stack_eval_arg expects to receive a list."),
   if emptyp(ex) then return(matrix([true, EMPTYCHAR, [], EMPTYCHAR, ""])),
   if length(ex)=1 then return(matrix([true, EMPTYCHAR, first(ex), EMPTYCHAR, ""])),
   /* Set up empty rows to hold the answer. */
@@ -1737,7 +1778,6 @@ stack_eval_arg(ex) := block([eqoutcome, eqoutsymb, eqoutnote, res, id, truthargu
              if assume_real then block([FAA, FBB, FGCD, ATres],
                FAA:if equationp(SAP) then lhs(SAP)-rhs(SAP) else SAP,
                FAB:if equationp(SBP) then lhs(SBP)-rhs(SBP) else SBP,
-               if (debug) then print("Checking assume_real with ", FAA, " and ", FAB),
                if (debug) then print("** Checking assume_real with: ", string(FAA), ", ", string(FAB), " **"),
                if (polynomialpsimp(FAA) and polynomialpsimp(FAB) and length(listofvars(FAA))=1 and length(listofvars(FAB))=1) then block(
                   FAA:ev(solve(FAA), simp),

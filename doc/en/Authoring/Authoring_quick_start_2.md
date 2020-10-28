@@ -12,7 +12,7 @@ This part of the authoring quick start guide deals with using question variables
 
 For this example, we will be working with a simple integration problem. Below is a typical set of practice exercises.
 
-![Integration exercises](%CONTENT/IntegrationExercises.jpg)
+![Integration exercises](../../content/IntegrationExercises.jpg)
 
 (Reproduced with permission from _Advanced Mathematics for AS and A level 2_ (A-level mathematics), Haese Mathematics (2018) [978-1-925489-32-3](http://www.haesemathematics.com/books/advanced-mathematics-2-for-a-level))
 
@@ -35,10 +35,8 @@ Notice we are using the CAS to determine the model answer by calling the `int()`
 
 Now it will be a lot faster to fill out the rest of the question. Add the following to the question text:
 
-<textarea readonly="readonly" rows="3" cols="50">
-Find \(\int{@exp@} \mathrm{d}x\)
-[[input:ans1]] [[validation:ans1]]
-</textarea>
+	Find \(\int{@exp@} \mathrm{d}x\)
+	[[input:ans1]] [[validation:ans1]]
 
 Notice that we have defined a local variable `exp`, and used the value of this in the Question text. There is a difference between mathematics enclosed between `\(..\)` symbols and `{@..@}` symbols. All the text-based fields in the question, including feedback, are [CAS text](CASText.md).  This is HTML into which mathematics can be inserted.  LaTeX is placed between `\(..\)`s, and CAS expressions (including your variables) between matching `{@..@}` symbols.  The CAS expressions are evaluated in the context of the question variables and displayed as LaTeX.
 

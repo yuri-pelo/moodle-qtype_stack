@@ -102,6 +102,7 @@ class stack_inputvalidation_test_data {
         array('aXy1', 'php_false', 'aXy*1', 'cas_true', '', 'missing_stars | forbiddenVariable', ""),
         // In STACK 4.3, the parser accepts these as functions.
         array('f(x)', 'php_true', 'f(x)', 'cas_true', 'f\left(x\right)', '', "Functions"),
+        array('f(x)^2', 'php_true', 'f(x)^2', 'cas_true', 'f^2\left(x\right)', '', ""),
         array('a(x)', 'php_true', 'a(x)', 'cas_true', 'a\left(x\right)', '', ""),
         array('x(t+1)', 'php_true', 'x(t+1)', 'cas_true', 'x\left(t+1\right)', '', ""),
         // Because we are using x as a variable, we do insert a * here!
@@ -206,7 +207,7 @@ class stack_inputvalidation_test_data {
         "This names the operator sine, which is a valid expression on its own.
         The classic difference between the function \(f\) and the value of the
         function at a point \(f(x)\).  Maybe a 'gocha' for the question author...."),
-        array('(x+y)^z', 'php_true', '(x+y)^z', 'cas_true', '\left(x+y\right)^{z}', '',
+        array('(x+y)^z', 'php_true', '(x+y)^z', 'cas_true', '{\left(x+y\right)}^{z}', '',
         "Check display: brackets only go round operands when strictly necessary, but student validation respects the input."),
         array('x+(y^z)', 'php_true', 'x+(y^z)', 'cas_true', 'x+y^{z}', '', ""),
         array('x-(y+z)', 'php_true', 'x-(y+z)', 'cas_true', 'x-\left(y+z\right)', '', ""),
@@ -267,6 +268,7 @@ class stack_inputvalidation_test_data {
         array('upsilon', 'php_true', 'upsilon', 'cas_true', '\upsilon', '', ""),
         array('phi', 'php_true', 'phi', 'cas_true', '\varphi', '',
                 "Constant, represents the so-called golden mean, \((1 + \sqrt{5})/2\)."),
+        array('phi(n)+Phi(n)', 'php_true', 'phi(n)+Phi(n)', 'cas_true', '\varphi\left(n\right)+\Phi\left(n\right)', '', ""),
         array('chi', 'php_true', 'chi', 'cas_true', '\chi', '', ""),
         array('psi', 'php_true', 'psi', 'cas_true', '\psi', '', "The derivative of \(\log (\gamma (x))\) of order \(n+1\)."),
         array('omega', 'php_true', 'omega', 'cas_true', '\omega', '', ""),
@@ -343,6 +345,8 @@ class stack_inputvalidation_test_data {
         array('root(x)', 'php_true', 'root(x)', 'cas_true', '\sqrt{x}', '', ''),
         array('root(x,3)', 'php_true', 'root(x,3)', 'cas_true', 'x^{\frac{1}{3}}', '', ''),
         array('root(2,-3)', 'php_true', 'root(2,-3)', 'cas_true', '2^{\frac{1}{-3}}', '', ''),
+        array('conjugate(x)', 'php_true', 'conjugate(x)', 'cas_true', 'x^\star', '', ''),
+        array('conjugate(x)^2', 'php_true', 'conjugate(x)^2', 'cas_true', '{x^\star}^2', '', ''),
         // Parser rules in 4.3, identify cases where known functions (cf) are prefixed with single letter variables.
         array('bsin(t)', 'php_true', 'b*sin(t)', 'cas_true', 'b\cdot \sin \left( t \right)', 'missing_stars', ""),
         // So we have added gcf as a function so it is not g*cf...
@@ -412,6 +416,8 @@ class stack_inputvalidation_test_data {
         array('switch(x,a,y,b,c)', 'php_false', '', '', '', 'forbiddenFunction', ""),
         array('sin(x)', 'php_true', 'sin(x)', 'cas_true', '\sin \left( x \right)', '', "Trig functions"),
         array('cos(x)', 'php_true', 'cos(x)', 'cas_true', '\cos \left( x \right)', '', ""),
+        array('cos(x)^2', 'php_true', 'cos(x)^2', 'cas_true', '\cos ^2x', '', ""),
+        array('cos(x+1)^2', 'php_true', 'cos(x+1)^2', 'cas_true', '\cos ^2\left(x+1\right)', '', ""),
         array('tan(x)', 'php_true', 'tan(x)', 'cas_true', '\tan \left( x \right)', '', ""),
         array('sec(x)', 'php_true', 'sec(x)', 'cas_true', '\sec \left( x \right)', '', ""),
         array('cot(x)', 'php_true', 'cot(x)', 'cas_true', '\cot \left( x \right)', '', ""),
@@ -454,6 +460,7 @@ class stack_inputvalidation_test_data {
         array('log_10(x)', 'php_true', 'lg(x,10)', 'cas_true', '\log_{10}\left(x\right)', 'logsubs', ""),
         array('log_2(a)', 'php_true', 'lg(a,2)', 'cas_true', '\log_{2}\left(a\right)', 'logsubs', ""),
         array('log_x(1/(x+b))', 'php_true', 'lg(1/(x+b),x)', 'cas_true', '\log_{x}\left(\frac{1}{x+b}\right)', 'logsubs', ""),
+        array('log_2(a)^3', 'php_true', 'lg(a,2)^3', 'cas_true', '{\log_{2}\left(a\right)}^3', 'logsubs', ""),
         array('2+log_x(1/(x+b))*x^2', 'php_true', '2+lg(1/(x+b),x)*x^2', 'cas_true',
             '2+\log_{x}\left(\frac{1}{x+b}\right)\cdot x^2', 'logsubs', ""),
         array('log_a(b)*log_b(c)', 'php_true', 'lg(b,a)*lg(c,b)', 'cas_true',
@@ -461,6 +468,8 @@ class stack_inputvalidation_test_data {
         array('lg(x)', 'php_true', 'lg(x)', 'cas_true', '\log_{10}\left(x\right)', '', "Logarithm to the base \(10\)."),
         array('lg(10^3)', 'php_true', 'lg(10^3)', 'cas_true', '\log_{10}\left(10^3\right)', '', ""),
         array('lg(x,a)', 'php_true', 'lg(x,a)', 'cas_true', '\log_{a}\left(x\right)', '', ""),
+        array('lg(x,2)+lg(x,2)^3', 'php_true', 'lg(x,2)+lg(x,2)^3', 'cas_true',
+            '\log_{2}\left(x\right)+{\log_{2}\left(x\right)}^3', '', ""),
         array('log(2x)/x+1/2', 'php_true', 'log(2*x)/x+1/2', 'cas_true',
                 '\frac{\ln \left( 2\cdot x \right)}{x}+\frac{1}{2}', 'missing_stars', ""),
         array('a++b', 'php_true', 'a++b', 'cas_true', 'a+b', '',
@@ -468,7 +477,7 @@ class stack_inputvalidation_test_data {
         array('a +++ b', 'php_true', 'a+++b', 'cas_true', 'a+b', '', ""),
         array('a --- b', 'php_true', 'a---b', 'cas_true', 'a-\left(-\left(-b\right)\right)', '', ""),
         array('rho*z*V/(4*pi*epsilon[0]*(R^2+z^2)^(3/2))', 'php_true', 'rho*z*V/(4*pi*epsilon[0]*(R^2+z^2)^(3/2))', 'cas_true',
-                '\frac{\rho\cdot z\cdot V}{4\cdot \pi\cdot \varepsilon_{0}\cdot \left(R^2+z^2\right)^{\frac{3}{2}}}',
+                '\frac{\rho\cdot z\cdot V}{4\cdot \pi\cdot \varepsilon_{0}\cdot {\left(R^2+z^2\right)}^{\frac{3}{2}}}',
                 '', "Subscripts"),
         array('a_b', 'php_true', 'a_b', 'cas_true', '{a}_{b}', '', ""),
         array('beta_47', 'php_true', 'beta_47', 'cas_true', '{\beta}_{47}', '', ""),
@@ -484,7 +493,7 @@ class stack_inputvalidation_test_data {
             '\prod_{k=1}^{3}{\cos \left( k\cdot x \right)}', '', '')
     );
 
-    protected static $rawdata_units = array(
+    protected static $rawdataunits = array(
         array('123', 'php_true', '123', 'cas_true', '123\,', 'Units_SA_no_units', "Units"),
         array('9.81*m/s^2', 'php_true', '9.81*m/s^2', 'cas_true', '9.81\, {\mathrm{m}}/{\mathrm{s}^2}', '', ""),
         array('9.81*m*s^-2', 'php_true', '9.81*m*s^-2', 'cas_true', '9.81\, {\mathrm{m}}/{\mathrm{s}^2}', '', ""),
@@ -517,7 +526,7 @@ class stack_inputvalidation_test_data {
     }
 
     public static function get_raw_test_data_units() {
-        return self::$rawdata_units;
+        return self::$rawdataunits;
     }
 
     public static function test_from_raw($data, $validationmethod) {
@@ -546,7 +555,7 @@ class stack_inputvalidation_test_data {
         foreach (self::$rawdata as $data) {
             $tests[] = self::test_from_raw($data, 'typeless');
         }
-        foreach (self::$rawdata_units as $data) {
+        foreach (self::$rawdataunits as $data) {
             $tests[] = self::test_from_raw($data, 'units');
         }
         return $tests;
@@ -558,7 +567,6 @@ class stack_inputvalidation_test_data {
         // Note: What we would really like to do is the following.
         // $el = stack_input_factory::make('algebraic', 'sans1', 'x');
         // $el->set_parameter('insertStars', 1);
-        // $el->set_parameter('strictSyntax', false);
         // $el->set_parameter('sameType', false);
         // $cs = $el->validate_student_response($test->rawstring);
         // However, we want to pull apart the bits to expose where the various errors occur.
@@ -637,7 +645,7 @@ class stack_inputvalidation_test_data {
             }
             if ($casdisplay != $test->display) {
                 $passed = false;
-                $errors .= ' '.stack_string('displaymismatch').html_writer::tag('pre', s($test->display));
+                $errors .= ' ' . stack_string('displaymismatch') . html_writer::tag('pre', s($test->display)) . html_writer::tag('pre', s($casdisplay));
             }
         }
 

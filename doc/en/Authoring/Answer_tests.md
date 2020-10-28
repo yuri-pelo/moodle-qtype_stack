@@ -5,7 +5,7 @@ establish whether they satisfy some mathematical criteria. The
 prototype test is to establish if they are the _same_.  That is
 to say, _algebraically equivalent_.
 
-The exact behaviour of each answer test can be seen from STACK's [test suite for STACK Answer tests](../../../answertests.php).
+We expose the exact behaviour of each answer test by giving registered users access to STACK's test suite for STACK Answer tests.  This can be found on a live server at [https://stack-demo.maths.ed.ac.uk/demo/question/type/stack/answertests.php](https://stack-demo.maths.ed.ac.uk/demo/question/type/stack/answertests.php)
 
 This compares pairs of expressions and displays the outcomes
 from each test. Mainly used to ensure STACK is working, it is
@@ -67,6 +67,8 @@ Hence, we need quite a number of different answer tests to establish equality in
 | SameType                                          | Are the two expressions of the same [types_of_object](../CAS/Maxima.md#Types_of_object)?  Note that this test works recursively over the entire expression.
 | SysEquiv                                          | Do two systems of polynomial equations have the same solutions? 
 | PropLogic                                         | An answer test designed to deal with [propositional logic](../CAS/Propositional_Logic.md). 
+
+`SubstEquiv` accepts an optional argument, which must be a list of variables.  These variables will be excluded from the list of possible comparisons, and so must be "fixed" in the comparison.  Useful if you want to establish that a student has used arbitrary constants in \(A\sin(x)+B\cos(x)\) but make sure \(x\) really stays as \(x\).
 
 ### AlgEquiv {#AlgEquiv}
 
@@ -170,6 +172,16 @@ This test uses Maxima's `regex_match` function.
 * The first argument should be the string, and the second argument should be the pattern to match.
 * Don't forget to escape within the pattern strings as needed. Note that there is a function `string_to_regex()` that will handle escaping of characters that would otherwise have meaning in the pattern. Also remember that you need to escape the backslashes like normal in Maxima-strings.
 * One can read more about the patterns posible from [here](http://ds26gte.github.io/pregexp/index.html). Case-insensitivity may be something worth noting there.
+
+STACK also provides a helper function `regex_match_exactp(regex, str)` to check if the string equals the pattern matched by the regular expression.
+
+    Regex           String      Result
+    (aaa)*(b|d)c    aaaaaabc    true
+    (aaa)*(b|d)c    dc          true
+    (aaa)*(b|d)c    aaaaaaabc   false
+    (aaa)*(b|d)c    cca         false
+
+Currently this is not provided as a separate answer test so you will need to use this predicate in the question variables and check the result against the expected value, or supply the predicate as an argument to an answer test.
 
 # Form {#Form}
 

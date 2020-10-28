@@ -24,8 +24,7 @@ Feedback as to the syntactic validity of a response is positioned using a corres
 
 This tag must be included even if validation is suppressed with an option (see below) and is automatically generated after the input if it does not exist.
 
-To see what sort of validation is done to a default algebraic input, look at the
-[test suite for validation of student's input](../../../studentinputs.php).
+We expose the exact behaviour of the validation by giving registered users access to STACK's test suite validation of student's answers.  This can be found on a live server at https://stack-demo.maths.ed.ac.uk/demo/question/type/stack/studentinputs.php
 
 Each input may have a number of options and this is potentially complex area with a large range of possibilities.
 
@@ -43,7 +42,7 @@ Internally you can refer to the student's answer using the variable name `ans1` 
 
 ### Model answer ###  {#model_answer}
 
-**This field is compulsory.** Every input must have an answer, although this answer is not necessarily the unique correct answer, or even "correct"!  This value will be available as a question variable named `tans`**`n`** (where **`n`** is 1, 2, ...), and it will be displayed to the student as the correct answer.
+**This field is compulsory.** Every input must have an answer, although this answer is not necessarily the unique correct answer, or even "correct"!  This value be displayed to the student as the correct answer.  We recommend you use a question variable for this field so it can be used in the other parts of the question, e.g. the potential response trees.
 
 ## Input type ##
 
@@ -123,27 +122,11 @@ A single letter can be entered.  This is useful for creating multiple-choice que
 
 The width of the input box.
 
-### Strict Syntax ### {#Strict_Syntax}
+### Insert Stars ### {#Insert_Stars}
 
-Both Strict Syntax and Insert Stars affect the way STACK treats the validation of CAS strings.
-
-* Strict Syntax defines the patterns to look for.
-* Insert Stars decides whether to insert stars automatically.
-
-We need these options since \(x(t+1)\) means apply the function \(x\) to the argument \((t+1)\), whereas \(\sin(x)\) would be fine. How does one distinguish between the two?
-
-This option decides if we expect strict Maxima syntax.  The default is `no`.  This option affects which patterns we search for when looking for missing stars.
+Insert Stars affect the way STACK treats the validation of CAS strings.
 
 Some patterns must always be wrong.  For example  `)(` must be missing a star, and so this pattern is always included.
-
-If set to `no`, this increases the range of things into which stars might be inserted.  In particular when `no` we assume
-
-* The student's expression does not contain any functions, so that `f(x+1)` is looked for, and we expect `f*(x+1)`.
-* The student's expression does not contain any scientific notation, so that `3E2` or `3e2` (which Maxima interprets as `300.0`) is looked for, and expects `3*E*2` or `3e2`.
-
-Please read the notes on [numbers](../CAS/Numbers.md#Floats).
-
-### Insert Stars ### {#Insert_Stars}
 
 There are six options.
 
@@ -161,7 +144,7 @@ There are also additional options to insert multiplication signs for spaces.
 
 If a space is taken for multiplication what should we do with \(\sin\ x\)?  Currently this is transformed to \(\sin \times x\) and then rejected as invalid as you can't multiply the function name by its argument.  Use these latter options with caution: in the long run students are likely to need to use a strict syntax with machines, and letting them use spaces now might be a disservice.
 
-The "Strict Syntax" and "Insert Stars" options are in conflict: we can't have it both ways.  What would you expect to happen in \(\sin(in)\)? If we replace `in` by `i*n` in the original typed expression we end up in a mess.   For this reason it is essential to have some on-screen representation of multiplication, e.g. as a dot, so the student can see at the validation that `xe^x` is interpreted 
+It is often very important to have some on-screen representation of multiplication, e.g. as a dot, so the student can see at the validation that `xe^x` is interpreted 
 
 1. as \( (x\cdot e)^x\) if we assume single character variable names, and
 2. as \( xe^x\) if we just "Insert `*`s for implied multiplication".  The absence of the dot here is key.

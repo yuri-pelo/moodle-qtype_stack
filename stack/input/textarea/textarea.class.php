@@ -101,7 +101,7 @@ class stack_textarea_input extends stack_input {
         return $contents;
     }
 
-    protected function caslines_to_answer($caslines) {
+    protected function caslines_to_answer($caslines, $secrules = false) {
         $vals = array();
         foreach ($caslines as $line) {
             if ($line->get_valid()) {
@@ -112,7 +112,10 @@ class stack_textarea_input extends stack_input {
             }
         }
         $s = '['.implode(',', $vals).']';
-        return stack_ast_container::make_from_student_source($s, '', $caslines[0]->get_securitymodel());
+        if (!$secrules) {
+            $secrules = $caslines[0]->get_securitymodel();
+        }
+        return stack_ast_container::make_from_student_source($s, '', $secrules);
     }
 
     /**
@@ -229,7 +232,6 @@ class stack_textarea_input extends stack_input {
             'mustVerify'         => true,
             'showValidation'     => 1,
             'boxWidth'           => 20,
-            'strictSyntax'       => true,
             'insertStars'        => 0,
             'syntaxHint'         => '',
             'syntaxAttribute'    => 0,

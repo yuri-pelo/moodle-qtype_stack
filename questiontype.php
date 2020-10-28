@@ -167,7 +167,8 @@ class qtype_stack extends question_type {
             $input->type               = $fromform->{$inputname . 'type'};
             $input->tans               = $fromform->{$inputname . 'modelans'};
             $input->boxsize            = $fromform->{$inputname . 'boxsize'};
-            $input->strictsyntax       = $fromform->{$inputname . 'strictsyntax'};
+            // TODO: remove this when we remove strictsyntax from the DB.
+            $input->strictsyntax       = true;
             $input->insertstars        = $fromform->{$inputname . 'insertstars'};
             $input->syntaxhint         = $fromform->{$inputname . 'syntaxhint'};
             $input->syntaxattribute    = $fromform->{$inputname . 'syntaxattribute'};
@@ -445,7 +446,7 @@ class qtype_stack extends question_type {
             $inputdata = $questiondata->inputs[$name];
             $allparameters = array(
                 'boxWidth'        => $inputdata->boxsize,
-                'strictSyntax'    => (bool) $inputdata->strictsyntax,
+                'strictSyntax'    => true,
                 'insertStars'     => (int) $inputdata->insertstars,
                 'syntaxHint'      => $inputdata->syntaxhint,
                 'syntaxAttribute' => $inputdata->syntaxattribute,
@@ -470,13 +471,15 @@ class qtype_stack extends question_type {
         }
 
         $totalvalue = 0;
+        $allformative = true;
         foreach ($questiondata->prts as $name => $prtdata) {
             // At this point we do not have the PRT method is_formative() available to us.
             if ($prtdata->feedbackstyle > 0) {
                 $totalvalue += $prtdata->value;
+                $allformative = false;
             }
         }
-        if ($questiondata->prts && $totalvalue < 0.0000001) {
+        if ($questiondata->prts && !$allformative && $totalvalue < 0.0000001) {
             throw new coding_exception('There is an error authoring your question. ' .
                     'The $totalvalue, the marks available for the question, must be positive in question ' .
                     $question->name);
@@ -521,8 +524,12 @@ class qtype_stack extends question_type {
                 $feedbackvariables = null;
             }
 
+            $prtvalue = 0;
+            if (!$allformative) {
+                $prtvalue = $prtdata->value / $totalvalue;
+            }
             $question->prts[$name] = new stack_potentialresponse_tree($name, '',
-                    (bool) $prtdata->autosimplify, $prtdata->value / $totalvalue,
+                    (bool) $prtdata->autosimplify, $prtvalue,
                     $feedbackvariables, $nodes, (string) $prtdata->firstnodename, (int) $prtdata->feedbackstyle);
         }
 

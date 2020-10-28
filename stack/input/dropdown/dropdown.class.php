@@ -169,7 +169,7 @@ class stack_dropdown_input extends stack_input {
                     $ddlvalue['value'] = $value[0];
                     $ddlvalue['display'] = $value[0];
                     if (array_key_exists(2, $value)) {
-                        $ddlvalue['display'] = $value[2];
+                        $ddlvalue['display'] = stack_maxima_latex_tidy($value[2]);
                     }
                     if (trim($value[1]) == 'true') {
                         $ddlvalue['correct'] = true;
@@ -458,6 +458,13 @@ class stack_dropdown_input extends stack_input {
     public function get_correct_response($in) {
         $this->adapt_to_model_answer($in);
         return $this->maxima_to_response_array($this->teacheranswervalue);
+    }
+
+    /**
+     * @return string the teacher's answer, suitable for testcase construction.
+     */
+    public function get_teacher_answer_testcase() {
+        return 'first(mcq_correct(' . $this->teacheranswer . '))';
     }
 
     /**

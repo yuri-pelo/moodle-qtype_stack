@@ -541,6 +541,13 @@ abstract class stack_input {
     }
 
     /**
+     * @return string the teacher's answer, suitable for testcase construction.
+     */
+    public function get_teacher_answer_testcase() {
+        return $this->teacheranswer;
+    }
+
+    /**
      * @return string the teacher's answer, displayed to the student in the general feedback.
      */
     public function get_teacher_answer_display($value, $display) {
@@ -615,8 +622,6 @@ abstract class stack_input {
         }
 
         $secrules = clone $basesecurity;
-        $secrules->set_allowedwords($this->get_parameter('allowWords', ''));
-        $secrules->set_forbiddenwords($this->get_parameter('forbidWords', ''));
         // Are we operating in a units context we should ignore?
         if ($this->get_extra_option('nounits', false)) {
             // Logic reversed: nounits means we don't have them.
@@ -752,7 +757,7 @@ abstract class stack_input {
         // Answers may not contain the ? character.  CAS-strings may, but answers may not.
         // It is very useful for teachers to be able to add in syntax hints.
         // We make sure +- -> #pm# here so that +- can be interpreted at +(-....).
-        if ($valid) {
+        if ($valid && $answerd->is_correctly_evaluated()) {
             $interpretedanswer = $answerd->get_evaluationform();
         } else {
             $interpretedanswer = $answerd->get_inputform(true, 1);
@@ -822,7 +827,6 @@ abstract class stack_input {
         $secrules->set_forbiddenwords($this->get_parameter('forbidWords', ''));
 
         $grammarautofixes = $this->get_parameter('grammarAutofixes', 0);
-        $strict = $this->get_parameter('strictSyntax', true);
 
         $filterstoapply = array();
 
@@ -1209,7 +1213,7 @@ abstract class stack_input {
             $feedbackerr .= $state->errors;
         }
         if ($feedbackerr != '') {
-            $feedback .= html_writer::tag('span', $feedbackerr, array('class' => 'alert alert-danger stackinputerror'));
+            $feedback .= html_writer::tag('div', $feedbackerr, array('class' => 'alert alert-danger stackinputerror'));
         }
 
         if ($this->get_parameter('showValidation', 1) == 1 && !($state->lvars === '' or $state->lvars === '[]')) {
@@ -1251,7 +1255,7 @@ abstract class stack_input {
      * @param array|string $in
      * @return string
      */
-    protected function caslines_to_answer($caslines) {
+    protected function caslines_to_answer($caslines, $secrules = false) {
         if (array_key_exists(0, $caslines)) {
             return $caslines[0];
         }

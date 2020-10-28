@@ -230,13 +230,50 @@ make_logic(OPT_LOGIC) := block(
     return(true)
 )$
 
-/* Options for cos^(-1), acos or arccos. */
-/* There is a bug in texput which prevents us from avoiding a "load" here. */
 make_arccos(OPT_ACOS) := block(
-    if OPT_ACOS = "cos-1" then load("cos-1.lisp"),
-    if OPT_ACOS = "arccos" then load("arccos.lisp"),
-    if OPT_ACOS = "acos" then load("acos.lisp")
-);
+    if OPT_ACOS = "cos-1" then block(
+       ?tex\-setup(?cdr([?%asin, "\\sin^{-1}"])),
+       ?tex\-setup(?cdr([?%acos, "\\cos^{-1}"])),
+       ?tex\-setup(?cdr([?%atan, "{\\tan^{-1}}"])),
+       ?tex\-setup(?cdr([?%asec, "{\\rm sec}^{-1}"])),
+       ?tex\-setup(?cdr([?%acsc, "{\\rm csc}^{-1}"])),
+       ?tex\-setup(?cdr([?%acot, "{\\rm cot}^{-1}"])),
+       ?tex\-setup(?cdr([?%asinh, "{\\rm sinh}^{-1}"])),
+       ?tex\-setup(?cdr([?%acosh, "{\\rm cosh}^{-1}"])),
+       ?tex\-setup(?cdr([?%atanh, "{\\rm tanh}^{-1}"])),
+       ?tex\-setup(?cdr([?%asech, "{\\rm sech}^{-1}"])),
+       ?tex\-setup(?cdr([?%acsch, "{\\rm csch}^{-1}"])),
+       ?tex\-setup(?cdr([?%acoth, "{\\rm coth}^{-1}"]))
+    ),
+    if OPT_ACOS = "arccos" then block(
+       ?tex\-setup(?cdr([?%asin, "\\arcsin "])),
+       ?tex\-setup(?cdr([?%acos, "\\arccos "])),
+       ?tex\-setup(?cdr([?%atan, "\\arctan "])),
+       ?tex\-setup(?cdr([?%asec, "{\\rm arcsec}"])),
+       ?tex\-setup(?cdr([?%acsc, "{\\rm arccsc}"])),
+       ?tex\-setup(?cdr([?%acot, "{\\rm arccot}"])),
+       ?tex\-setup(?cdr([?%asinh, "{\\rm arcsinh}"])),
+       ?tex\-setup(?cdr([?%acosh, "{\\rm arccosh}"])),
+       ?tex\-setup(?cdr([?%atanh, "{\\rm arctanh}"])),
+       ?tex\-setup(?cdr([?%asech, "{\\rm arcsech}"])),
+       ?tex\-setup(?cdr([?%acsch, "{\\rm arccsch}"])),
+       ?tex\-setup(?cdr([?%acoth, "{\\rm arccoth}"]))
+    ),
+    if OPT_ACOS = "acos" then block(
+       ?tex\-setup(?cdr([?%asin, "{\\rm asin}"])),
+       ?tex\-setup(?cdr([?%acos, "{\\rm acos}"])),
+       ?tex\-setup(?cdr([?%atan, "{\\rm atan}"])),
+       ?tex\-setup(?cdr([?%asec, "{\\rm asec}"])),
+       ?tex\-setup(?cdr([?%acsc, "{\\rm acsc}"])),
+       ?tex\-setup(?cdr([?%acot, "{\\rm acot}"])),
+       ?tex\-setup(?cdr([?%asinh, "{\\rm asinh}"])),
+       ?tex\-setup(?cdr([?%acosh, "{\\rm acosh}"])),
+       ?tex\-setup(?cdr([?%atanh, "{\\rm atanh}"])),
+       ?tex\-setup(?cdr([?%asech, "{\\rm asech}"])),
+       ?tex\-setup(?cdr([?%acsch, "{\\rm acsch}"])),
+       ?tex\-setup(?cdr([?%acoth, "{\\rm acoth}"]))
+    )
+)$
 
 /* Fine tune the display of fractions between inline and displayed. */
 stackfractionsinline(e) := block ([a, b],
@@ -348,6 +385,21 @@ list_remove(ex, n) := block([k, l],
     makelist(ex[k], k, l)
 )$
 
+/********************************************/
+/***********  Random set generation *********/
+/********************************************/
+/* Could be implemented with rand_selection but would require two conversions
+ * between sets and lists*/
+random_subset(u):=
+  disjoin(false, map(lambda([x], if rand(2)=0 then x), u)); 
+
+random_subset_n(u,n) := 
+  setify(rand_selection(listify(u),n));
+
+/* random non-empty subset */
+random_ne_subset(u) := random_subset_n(u, rand(cardinality(u))+1);
+
+
 /* Create a number in a random range. */
 rand_range([ex]) := block(
   if (length(ex)<2 or length(ex)>3) then error("rand_range must have 2 or 3 arguments."),
@@ -432,6 +484,26 @@ mcq_incorrect(ta):=block(
     if not(all_listp(listp, ta)) then error("mcq_incorrect: all list elements must be lists, but was passed: ", string(ta)),
     if not(all_listp(lambda([ex], is(length(ex)>=2)), ta)) then error("mcq_incorrect: all list elements must be lists of length at least 2, but was passed: ", string(ta)),
     maplist(first, sublist(ta, lambda([ex], not(second(ex)))))
+)$
+
+/* ********************************** */
+/* Statistics function                */
+/* ********************************** */
+
+/*   ------------------   Mode function   ---------------------   */
+/*  mode(n) returns a list of all the modal elements in the list n */
+mode(n):= block([i,j,count_elements,counts,highest_count,mode_set],
+    count_elements: makelist(0,i,1,length(n)),
+    for i: 1 thru length(n) do 
+        (for j: 1 thru length(n) do 
+            (if n[i]=n[j] then count_elements[i]: count_elements[i]+1)),
+    counts: listify(setify(count_elements)),
+    highest_count:counts[length(counts)],
+    mode_set:{},
+    for i:1 thru length(n) do 
+        (if count_elements[i]=highest_count then mode_set: union(mode_set,{n[i]})),
+    mode_list:listify(mode_set),
+    return(mode_list)
 )$
 
 /* ********************************** */
@@ -1271,7 +1343,7 @@ ATAlgEquiv(SA,SB) := block([simp:true, ret, newret, SAN],
     ret:ATAlgEquivfun(SA, SB),
     /* Can we find a permutation of the variables? */
     if ret[2]=0 then block([p1],
-        p1:subst_equiv(SAN, SB),
+        p1:subst_equiv(SAN, SB, []),
         /* Actually, at this point 2008/7/7, we don't want to give this feedback.  Just leave an answer note. */
         /* if p1#[] and p1#false then ret:[ret[1], ret[2], StackAddNote(ret[3], concat("ATAlgEquiv_Subst ", string(p1))), StackAddFeedback(ret[4], "Subst", stack_disp(p1, "d"))] */
         if p1#[] and p1#false then ret:[ret[1], ret[2], StackAddNote(ret[3], concat("ATAlgEquiv_Subst ", string(p1))), ret[4]]
@@ -1837,21 +1909,26 @@ ATLowestTerms(SA, SB) := block([simp:false, ret, validity, mark, FeedBack, Answe
     return([validity, mark, AnswerNote, FeedBack])
 )$
 
-ATSubstEquiv(SA,SB) := block([simp:true, ret, SAc, SBc],
+ATSubstEquiv([ex]) := block([simp:true, SA, SB, SC, ret, SAc, SBc],
     /* Turn on simplification and error catch */
-    SA:errcatch(ev(SA, simp, nouns)),
+    SA:errcatch(ev(first(ex), simp, nouns)),
     if is(SA=[STACKERROR]) then return([false, false, StackAddNote("", "ATSubstEquiv_STACKERROR_SAns"), ""]),
     SA:SA[1],
-    SB:errcatch(ev(SB, simp, nouns)),
+    SB:errcatch(ev(second(ex), simp, nouns)),
     if is(SB=[STACKERROR]) then return([false, false, StackAddNote("", "ATSubstEquiv_STACKERROR_TAns"), ""]),
     SB:SB[1],
+    SC:[[]],
+    if length(ex)>2 then
+        SC:errcatch(ev(third(ex), simp, nouns)),
+    if is(SC=[STACKERROR]) then return([false, false, StackAddNote("", "ATSubstEquiv_STACKERROR_Opt"), ""]),
+    SC:SC[1],
     /* Copy SA and SB.  If they are lists or matrices then ATAlgEquivfun potentially colours wrong entries. */
     SAc:copy(SA),
     SBc:copy(SB),
     ret:ATAlgEquivfun(SAc, SBc),
     /* Can we find a permutation of the variables? */
     if ret[2]=false then block([p1],
-        p1:subst_equiv(SA, SB),
+        p1:subst_equiv(SA, SB, SC),
         if p1#[] and p1#false then ret:[true, true, StackAddNote("", concat("ATSubstEquiv_Subst ", string(p1))), StackAddFeedback("", "Subst", stack_disp(p1, "d"))]
     ),
     /* Send back result */
@@ -3143,4 +3220,5 @@ load(linearalgebra);
 
 /* Stack expects some output with the version number the output happens at */
 /* maximalocal.mac after additional library loading */
-stackmaximaversion:2020070100$
+stackmaximaversion:2020101501$
+
